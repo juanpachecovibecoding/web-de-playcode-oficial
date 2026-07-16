@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-pixel: "Press Start 2P", monospace;
+}
+
+@utility pixel-grid {
+  background-image: radial-gradient(#0f172a 2px, transparent 2px);
+  background-size: 24px 24px;
+}
+
+@utility pixel-grid-colored {
+  background-image: linear-gradient(#0f172a 2px, transparent 2px), linear-gradient(90deg, #0f172a 2px, transparent 2px);
+  background-size: 32px 32px;
+}
+
+@utility pixel-grid-cyan {
+  background-image: radial-gradient(#4ecdc4 2px, transparent 2px);
+  background-size: 24px 24px;
+}
+
+@utility text-shadow-slate {
+  text-shadow: 4px 4px 0 #cbd5e1;
+}
+
+@utility text-shadow-black {
+  text-shadow: 4px 4px 0 #0f172a;
+}
+
+@utility text-shadow-black-sm {
+  text-shadow: 2px 2px 0 #0f172a;
+}

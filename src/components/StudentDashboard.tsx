@@ -1,0 +1,1371 @@
+import React, { useState, useEffect } from 'react';
+import {
+  BookOpen,
+  LogOut,
+  Code2,
+  CheckCircle2,
+  Video,
+  User,
+  Image,
+  Palette,
+  Sparkles,
+  ArrowRight,
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Circle,
+  MessageSquare,
+  Heart,
+  Send,
+  Plus,
+  Trash2,
+  Search,
+  X
+} from 'lucide-react';
+
+interface Student {
+  id: string;
+  name: string;
+  email: string;
+  course: string;
+  status: 'Activo' | 'Completado' | 'Pendiente';
+  bio?: string;
+  avatar?: string;
+  photoUrl?: string;
+  theme?: 'default' | 'cyberpunk' | 'playcode';
+  password?: string;
+  completedLessonIds?: string[];
+  role?: 'admin' | 'docente' | 'alumno' | 'profesor';
+}
+
+interface Meeting {
+  id: string;
+  name: string;
+  url: string;
+}
+
+interface Classroom {
+  id: string;
+  name: string;
+  description: string;
+  dateTime?: string;
+  students: string[];
+  meetingId?: string;
+  lessonIds?: string[];
+  imageUrl?: string;
+}
+
+interface Lesson {
+  id: string;
+  title: string;
+  courseName: string;
+  htmlContent: string;
+}
+
+interface ForumComment {
+  id: string;
+  content: string;
+  authorName: string;
+  authorEmail: string;
+  createdAt: string;
+}
+
+interface ForumPost {
+  id: string;
+  title: string;
+  content: string;
+  authorName: string;
+  authorEmail: string;
+  authorAvatar?: string;
+  imageUrl?: string; // base64
+  likes: number;
+  likedBy: string[]; // emails of users who liked
+  reactions: { [key: string]: number }; // emoji -> count
+  reactedBy: { [userEmail: string]: string }; // userEmail -> emoji
+  createdAt: string;
+  comments: ForumComment[];
+}
+
+interface StudentDashboardProps {
+  student: Student;
+  classrooms: Classroom[];
+  meetings: Meeting[];
+  lessons: Lesson[];
+  onLogout: () => void;
+  onSaveProfile: (updated: Student) => void;
+}
+
+interface ThemeStyles {
+  bg: string;
+  sidebarBg: string;
+  sidebarBorder: string;
+  activeTabBg: string;
+  activeTabText: string;
+  headerBorder: string;
+  cardBg: string;
+  cardBorder: string;
+  cardShadow: string;
+  textColor: string;
+  subtextColor: string;
+  primaryBtnBg: string;
+  primaryBtnHover: string;
+  primaryBtnText: string;
+  badgeBg: string;
+  badgeText: string;
+}
+
+const themePalettes: Record<'default' | 'cyberpunk' | 'playcode', ThemeStyles> = {
+  default: {
+    bg: 'bg-[#f3f7fa]',
+    sidebarBg: 'bg-[#0d1b2e]',
+    sidebarBorder: 'border-[#1e385c]',
+    activeTabBg: 'bg-[#a3b8cc]',
+    activeTabText: 'text-[#0d1b2e] border-[#0d1b2e] shadow-[2px_2px_0_0_#ffffff]',
+    headerBorder: 'border-[#a3b8cc]',
+    cardBg: 'bg-white',
+    cardBorder: 'border-2 border-[#0d1b2e]',
+    cardShadow: 'shadow-[4px_4px_0_0_#0d1b2e]',
+    textColor: 'text-[#0d1b2e]',
+    subtextColor: 'text-[#6180a6]',
+    primaryBtnBg: 'bg-[#2a4e7c]',
+    primaryBtnHover: 'hover:bg-[#1e385c]',
+    primaryBtnText: 'text-white border-2 border-[#0d1b2e] shadow-[2px_2px_0_0_#000000]',
+    badgeBg: 'bg-[#f0f4f8] text-[#2a4e7c] border border-[#a3b8cc]',
+    badgeText: 'text-[#2a4e7c]'
+  },
+  cyberpunk: {
+    bg: 'bg-[#08020f]',
+    sidebarBg: 'bg-[#1a0033]',
+    sidebarBorder: 'border-[#ff00ff]',
+    activeTabBg: 'bg-[#ff00ff]',
+    activeTabText: 'text-white border-[#ff00ff] shadow-[2px_2px_0_0_#7b6eff]',
+    headerBorder: 'border-[#ff00ff]',
+    cardBg: 'bg-[#130321]',
+    cardBorder: 'border-2 border-[#8b2ae2]',
+    cardShadow: 'shadow-[4px_4px_0_0_#ff00ff]',
+    textColor: 'text-[#fdf2ff]',
+    subtextColor: 'text-[#df73e3]',
+    primaryBtnBg: 'bg-[#ff00ff]',
+    primaryBtnHover: 'hover:bg-[#9400d3]',
+    primaryBtnText: 'text-white border-2 border-[#7b6eff] shadow-[2px_2px_0_0_#7b6eff]',
+    badgeBg: 'bg-[#8b2ae2]/30 text-[#df73e3] border border-[#ff00ff]',
+    badgeText: 'text-[#df73e3]'
+  },
+  playcode: {
+    bg: 'bg-slate-55',
+    sidebarBg: 'bg-[#001f4a]',
+    sidebarBorder: 'border-[#f2900f]',
+    activeTabBg: 'bg-[#ffe66d]',
+    activeTabText: 'text-[#001f4a] border-[#001f4a] shadow-[2px_2px_0_0_#f2900f]',
+    headerBorder: 'border-[#f2900f]',
+    cardBg: 'bg-white',
+    cardBorder: 'border-2 border-[#001f4a]',
+    cardShadow: 'shadow-[4px_4px_0_0_#001f4a]',
+    textColor: 'text-[#001f4a]',
+    subtextColor: 'text-[#ff6b6b]',
+    primaryBtnBg: 'bg-[#ffe66d]',
+    primaryBtnHover: 'hover:bg-[#ffd166]',
+    primaryBtnText: 'text-[#001f4a] border-2 border-[#001f4a] shadow-[2px_2px_0_0_#001f4a]',
+    badgeBg: 'bg-[#4ecdc4]/20 text-[#001f4a] border border-[#001f4a]',
+    badgeText: 'text-[#001f4a]'
+  }
+};
+
+const avatarChoices = ['🚀', '💻', '🤖', '🎨', '🧠', '👾', '🎮', '🦄'];
+
+export const StudentDashboard: React.FC<StudentDashboardProps> = ({
+  student,
+  classrooms,
+  meetings,
+  lessons,
+  onLogout,
+  onSaveProfile
+}) => {
+  const [activeTab, setActiveTab] = useState<'aprendizaje' | 'perfil' | 'foro'>('aprendizaje');
+  const [palette, setPalette] = useState<'default' | 'cyberpunk' | 'playcode'>(student.theme || 'default');
+
+  // Forum states
+  const [posts, setPosts] = useState<ForumPost[]>(() => {
+    const saved = localStorage.getItem('playcode_forum_posts');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    // Default initial posts
+    return [
+      {
+        id: 'post-1',
+        title: '¡Bienvenidos al Foro Estudiantil de Play Code! 🚀',
+        content: '¡Hola a todos! Este es nuestro espacio para compartir dudas, proyectos y aprender juntos. ¡Cuéntanos qué estás programando hoy!',
+        authorName: 'Juan Pacheco',
+        authorEmail: 'juanpacheco@playcode.com.ar',
+        authorAvatar: '🧠',
+        likes: 3,
+        likedBy: [],
+        reactions: { '🚀': 4, '🎉': 2 },
+        reactedBy: {},
+        createdAt: new Date(Date.now() - 3600000 * 24).toISOString(), // 1 day ago
+        comments: [
+          {
+            id: 'comment-1',
+            content: '¡Me encanta este nuevo foro! Voy a subir un screenshot de mi proyecto de HTML pronto.',
+            authorName: 'Lucas Pérez',
+            authorEmail: 'lucas@playcode.com',
+            createdAt: new Date(Date.now() - 3600000 * 20).toISOString()
+          }
+        ]
+      }
+    ];
+  });
+
+  const [newPostTitle, setNewPostTitle] = useState('');
+  const [newPostContent, setNewPostContent] = useState('');
+  const [newPostImage, setNewPostImage] = useState<string | null>(null);
+  const [showAddPostForm, setShowAddPostForm] = useState(false);
+  const [commentInputs, setCommentInputs] = useState<{ [postId: string]: string }>({});
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [forumSearchQuery, setForumSearchQuery] = useState('');
+
+  // Sync to localStorage
+  useEffect(() => {
+    localStorage.setItem('playcode_forum_posts', JSON.stringify(posts));
+  }, [posts]);
+
+  // Forum handlers
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file size (limit to 2MB to keep base64 reasonable for localStorage)
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Por favor selecciona una imagen menor a 2MB.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewPostImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCreatePost = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPostTitle.trim() || !newPostContent.trim()) return;
+
+    const newPost: ForumPost = {
+      id: 'post-' + Date.now(),
+      title: newPostTitle,
+      content: newPostContent,
+      authorName: student.name,
+      authorEmail: student.email,
+      authorAvatar: student.avatar || '🚀',
+      imageUrl: newPostImage || undefined,
+      likes: 0,
+      likedBy: [],
+      reactions: { '🚀': 0, '🎉': 0, '💻': 0, '🧠': 0 },
+      reactedBy: {},
+      createdAt: new Date().toISOString(),
+      comments: []
+    };
+
+    setPosts([newPost, ...posts]);
+    setNewPostTitle('');
+    setNewPostContent('');
+    setNewPostImage(null);
+    setShowAddPostForm(false);
+  };
+
+  const handleLikePost = (postId: string) => {
+    setPosts(prevPosts =>
+      prevPosts.map(post => {
+        if (post.id !== postId) return post;
+        const userEmail = student.email;
+        const hasLiked = post.likedBy.includes(userEmail);
+        const likedBy = hasLiked
+          ? post.likedBy.filter(email => email !== userEmail)
+          : [...post.likedBy, userEmail];
+        const likes = hasLiked ? Math.max(0, post.likes - 1) : post.likes + 1;
+        return { ...post, likes, likedBy };
+      })
+    );
+  };
+
+  const handleReactToPost = (postId: string, emoji: string) => {
+    setPosts(prevPosts =>
+      prevPosts.map(post => {
+        if (post.id !== postId) return post;
+        const userEmail = student.email;
+        
+        // Initialize reactedBy and reactions if they don't exist
+        const postReactedBy = post.reactedBy || {};
+        const postReactions = post.reactions || { '🚀': 0, '🎉': 0, '💻': 0, '🧠': 0 };
+
+        const previousReaction = postReactedBy[userEmail];
+        
+        const reactedBy = { ...postReactedBy, [userEmail]: emoji };
+        const reactions = { ...postReactions };
+
+        if (previousReaction === emoji) {
+          reactions[emoji] = Math.max(0, (reactions[emoji] || 1) - 1);
+          delete reactedBy[userEmail];
+        } else {
+          if (previousReaction) {
+            reactions[previousReaction] = Math.max(0, (reactions[previousReaction] || 1) - 1);
+          }
+          reactions[emoji] = (reactions[emoji] || 0) + 1;
+        }
+
+        return { ...post, reactions, reactedBy };
+      })
+    );
+  };
+
+  const handleAddComment = (postId: string) => {
+    const text = commentInputs[postId] || '';
+    if (!text.trim()) return;
+
+    setPosts(prevPosts =>
+      prevPosts.map(post => {
+        if (post.id !== postId) return post;
+        const newComment: ForumComment = {
+          id: 'comment-' + Date.now(),
+          content: text,
+          authorName: student.name,
+          authorEmail: student.email,
+          createdAt: new Date().toISOString()
+        };
+        return { ...post, comments: [...post.comments, newComment] };
+      })
+    );
+
+    setCommentInputs(prev => ({ ...prev, [postId]: '' }));
+  };
+
+  const handleDeletePost = (postId: string) => {
+    if (window.confirm('¿Estás seguro de que deseas eliminar esta publicación?')) {
+      setPosts(prevPosts => prevPosts.filter(p => p.id !== postId));
+    }
+  };
+  
+  // Lesson settings
+  const [selectedClassroomForLessons, setSelectedClassroomForLessons] = useState<Classroom | null>(null);
+  const [selectedLessonForPreview, setSelectedLessonForPreview] = useState<Lesson | null>(null);
+  const [selectedCourseName, setSelectedCourseName] = useState<string | null>(null);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  // Profile settings
+  const [bio, setBio] = useState(student.bio || '¡Hola! Soy alumno en Play Code y estoy programando el futuro.');
+  const [selectedAvatar, setSelectedAvatar] = useState(student.avatar || '🚀');
+  const [customPhotoUrl, setCustomPhotoUrl] = useState(student.photoUrl || '');
+  const [isSaved, setIsSaved] = useState(false);
+
+  const handleSave = () => {
+    onSaveProfile({
+      ...student,
+      bio,
+      avatar: selectedAvatar,
+      photoUrl: customPhotoUrl,
+      theme: palette
+    });
+    setIsSaved(true);
+    setTimeout(() => {
+      setIsSaved(false);
+    }, 3000);
+  };
+
+  // Get active theme styles
+  const t = themePalettes[palette];
+
+  // Filter classes belonging to this student
+  const myClassrooms = classrooms.filter(cls => cls.students.includes(student.id));
+
+  // Calculate course progress based on lessons assigned to the student's classrooms (with fallback to course name)
+  const studentClassroomLessonIds = Array.from(
+    new Set(myClassrooms.flatMap(cls => cls.lessonIds || []))
+  );
+  const courseLessons = studentClassroomLessonIds.length > 0
+    ? lessons.filter(l => studentClassroomLessonIds.includes(l.id))
+    : lessons.filter(l => l.courseName === student.course);
+
+  const completedLessonIds = student.completedLessonIds || [];
+  const completedCourseLessons = courseLessons.filter(l => completedLessonIds.includes(l.id));
+  const progressPercent = courseLessons.length > 0 
+    ? Math.round((completedCourseLessons.length / courseLessons.length) * 100) 
+    : 0;
+
+  const toggleLessonCompletion = (lessonId: string) => {
+    let updatedCompleted: string[];
+    if (completedLessonIds.includes(lessonId)) {
+      updatedCompleted = completedLessonIds.filter(id => id !== lessonId);
+    } else {
+      updatedCompleted = [...completedLessonIds, lessonId];
+    }
+    onSaveProfile({
+      ...student,
+      completedLessonIds: updatedCompleted
+    });
+  };
+
+  return (
+    <div className={`min-h-screen ${t.bg} flex flex-col ${t.textColor} font-sans transition-colors duration-300`}>
+      {/* Top Navbar */}
+      <header className={`w-full ${t.sidebarBg} text-slate-100 border-b-4 ${t.sidebarBorder} transition-colors duration-300 sticky top-0 z-40`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          
+          {/* Logo / Brand */}
+          <div className="flex items-center gap-3">
+            <div className={`p-1.5 border border-white/20 bg-opacity-20 text-white shadow-[1px_1px_0_0_#ffffff]`}>
+              <Code2 className="w-5 h-5" />
+            </div>
+            <div className="hidden sm:block">
+              <span className="font-pixel text-sm tracking-wider text-white block">Play Code</span>
+              <span className="text-[9px] text-[#a3b8cc] font-bold uppercase tracking-widest">Portal Alumno</span>
+            </div>
+          </div>
+
+          {/* Right side: User Profile Info & Logout */}
+          <div className="flex items-center gap-3">
+            <div className="hidden lg:flex items-center gap-2">
+              {customPhotoUrl ? (
+                <img
+                  src={customPhotoUrl}
+                  alt={student.name}
+                  className={`w-7 h-7 rounded-full border object-cover ${t.sidebarBorder}`}
+                  onError={() => setCustomPhotoUrl('')}
+                />
+              ) : (
+                <div className="w-7 h-7 rounded-full bg-white/20 text-white flex items-center justify-center font-bold text-xs border border-white/20">
+                  {selectedAvatar}
+                </div>
+              )}
+              <div className="text-left leading-tight max-w-[120px]">
+                <span className="text-xs font-bold text-slate-200 block truncate">{student.name}</span>
+                <span className="text-[9px] text-slate-400 block truncate">{student.email}</span>
+              </div>
+            </div>
+
+            <button
+              onClick={onLogout}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-slate-100 font-bold text-xs border border-white/20 shadow-[1.5px_1.5px_0_0_#000000] active:shadow-[0px_0px_0_0_#000000] active:translate-y-[1.5px] active:translate-x-[1.5px] transition-all cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Salir</span>
+            </button>
+          </div>
+
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 max-w-7xl w-full mx-auto p-6 md:p-10">
+        {/* Header with Greeting and Navigation Tabs */}
+        <header className={`flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b-2 ${t.headerBorder} mb-8`}>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight mb-1">¡Hola, {student.name}!</h1>
+            
+            {/* Tabs right here in the greeting card */}
+            <div className="flex flex-wrap items-center gap-3 mt-4">
+              <button
+                onClick={() => {
+                  setActiveTab('aprendizaje');
+                  setSelectedCourseName(null);
+                  setSelectedClassroomForLessons(null);
+                  setSelectedLessonForPreview(null);
+                }}
+                className={`flex items-center gap-2 px-4 py-2 font-bold text-xs border-2 border-[#0d1b2e] transition-all cursor-pointer shadow-[3px_3px_0_0_#000000] active:translate-y-[2px] active:shadow-[1px_1px_0_0_#000000] ${
+                  activeTab === 'aprendizaje'
+                    ? `${t.activeTabBg} ${t.activeTabText}`
+                    : 'bg-white text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <BookOpen className="w-3.5 h-3.5" /> <span>MI APRENDIZAJE</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('perfil')}
+                className={`flex items-center gap-2 px-4 py-2 font-bold text-xs border-2 border-[#0d1b2e] transition-all cursor-pointer shadow-[3px_3px_0_0_#000000] active:translate-y-[2px] active:shadow-[1px_1px_0_0_#000000] ${
+                  activeTab === 'perfil'
+                    ? `${t.activeTabBg} ${t.activeTabText}`
+                    : 'bg-white text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <User className="w-3.5 h-3.5" /> <span>MI PERFIL & DISEÑO</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('foro')}
+                className={`flex items-center gap-2 px-4 py-2 font-bold text-xs border-2 border-[#0d1b2e] transition-all cursor-pointer shadow-[3px_3px_0_0_#000000] active:translate-y-[2px] active:shadow-[1px_1px_0_0_#000000] ${
+                  activeTab === 'foro'
+                    ? `${t.activeTabBg} ${t.activeTabText}`
+                    : 'bg-white text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <MessageSquare className="w-3.5 h-3.5" /> <span>FORO ESTUDIANTIL</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-col items-start md:items-end gap-2 shrink-0">
+            <div className="bg-[#2a4e7c] text-white border-2 border-[#0d1b2e] px-3.5 py-1.5 font-mono text-[10px] uppercase font-bold shadow-[2px_2px_0_0_#0d1b2e]">
+              ALUMNO ACTIVO
+            </div>
+            <p className={`${t.subtextColor} font-medium text-xs`}>
+              {activeTab === 'aprendizaje' 
+                ? 'Bienvenido a tu panel personal de Play Code.' 
+                : activeTab === 'perfil' 
+                  ? 'Personaliza tu biografía, avatar y colores de fondo.' 
+                  : 'Interactúa con tus compañeros, sube imágenes y comenta.'}
+            </p>
+          </div>
+        </header>
+
+        {/* TAB 1: MI APRENDIZAJE */}
+        {/* TAB 1: MI APRENDIZAJE */}
+        {activeTab === 'aprendizaje' && (
+          <div>
+            {!selectedCourseName ? (
+              <div className="space-y-6">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500">Mis Cursos Inscritos</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div 
+                    onClick={() => setSelectedCourseName(student.course)}
+                    className={`${t.cardBg} ${t.cardBorder} p-6 ${t.cardShadow} hover:translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#000000] cursor-pointer transition-all flex flex-col justify-between`}
+                  >
+                    <div>
+                      <div className="flex justify-between items-center mb-3">
+                        <span className={`text-[10px] font-mono font-bold px-2 py-0.5 ${t.badgeBg}`}>
+                          ACTIVO
+                        </span>
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      </div>
+                      <h4 className="text-lg font-bold line-clamp-2">{student.course}</h4>
+                      <p className="text-[10px] text-slate-500 mt-1">Programa curricular Play Code</p>
+
+                      {/* Progress Bar */}
+                      <div className="mt-4 pt-4 border-t border-slate-100">
+                        <div className="flex justify-between items-center text-[9px] font-bold text-slate-500 mb-1">
+                          <span>PROGRESO DE LECCIONES</span>
+                          <span>{progressPercent}%</span>
+                        </div>
+                        <div className="w-full bg-slate-200 border border-[#0d1b2e] h-2">
+                          <div 
+                            className="bg-[#2a4e7c] h-full transition-all duration-300"
+                            style={{ width: `${progressPercent}%` }}
+                          />
+                        </div>
+                        <span className="text-[8px] text-slate-400 mt-1.5 block">
+                          {completedCourseLessons.length} de {courseLessons.length} lecciones completadas
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center pt-4 border-t border-slate-100 mt-4">
+                      <span className="text-[10px] font-bold text-[#2a4e7c] uppercase">Ver Clases del Curso</span>
+                      <ArrowRight className="w-4 h-4 text-[#2a4e7c]" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : selectedClassroomForLessons ? (
+              <div className="space-y-6">
+                {/* Back button and Classroom Info */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b-2 border-slate-200 pb-4 mb-2">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => {
+                        setSelectedClassroomForLessons(null);
+                        setSelectedLessonForPreview(null);
+                      }}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 font-bold text-xs border-2 border-[#0d1b2e] bg-white hover:bg-slate-50 transition-all cursor-pointer shadow-[2px_2px_0_0_#000000] active:translate-y-[2px] active:shadow-[0px_0px_0_0_#000000]"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" /> Volver a Clases
+                    </button>
+
+                    <button
+                      onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 font-bold text-xs border-2 border-[#0d1b2e] bg-white hover:bg-slate-50 transition-all cursor-pointer shadow-[2px_2px_0_0_#000000] active:translate-y-[2px] active:shadow-[0px_0px_0_0_#000000]"
+                    >
+                      {isSidebarCollapsed ? (
+                        <>
+                          <ChevronRight className="w-3.5 h-3.5" /> Mostrar Lecciones
+                        </>
+                      ) : (
+                        <>
+                          <ChevronLeft className="w-3.5 h-3.5" /> Ocultar Lecciones
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <div className="text-left sm:text-right">
+                    <span className="text-[9px] uppercase font-mono font-bold text-slate-400 block">Workspace de Estudio</span>
+                    <h3 className="text-sm font-bold text-[#0d1b2e] uppercase tracking-wider">
+                      {selectedClassroomForLessons.name}
+                    </h3>
+                  </div>
+                </div>
+
+                {/* Workspace Split Layout */}
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                  {/* Left panel: collapsible/scrollable list of lessons */}
+                  <div className={`space-y-4 ${isSidebarCollapsed ? 'hidden' : 'lg:col-span-1 block'}`}>
+                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Lecciones de la Clase</h4>
+                    <div className="flex flex-col gap-2 max-h-[60vh] overflow-y-auto pr-1">
+                      {selectedClassroomForLessons.lessonIds && selectedClassroomForLessons.lessonIds.map(id => {
+                        const lesson = lessons.find(l => l.id === id);
+                        if (!lesson) return null;
+                        const isSelected = selectedLessonForPreview?.id === lesson.id;
+                        const isCompleted = completedLessonIds.includes(lesson.id);
+                        return (
+                          <div
+                            key={lesson.id}
+                            className={`w-full text-left p-3.5 border-2 transition-all flex flex-col gap-1.5 ${
+                              isSelected
+                                ? `border-[#0d1b2e] ${t.activeTabBg} ${t.activeTabText} shadow-[2.5px_2.5px_0_0_#0d1b2e]`
+                                : `bg-white border-slate-350 text-slate-700 hover:border-slate-400 hover:bg-slate-50`
+                            }`}
+                          >
+                            <div className="flex items-start gap-2.5">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleLessonCompletion(lesson.id);
+                                }}
+                                className="cursor-pointer p-0.5 hover:bg-slate-200/60 rounded transition-all mt-0.5 border-0 bg-transparent flex items-center justify-center"
+                                title={isCompleted ? "Marcar como incompleto" : "Marcar como completado"}
+                              >
+                                {isCompleted ? (
+                                  <CheckCircle2 className="w-4.5 h-4.5 text-emerald-600" />
+                                ) : (
+                                  <Circle className="w-4.5 h-4.5 text-slate-350 hover:text-[#2a4e7c]" />
+                                )}
+                              </button>
+                              <div 
+                                className="flex-1 min-w-0 cursor-pointer"
+                                onClick={() => setSelectedLessonForPreview(lesson)}
+                              >
+                                <span className="font-bold text-xs line-clamp-2 block">{lesson.title}</span>
+                                <span className="text-[8px] text-slate-400 font-semibold uppercase block mt-0.5">ID: {lesson.id}</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {(!selectedClassroomForLessons.lessonIds || selectedClassroomForLessons.lessonIds.length === 0) && (
+                        <div className="p-4 text-center border-2 border-dashed border-slate-300 text-slate-400 text-xs italic bg-slate-50">
+                          No hay lecciones vinculadas.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right panel: Content viewer */}
+                  <div className={isSidebarCollapsed ? 'lg:col-span-4' : 'lg:col-span-3'}>
+                    {selectedLessonForPreview ? (
+                      <div className="bg-white border-4 border-[#0d1b2e] shadow-[6px_6px_0_0_#000000] overflow-hidden w-full flex flex-col">
+                        {/* Embed Frame */}
+                        <div className="bg-slate-50 flex items-center justify-center">
+                          <div
+                            key={selectedLessonForPreview.id}
+                            className="w-full flex justify-center items-center [&_iframe]:w-full [&_iframe]:border-0 [&_iframe]:min-h-[500px] [&_iframe]:aspect-video"
+                            dangerouslySetInnerHTML={{ __html: selectedLessonForPreview.htmlContent }}
+                          />
+                        </div>
+
+                        {/* Control Footer */}
+                        <div className="bg-white border-t-4 border-[#0d1b2e] p-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+                          <div className="text-left">
+                            <span className="text-[9px] uppercase font-mono font-bold text-slate-400 block">Estás estudiando</span>
+                            <h4 className="text-xs font-bold text-[#0d1b2e]">{selectedLessonForPreview.title}</h4>
+                          </div>
+
+                          <button
+                            onClick={() => toggleLessonCompletion(selectedLessonForPreview.id)}
+                            className={`inline-flex items-center gap-2 px-4 py-2 font-bold text-xs border-2 border-[#0d1b2e] transition-all cursor-pointer shadow-[3px_3px_0_0_#000000] active:translate-y-[2px] active:shadow-[0px_0px_0_0_#000000] ${
+                              completedLessonIds.includes(selectedLessonForPreview.id)
+                                ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
+                                : 'bg-[#ffd166] text-[#001f4a] hover:bg-[#ffc233]'
+                            }`}
+                          >
+                            {completedLessonIds.includes(selectedLessonForPreview.id) ? (
+                              <>
+                                <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Lección Completada ✓
+                              </>
+                            ) : (
+                              <>
+                                <Circle className="w-4 h-4" /> Marcar como Completada
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="border-4 border-dashed border-slate-300 bg-slate-50 p-10 text-center text-slate-400 italic text-xs h-[50vh] flex items-center justify-center">
+                        Selecciona una lección del panel izquierdo para comenzar.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <button
+                  onClick={() => setSelectedCourseName(null)}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 font-bold text-xs border-2 border-[#0d1b2e] bg-white hover:bg-slate-50 transition-all cursor-pointer shadow-[2px_2px_0_0_#000000] active:translate-y-[2px] active:shadow-[0px_0px_0_0_#000000] mb-4"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" /> Volver a Cursos
+                </button>
+                
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white border-2 border-[#0d1b2e] p-5 shadow-[4px_4px_0_0_#000000] mb-6">
+                  <div className="flex items-center gap-3">
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-[#ffd166] border border-[#0d1b2e] uppercase text-[#001f4a]">
+                      Curso Activo
+                    </span>
+                    <h2 className="text-lg md:text-xl font-bold uppercase tracking-wide">{selectedCourseName}</h2>
+                  </div>
+
+                  <div className="w-full md:w-80">
+                    <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 mb-1">
+                      <span>TU PROGRESO EN EL CURSO</span>
+                      <span>{progressPercent}%</span>
+                    </div>
+                    <div className="w-full bg-slate-200 border border-[#0d1b2e] h-2.5">
+                      <div 
+                        className="bg-[#2a4e7c] h-full transition-all duration-300"
+                        style={{ width: `${progressPercent}%` }}
+                      />
+                    </div>
+                    <span className="text-[9px] text-slate-400 mt-1 block">
+                      {completedCourseLessons.length} de {courseLessons.length} lecciones completadas
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500">Mis Cursos</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                    {myClassrooms.map(cls => {
+                      const associatedMeeting = meetings.find(m => m.id === cls.meetingId);
+                      return (
+                        <div key={cls.id} className={`${t.cardBg} ${t.cardBorder} ${t.cardShadow} flex flex-col justify-between overflow-hidden`}>
+                          {cls.imageUrl ? (
+                            <div 
+                              onClick={() => {
+                                if (cls.lessonIds && cls.lessonIds.length > 0) {
+                                  setSelectedClassroomForLessons(cls);
+                                  const firstId = cls.lessonIds?.[0];
+                                  const firstLesson = lessons.find(l => l.id === firstId);
+                                  setSelectedLessonForPreview(firstLesson || null);
+                                }
+                              }}
+                              className="w-full h-32 overflow-hidden border-b-2 border-[#0d1b2e] shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
+                              title="Haga clic para ver las lecciones de este curso"
+                            >
+                              <img
+                                src={cls.imageUrl}
+                                alt={cls.name}
+                                className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-300"
+                              />
+                            </div>
+                          ) : (
+                            <div 
+                              onClick={() => {
+                                if (cls.lessonIds && cls.lessonIds.length > 0) {
+                                  setSelectedClassroomForLessons(cls);
+                                  const firstId = cls.lessonIds?.[0];
+                                  const firstLesson = lessons.find(l => l.id === firstId);
+                                  setSelectedLessonForPreview(firstLesson || null);
+                                }
+                              }}
+                              className="w-full h-32 bg-gradient-to-br from-[#0d1b2e] to-[#1e385c] border-b-2 border-[#0d1b2e] flex items-center justify-center shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
+                              title="Haga clic para ver las lecciones de este curso"
+                            >
+                              <BookOpen className="w-10 h-10 text-[#a3b8cc]/20" />
+                            </div>
+                          )}
+                          <div className="p-4 flex-1 flex flex-col justify-between">
+                            <div
+                              onClick={() => {
+                                if (cls.lessonIds && cls.lessonIds.length > 0) {
+                                  setSelectedClassroomForLessons(cls);
+                                  const firstId = cls.lessonIds?.[0];
+                                  const firstLesson = lessons.find(l => l.id === firstId);
+                                  setSelectedLessonForPreview(firstLesson || null);
+                                }
+                              }}
+                              className={cls.lessonIds && cls.lessonIds.length > 0 ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}
+                              title={cls.lessonIds && cls.lessonIds.length > 0 ? 'Haga clic para ver las lecciones de este curso' : ''}
+                            >
+                              <h4 className="text-sm font-bold mb-1 line-clamp-2 leading-tight">{cls.name}</h4>
+                              <p className="text-[11px] text-slate-500 mb-3 line-clamp-3">{cls.description}</p>
+                            </div>
+
+                            <div className="border-t border-slate-100 pt-3">
+                              {associatedMeeting ? (
+                                <a
+                                  href={associatedMeeting.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center justify-center gap-1.5 px-3 py-2 bg-[#2C7EEA] hover:bg-[#1A66C7] text-white text-[10px] font-bold border border-[#0d1b2e] transition-all w-full text-center"
+                                >
+                                  Unirse Meet <Video className="w-3.5 h-3.5" />
+                                </a>
+                              ) : (
+                                <div className="text-[10px] text-slate-400 italic bg-slate-50 p-2 border border-slate-200 text-center">
+                                  Sin sala virtual configurada.
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {myClassrooms.length === 0 && (
+                      <div className={`col-span-full text-center py-8 ${t.cardBg} border ${t.cardBorder} text-slate-400 italic text-xs`}>
+                        No tienes cursos asignados por el momento.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+
+        {/* TAB 2: MI PERFIL & DISEÑO */}
+        {activeTab === 'perfil' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Profile Preview Card */}
+            <div className="space-y-6 lg:col-span-1">
+              <h3 className="text-sm font-bold uppercase tracking-wider">Vista Previa</h3>
+              <div className={`${t.cardBg} ${t.cardBorder} p-6 ${t.cardShadow} text-center flex flex-col items-center`}>
+                {customPhotoUrl ? (
+                  <img
+                    src={customPhotoUrl}
+                    alt={student.name}
+                    className="w-24 h-24 rounded-full border-4 border-[#0d1b2e] object-cover mb-4 shadow-[3px_3px_0_0_#2a4e7c]"
+                    onError={() => setCustomPhotoUrl('')}
+                  />
+                ) : (
+                  <div className="w-24 h-24 rounded-full bg-[#f0f4f8] text-5xl flex items-center justify-center border-4 border-[#0d1b2e] mb-4 shadow-[3px_3px_0_0_#2a4e7c]">
+                    {selectedAvatar}
+                  </div>
+                )}
+
+                <h4 className="text-lg font-bold">{student.name}</h4>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{student.email}</span>
+
+                <div className="my-4 border-t border-slate-200/50 w-full pt-4">
+                  <p className="text-xs italic text-slate-500 px-2 leading-relaxed">
+                    "{bio || 'Sin biografía'}"
+                  </p>
+                </div>
+
+                <div className={`mt-2 text-[10px] font-bold px-3 py-1 ${t.badgeBg} rounded-full`}>
+                  Curso: {student.course}
+                </div>
+              </div>
+            </div>
+
+            {/* Customization Form & Themes */}
+            <div className="space-y-8 lg:col-span-2">
+              
+              {/* Form Customization */}
+              <div className={`${t.cardBg} ${t.cardBorder} p-6 ${t.cardShadow} space-y-5 text-xs`}>
+                <h3 className="text-sm font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4" /> Personalizar Perfil
+                </h3>
+
+                <div>
+                  <label className="font-bold text-slate-500 block mb-1.5">Seleccionar Avatar (Emoji)</label>
+                  <div className="flex flex-wrap gap-2">
+                    {avatarChoices.map(emoji => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        onClick={() => { setSelectedAvatar(emoji); setCustomPhotoUrl(''); }}
+                        className={`w-10 h-10 text-xl border-2 rounded flex items-center justify-center hover:bg-slate-100 transition-all cursor-pointer ${
+                          selectedAvatar === emoji && !customPhotoUrl ? 'border-[#2a4e7c] bg-[#f0f4f8]' : 'border-slate-350 bg-white'
+                        }`}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-500 block mb-1.5 flex items-center gap-1">
+                    <Image className="w-3.5 h-3.5" /> O Vincular Foto de Perfil (URL)
+                  </label>
+                  <input
+                    type="url"
+                    value={customPhotoUrl}
+                    onChange={(e) => setCustomPhotoUrl(e.target.value)}
+                    placeholder="https://ejemplo.com/tu-foto.jpg"
+                    className="w-full p-2.5 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-slate-900 font-semibold"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">Ingresa el enlace directo a una imagen JPG/PNG para usarla en lugar del avatar.</p>
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-500 block mb-1.5">Biografía corta</label>
+                  <textarea
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    placeholder="Cuéntanos un poco sobre ti..."
+                    rows={3}
+                    maxLength={160}
+                    className="w-full p-2.5 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-slate-900 resize-none font-semibold"
+                  />
+                  <p className="text-[9px] text-slate-400 text-right mt-1">{bio.length}/160 caracteres</p>
+                </div>
+              </div>
+
+              {/* Theme Selector */}
+              <div className={`${t.cardBg} ${t.cardBorder} p-6 ${t.cardShadow} space-y-4`}>
+                <h3 className="text-sm font-bold uppercase tracking-wider flex items-center gap-1.5 text-xs">
+                  <Palette className="w-4 h-4" /> Seleccionar Tema del Panel
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {/* Theme 1 Card */}
+                  <button
+                    onClick={() => setPalette('default')}
+                    className={`p-4 border-2 text-left cursor-pointer transition-all flex flex-col justify-between h-28 ${
+                      palette === 'default'
+                        ? 'border-[#2a4e7c] bg-[#f0f4f8] shadow-[3px_3px_0_0_#2a4e7c]'
+                        : 'border-slate-300 bg-white hover:border-slate-400'
+                    }`}
+                  >
+                    <div>
+                      <span className="text-xs font-bold text-[#0d1b2e] block">Paleta 1</span>
+                      <span className="text-[9px] text-[#6180a6] uppercase font-bold">Default Blue</span>
+                    </div>
+                    <div className="flex gap-1">
+                      <span className="w-3.5 h-3.5 rounded-full bg-[#0d1b2e]"></span>
+                      <span className="w-3.5 h-3.5 rounded-full bg-[#2a4e7c]"></span>
+                      <span className="w-3.5 h-3.5 rounded-full bg-[#a3b8cc]"></span>
+                    </div>
+                  </button>
+
+                  {/* Theme 2 Card */}
+                  <button
+                    onClick={() => setPalette('cyberpunk')}
+                    className={`p-4 border-2 text-left cursor-pointer transition-all flex flex-col justify-between h-28 ${
+                      palette === 'cyberpunk'
+                        ? 'border-[#ff00ff] bg-[#8b2ae2]/10 shadow-[3px_3px_0_0_#ff00ff]'
+                        : 'border-slate-300 bg-white hover:border-slate-400'
+                    }`}
+                  >
+                    <div>
+                      <span className="text-xs font-bold text-slate-800 block">Paleta 2</span>
+                      <span className="text-[9px] text-[#ff00ff] uppercase font-bold">Cyberpunk / Neon</span>
+                    </div>
+                    <div className="flex gap-1">
+                      <span className="w-3.5 h-3.5 rounded-full bg-[#1a0033]"></span>
+                      <span className="w-3.5 h-3.5 rounded-full bg-[#ff00ff]"></span>
+                      <span className="w-3.5 h-3.5 rounded-full bg-[#7b6eff]"></span>
+                    </div>
+                  </button>
+
+                  {/* Theme 3 Card */}
+                  <button
+                    onClick={() => setPalette('playcode')}
+                    className={`p-4 border-2 text-left cursor-pointer transition-all flex flex-col justify-between h-28 ${
+                      palette === 'playcode'
+                        ? 'border-[#001f4a] bg-slate-100 shadow-[3px_3px_0_0_#f2900f]'
+                        : 'border-slate-300 bg-white hover:border-slate-400'
+                    }`}
+                  >
+                    <div>
+                      <span className="text-xs font-bold text-[#001f4a] block">Paleta 3</span>
+                      <span className="text-[9px] text-[#f2900f] uppercase font-bold">Play Code Web</span>
+                    </div>
+                    <div className="flex gap-1">
+                      <span className="w-3.5 h-3.5 rounded-full bg-[#001f4a]"></span>
+                      <span className="w-3.5 h-3.5 rounded-full bg-[#ffe66d]"></span>
+                      <span className="w-3.5 h-3.5 rounded-full bg-[#f2900f]"></span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Save Button */}
+              <div className="flex items-center gap-4 justify-end">
+                {isSaved && (
+                  <span className="text-xs font-bold text-emerald-600 animate-pulse bg-emerald-55 border border-emerald-300 px-3 py-1 rounded">
+                    ¡Cambios guardados con éxito! ✓
+                  </span>
+                )}
+                <button
+                  onClick={handleSave}
+                  className={`px-6 py-2.5 ${t.primaryBtnBg} ${t.primaryBtnHover} ${t.primaryBtnText} text-xs font-bold transition-all shadow-[3px_3px_0_0_#000000] active:translate-y-[3px] active:shadow-[0px_0px_0_0_#000000] cursor-pointer`}
+                >
+                  Guardar Perfil y Tema
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: FORO ESTUDIANTIL */}
+        {activeTab === 'foro' && (
+          <div className="space-y-6 max-w-4xl mx-auto">
+            {/* Cabecera del Foro y Formulario */}
+            {!selectedPostId && (
+              <>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-200">
+                  <div>
+                    <h2 className={`text-xl font-bold ${t.textColor}`}>Foro de Discusión</h2>
+                    <p className={`text-xs ${t.subtextColor} font-semibold mt-1`}>
+                      Comparte tus dudas, ideas, proyectos y reacciona a las publicaciones de tus compañeros.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowAddPostForm(!showAddPostForm)}
+                    className={`px-4 py-2 text-xs font-bold transition-all shadow-[2px_2px_0_0_#000000] active:translate-y-[2px] active:shadow-[0px_0px_0_0_#000000] cursor-pointer flex items-center gap-1.5 ${
+                      showAddPostForm 
+                        ? 'bg-slate-200 hover:bg-slate-300 text-slate-700 border-2 border-slate-400' 
+                        : `${t.primaryBtnBg} ${t.primaryBtnHover} ${t.primaryBtnText}`
+                    }`}
+                  >
+                    {showAddPostForm ? 'Cancelar' : 'Nueva Publicación'} <Plus className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {/* Buscador del Foro */}
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <Search className="w-4 h-4 text-slate-400" />
+                  </span>
+                  <input
+                    type="text"
+                    value={forumSearchQuery}
+                    onChange={(e) => setForumSearchQuery(e.target.value)}
+                    placeholder="Buscar publicaciones por título, contenido o autor..."
+                    className="w-full pl-9 pr-9 py-2 border-2 border-[#0d1b2e] rounded text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#2a4e7c] text-slate-900 bg-white"
+                  />
+                  {forumSearchQuery && (
+                    <button
+                      onClick={() => setForumSearchQuery('')}
+                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Formulario para nuevo Post */}
+                {showAddPostForm && (
+                  <form onSubmit={handleCreatePost} className={`${t.cardBg} ${t.cardBorder} ${t.cardShadow} p-5 space-y-4`}>
+                    <h3 className={`text-sm font-bold uppercase tracking-wider ${t.textColor}`}>Crear Nueva Publicación</h3>
+                    
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-600 block">Título</label>
+                      <input
+                        type="text"
+                        required
+                        value={newPostTitle}
+                        onChange={(e) => setNewPostTitle(e.target.value)}
+                        placeholder="Ej. ¿Cómo centrar un div en CSS? 🤔"
+                        className="w-full px-3 py-2 border-2 border-[#0d1b2e] rounded text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#2a4e7c] text-slate-900 bg-white"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-655 block">Mensaje / Contenido</label>
+                      <textarea
+                        required
+                        rows={4}
+                        value={newPostContent}
+                        onChange={(e) => setNewPostContent(e.target.value)}
+                        placeholder="Describe tu duda o comparte el código/proyecto que estás construyendo..."
+                        className="w-full px-3 py-2 border-2 border-[#0d1b2e] rounded text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#2a4e7c] text-slate-900 bg-white"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-600 block">Subir Imagen (Opcional)</label>
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-2 file:border-[#0d1b2e] file:text-xs file:font-bold file:bg-[#f0f4f8] file:text-[#2a4e7c] file:cursor-pointer hover:file:bg-slate-100"
+                        />
+                        {newPostImage && (
+                          <button
+                            type="button"
+                            onClick={() => setNewPostImage(null)}
+                            className="text-xs text-red-650 hover:underline font-bold"
+                          >
+                            Quitar Imagen
+                          </button>
+                        )}
+                      </div>
+
+                      {newPostImage && (
+                        <div className="mt-2 border-2 border-[#0d1b2e] rounded max-w-xs overflow-hidden shadow-[2px_2px_0_0_#0d1b2e]">
+                          <img src={newPostImage} alt="Preview" className="w-full object-cover max-h-48" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="pt-2 flex justify-end">
+                      <button
+                        type="submit"
+                        className={`px-5 py-2 ${t.primaryBtnBg} ${t.primaryBtnHover} ${t.primaryBtnText} text-xs font-bold transition-all shadow-[2px_2px_0_0_#000000] active:translate-y-[2px] active:shadow-[0px_0px_0_0_#000000] cursor-pointer`}
+                      >
+                        Publicar en el Foro
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </>
+            )}
+
+            {/* Listado de Posts */}
+            {selectedPostId ? (
+              (() => {
+                const post = posts.find(p => p.id === selectedPostId);
+                if (!post) {
+                  setSelectedPostId(null);
+                  return null;
+                }
+                const hasLiked = post.likedBy.includes(student.email);
+                const userReaction = post.reactedBy?.[student.email];
+                return (
+                  <div className="space-y-4 animate-in fade-in zoom-in-95 duration-200">
+                    <button
+                      onClick={() => setSelectedPostId(null)}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 font-bold text-xs border-2 border-[#0d1b2e] bg-white hover:bg-slate-50 transition-all cursor-pointer shadow-[2px_2px_0_0_#000000] active:translate-y-[2px] active:shadow-[0px_0px_0_0_#000000] text-slate-800"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" /> Volver al Foro
+                    </button>
+
+                    <div className={`${t.cardBg} ${t.cardBorder} ${t.cardShadow} p-5 flex flex-col gap-4`}>
+                      {/* Header: Autor y Fecha */}
+                      <div className="flex justify-between items-center pb-2.5 border-b border-slate-100">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full bg-[#f0f4f8] border border-slate-300 flex items-center justify-center font-bold text-sm shadow-[1px_1px_0_0_#0d1b2e]">
+                            {post.authorAvatar || '🚀'}
+                          </div>
+                          <div>
+                            <span className="text-xs font-bold text-slate-800 block leading-tight">{post.authorName}</span>
+                            <span className="text-[9px] text-slate-400 block font-medium">{post.authorEmail}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-3">
+                          <span className="text-[10px] text-slate-400 font-bold bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
+                            {new Date(post.createdAt).toLocaleDateString()} {new Date(post.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                          {post.authorEmail === student.email && (
+                            <button
+                              onClick={() => {
+                                handleDeletePost(post.id);
+                                setSelectedPostId(null);
+                              }}
+                              className="text-slate-400 hover:text-red-655 p-1 cursor-pointer transition-colors"
+                              title="Eliminar Publicación"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Titulo y Mensaje */}
+                      <div>
+                        <h3 className="text-sm font-bold text-[#0d1b2e] mb-1.5 leading-snug">{post.title}</h3>
+                        <p className="text-xs text-slate-655 whitespace-pre-wrap leading-relaxed font-semibold">{post.content}</p>
+                      </div>
+
+                      {/* Imagen cargada */}
+                      {post.imageUrl && (
+                        <div className="border-2 border-[#0d1b2e] rounded overflow-hidden max-w-lg shadow-[3px_3px_0_0_#0d1b2e] group">
+                          <img 
+                            src={post.imageUrl} 
+                            alt={post.title} 
+                            className="w-full object-cover max-h-[350px] transition-transform duration-300 group-hover:scale-101" 
+                          />
+                        </div>
+                      )}
+
+                      {/* Botones de Interaccion (Likes y Reacciones) */}
+                      <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100">
+                        {/* Botón de Like */}
+                        <button
+                          onClick={() => handleLikePost(post.id)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold transition-all cursor-pointer ${
+                            hasLiked
+                              ? 'bg-rose-50 border-rose-300 text-rose-600 shadow-[1px_1px_0_0_#e11d48]'
+                              : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100 shadow-[1px_1px_0_0_#cbd5e1]'
+                          }`}
+                        >
+                          <Heart className={`w-3.5 h-3.5 ${hasLiked ? 'fill-rose-500 text-rose-600' : ''}`} />
+                          <span>{post.likes}</span>
+                        </button>
+
+                        {/* Reaction Emojis Picker */}
+                        <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-full px-2 py-0.5 shadow-[1px_1px_0_0_#cbd5e1]">
+                          {['🚀', '🎉', '💻', '🧠'].map((emoji) => {
+                            const count = post.reactions?.[emoji] || 0;
+                            const isSelected = userReaction === emoji;
+                            return (
+                              <button
+                                key={emoji}
+                                onClick={() => handleReactToPost(post.id, emoji)}
+                                className={`px-2 py-1 rounded text-xs flex items-center gap-1 transition-all cursor-pointer ${
+                                  isSelected 
+                                    ? 'bg-[#ffe66d] border border-[#001f4a] font-bold scale-110' 
+                                    : 'hover:bg-slate-200 border border-transparent'
+                                }`}
+                                title={`Reaccionar con ${emoji}`}
+                              >
+                                <span>{emoji}</span>
+                                {count > 0 && <span className="text-[9px] font-bold text-slate-600">{count}</span>}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Seccion de Comentarios */}
+                      <div className="bg-slate-50 border border-slate-200 rounded p-4 space-y-4">
+                        <h4 className="text-xs font-bold text-[#0d1b2e] uppercase tracking-wider flex items-center gap-1">
+                          <MessageSquare className="w-3.5 h-3.5 text-[#2a4e7c]" />
+                          Comentarios ({post.comments.length})
+                        </h4>
+                        
+                        {/* Lista de comentarios */}
+                        {post.comments.length > 0 ? (
+                          <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+                            {post.comments.map((comment) => (
+                              <div key={comment.id} className="bg-white border border-slate-200 p-2.5 rounded shadow-[1.5px_1.5px_0_0_#cbd5e1]">
+                                <div className="flex justify-between items-center mb-1">
+                                  <span className="text-[10px] font-bold text-slate-800">{comment.authorName}</span>
+                                  <span className="text-[8px] text-slate-400 font-semibold bg-slate-50 px-1 rounded">
+                                    {new Date(comment.createdAt).toLocaleDateString()} {new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-slate-655 font-semibold">{comment.content}</p>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-slate-400 italic font-medium">Nadie ha comentado todavía. ¡Sé el primero!</p>
+                        )}
+
+                        {/* Input para agregar comentario */}
+                        <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
+                          <input
+                            type="text"
+                            value={commentInputs[post.id] || ''}
+                            onChange={(e) => setCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))}
+                            placeholder="Escribe un comentario..."
+                            className="flex-1 px-3 py-1.5 border-2 border-slate-300 rounded text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#2a4e7c] text-slate-900 bg-white"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleAddComment(post.id);
+                            }}
+                          />
+                          <button
+                            onClick={() => handleAddComment(post.id)}
+                            className="p-1.5 bg-[#2a4e7c] hover:bg-[#1e385c] text-white rounded border border-[#0d1b2e] shadow-[1px_1px_0_0_#000000] active:translate-y-[1px] active:shadow-[0px_0px_0_0_#000000] cursor-pointer"
+                            title="Enviar comentario"
+                          >
+                            <Send className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()
+            ) : (
+              (() => {
+                const query = forumSearchQuery.toLowerCase().trim();
+                const filteredPosts = query
+                  ? posts.filter(post => 
+                      post.title.toLowerCase().includes(query) || 
+                      post.content.toLowerCase().includes(query) || 
+                      post.authorName.toLowerCase().includes(query)
+                    )
+                  : posts;
+                return (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                      {filteredPosts.map((post) => (
+                        <div 
+                          key={post.id} 
+                          onClick={() => setSelectedPostId(post.id)}
+                          className={`${t.cardBg} ${t.cardBorder} ${t.cardShadow} flex flex-col justify-between overflow-hidden hover:translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#000000] cursor-pointer transition-all`}
+                        >
+                          {post.imageUrl ? (
+                            <div className="w-full h-32 overflow-hidden border-b-2 border-[#0d1b2e] shrink-0">
+                              <img
+                                src={post.imageUrl}
+                                alt={post.title}
+                                className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-300"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-full h-32 bg-gradient-to-br from-[#0d1b2e] to-[#1e385c] border-b-2 border-[#0d1b2e] flex items-center justify-center shrink-0">
+                              <MessageSquare className="w-10 h-10 text-[#a3b8cc]/20" />
+                            </div>
+                          )}
+
+                          <div className="p-4 flex-1 flex flex-col justify-between gap-3">
+                            <div>
+                              {/* Autor & Fecha */}
+                              <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-100">
+                                <div className="w-6 h-6 rounded-full bg-[#f0f4f8] border border-slate-350 flex items-center justify-center font-bold text-xs shadow-[0.5px_0.5px_0_0_#0d1b2e]">
+                                  {post.authorAvatar || '🚀'}
+                                </div>
+                                <div className="min-w-0">
+                                  <span className="text-[10px] font-bold text-slate-800 block truncate leading-none">{post.authorName}</span>
+                                  <span className="text-[8px] text-slate-455 block font-mono mt-0.5 leading-none">
+                                    {new Date(post.createdAt).toLocaleDateString()}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <h4 className="text-xs font-bold mb-1 line-clamp-2 leading-tight text-[#0d1b2e]">{post.title}</h4>
+                              <p className="text-[10px] text-slate-500 line-clamp-3 font-semibold leading-relaxed">{post.content}</p>
+                            </div>
+
+                            {/* Footer: Likes y Comentarios */}
+                            <div className="border-t border-slate-100 pt-2.5 flex items-center justify-between text-[9px] font-bold text-slate-500">
+                              <div className="flex items-center gap-2">
+                                <span>❤️ {post.likes}</span>
+                                <span>💬 {post.comments?.length || 0}</span>
+                              </div>
+                              <span className="text-[#2a4e7c] uppercase hover:underline">Ver más &rarr;</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {filteredPosts.length === 0 && (
+                      <div className="p-10 text-center bg-white border-2 border-dashed border-slate-350 rounded space-y-2">
+                        <MessageSquare className="w-8 h-8 text-slate-300 mx-auto" />
+                        <p className="text-slate-400 text-xs italic">
+                          {posts.length === 0 
+                            ? "El foro está vacío. ¡Publica algo para iniciar la conversación!" 
+                            : "No se encontraron publicaciones que coincidan con tu búsqueda."}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()
+            )}
+          </div>
+        )}
+      </main>
+    </div>
+  );
+};

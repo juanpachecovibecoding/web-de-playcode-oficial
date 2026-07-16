@@ -39,7 +39,7 @@ interface Student {
   id: string;
   name: string;
   email: string;
-  course: string;
+  course?: string;
   status: 'Activo' | 'Completado' | 'Pendiente';
   password?: string;
   completedLessonIds?: string[];
@@ -124,6 +124,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   platforms,
   setPlatforms
 }) => {
+  void setCourses;
   const [activeTab, setActiveTab] = useState<'inicio' | 'cursos' | 'usuarios' | 'docentes' | 'clases' | 'meetings' | 'contenido' | 'config' | 'foro' | 'plataformas'>('inicio');
 
   // Platforms state is received from props!
@@ -143,7 +144,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [editStudentName, setEditStudentName] = useState('');
   const [editStudentEmail, setEditStudentEmail] = useState('');
   const [editStudentRole, setEditStudentRole] = useState<'admin' | 'docente' | 'alumno' | 'profesor'>('alumno');
-  const [editStudentCourse, setEditStudentCourse] = useState('');
   const [editStudentPassword, setEditStudentPassword] = useState('');
   const [editStudentPlatformId, setEditStudentPlatformId] = useState('');
   const [editStudentAulaId, setEditStudentAulaId] = useState('');
@@ -309,13 +309,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setPlatforms(prev => prev.map(p =>
       p.id === platformId
         ? {
-            ...p,
-            aulas: p.aulas.map(a =>
-              a.id === aulaId
-                ? { ...a, name: editAulaName.trim(), ageRange: editAulaAge.trim(), modality: editAulaModality, description: editAulaDesc.trim(), schedule: editAulaSchedule.trim(), courseIds: editAulaCourseIds }
-                : a
-            )
-          }
+          ...p,
+          aulas: p.aulas.map(a =>
+            a.id === aulaId
+              ? { ...a, name: editAulaName.trim(), ageRange: editAulaAge.trim(), modality: editAulaModality, description: editAulaDesc.trim(), schedule: editAulaSchedule.trim(), courseIds: editAulaCourseIds }
+              : a
+          )
+        }
         : p
     ));
     setEditAulaCourseIds([]);
@@ -446,7 +446,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const userEmail = 'juanpacheco@playcode.com.ar';
     const updated = posts.map(post => {
       if (post.id !== postId) return post;
-      
+
       const postReactedBy = post.reactedBy || {};
       const postReactions = post.reactions || { '🚀': 0, '🎉': 0, '💻': 0, '🧠': 0 };
 
@@ -509,7 +509,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
   const [newStudentName, setNewStudentName] = useState('');
   const [newStudentEmail, setNewStudentEmail] = useState('');
-  const [newStudentCourse, setNewStudentCourse] = useState(classrooms[0]?.name || '');
   const [newStudentPassword, setNewStudentPassword] = useState('123456');
   const [newStudentRole, setNewStudentRole] = useState<'admin' | 'docente' | 'alumno' | 'profesor'>('alumno');
 
@@ -567,7 +566,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       id: Date.now().toString(),
       name: newStudentName,
       email: newStudentEmail,
-      course: newStudentCourse,
       status: 'Activo',
       password: newStudentPassword || '123456',
       role: newStudentRole,
@@ -575,10 +573,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       aulaId: newStudentAulaId || undefined
     };
     setStudents([...students, newStudent]);
-    
-    // Increment student count in corresponding course
-    setCourses(courses.map(c => c.title === newStudentCourse ? { ...c, studentsCount: c.studentsCount + 1 } : c));
-    
+
     setNewStudentName('');
     setNewStudentEmail('');
     setNewStudentPassword('123456');
@@ -590,10 +585,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const handleDeleteStudent = (id: string) => {
     if (confirm('¿Estás seguro de eliminar a este usuario?')) {
-      const studentToDelete = students.find(s => s.id === id);
-      if (studentToDelete) {
-        setCourses(courses.map(c => c.title === studentToDelete.course ? { ...c, studentsCount: Math.max(0, c.studentsCount - 1) } : c));
-      }
       setStudents(students.filter(s => s.id !== id));
     }
   };
@@ -613,7 +604,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setEditStudentName(student.name);
     setEditStudentEmail(student.email);
     setEditStudentRole(student.role || 'alumno');
-    setEditStudentCourse(student.course);
     setEditStudentPassword(student.password || '123456');
     setEditStudentPlatformId(student.platformId || '');
     setEditStudentAulaId(student.aulaId || '');
@@ -631,7 +621,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           name: editStudentName.trim(),
           email: editStudentEmail.trim(),
           role: editStudentRole,
-          course: editStudentCourse,
           password: editStudentPassword || '123456',
           platformId: editStudentPlatformId || undefined,
           aulaId: editStudentAulaId || undefined
@@ -644,7 +633,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setEditStudentName('');
     setEditStudentEmail('');
     setEditStudentRole('alumno');
-    setEditStudentCourse('');
     setEditStudentPassword('');
     setEditStudentPlatformId('');
     setEditStudentAulaId('');
@@ -753,7 +741,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setSelectedEditClassStudents(cls.students);
     setSelectedEditClassMeeting(cls.meetingId || '');
     setSelectedEditClassLessons(cls.lessonIds || []);
-    
+
     const selectedMeeting = meetings.find(m => m.id === cls.meetingId);
     setEditMeetingSearch(selectedMeeting ? selectedMeeting.name : '');
     setEditStudentSearch('');
@@ -802,99 +790,90 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         <nav className="flex-1 p-4 space-y-2">
           <button
             onClick={() => setActiveTab('inicio')}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${
-              activeTab === 'inicio'
+            className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${activeTab === 'inicio'
                 ? 'bg-[#a3b8cc] text-[#0d1b2e] border-[#0d1b2e] shadow-[2px_2px_0_0_#ffffff] translate-x-0.5 -translate-y-0.5'
                 : 'border-transparent text-slate-400 hover:text-white hover:bg-[#1e385c]/50'
-            }`}
+              }`}
           >
             <LayoutDashboard className="w-3.5 h-3.5" /> INICIO / MÉTRICAS
           </button>
 
           <button
             onClick={() => setActiveTab('clases')}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${
-              activeTab === 'clases'
+            className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${activeTab === 'clases'
                 ? 'bg-[#a3b8cc] text-[#0d1b2e] border-[#0d1b2e] shadow-[2px_2px_0_0_#ffffff] translate-x-0.5 -translate-y-0.5'
                 : 'border-transparent text-slate-400 hover:text-white hover:bg-[#1e385c]/50'
-            }`}
+              }`}
           >
             <BookOpen className="w-3.5 h-3.5" /> CURSOS
           </button>
 
           <button
             onClick={() => setActiveTab('meetings')}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${
-              activeTab === 'meetings'
+            className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${activeTab === 'meetings'
                 ? 'bg-[#a3b8cc] text-[#0d1b2e] border-[#0d1b2e] shadow-[2px_2px_0_0_#ffffff] translate-x-0.5 -translate-y-0.5'
                 : 'border-transparent text-slate-400 hover:text-white hover:bg-[#1e385c]/50'
-            }`}
+              }`}
           >
             <Video className="w-3.5 h-3.5" /> MEETINGS
           </button>
 
           <button
             onClick={() => setActiveTab('contenido')}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${
-              activeTab === 'contenido'
+            className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${activeTab === 'contenido'
                 ? 'bg-[#a3b8cc] text-[#0d1b2e] border-[#0d1b2e] shadow-[2px_2px_0_0_#ffffff] translate-x-0.5 -translate-y-0.5'
                 : 'border-transparent text-slate-400 hover:text-white hover:bg-[#1e385c]/50'
-            }`}
+              }`}
           >
             <Code2 className="w-3.5 h-3.5" /> CONTENIDO / LECCIONES
           </button>
 
           <button
             onClick={() => setActiveTab('usuarios')}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${
-              activeTab === 'usuarios'
+            className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${activeTab === 'usuarios'
                 ? 'bg-[#a3b8cc] text-[#0d1b2e] border-[#0d1b2e] shadow-[2px_2px_0_0_#ffffff] translate-x-0.5 -translate-y-0.5'
                 : 'border-transparent text-slate-400 hover:text-white hover:bg-[#1e385c]/50'
-            }`}
+              }`}
           >
             <Users className="w-3.5 h-3.5" /> USUARIOS
           </button>
 
           <button
             onClick={() => setActiveTab('docentes')}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${
-              activeTab === 'docentes'
+            className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${activeTab === 'docentes'
                 ? 'bg-[#a3b8cc] text-[#0d1b2e] border-[#0d1b2e] shadow-[2px_2px_0_0_#ffffff] translate-x-0.5 -translate-y-0.5'
                 : 'border-transparent text-slate-400 hover:text-white hover:bg-[#1e385c]/50'
-            }`}
+              }`}
           >
             <GraduationCap className="w-3.5 h-3.5" /> DOCENTES
           </button>
 
           <button
             onClick={() => setActiveTab('plataformas')}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${
-              activeTab === 'plataformas'
+            className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${activeTab === 'plataformas'
                 ? 'bg-[#a3b8cc] text-[#0d1b2e] border-[#0d1b2e] shadow-[2px_2px_0_0_#ffffff] translate-x-0.5 -translate-y-0.5'
                 : 'border-transparent text-slate-400 hover:text-white hover:bg-[#1e385c]/50'
-            }`}
+              }`}
           >
             <Building2 className="w-3.5 h-3.5" /> PLATAFORMAS
           </button>
 
           <button
             onClick={() => setActiveTab('foro')}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${
-              activeTab === 'foro'
+            className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${activeTab === 'foro'
                 ? 'bg-[#a3b8cc] text-[#0d1b2e] border-[#0d1b2e] shadow-[2px_2px_0_0_#ffffff] translate-x-0.5 -translate-y-0.5'
                 : 'border-transparent text-slate-400 hover:text-white hover:bg-[#1e385c]/50'
-            }`}
+              }`}
           >
             <MessageSquare className="w-3.5 h-3.5" /> FOROS (MODERAR)
           </button>
 
           <button
             onClick={() => setActiveTab('config')}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${
-              activeTab === 'config'
+            className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${activeTab === 'config'
                 ? 'bg-[#a3b8cc] text-[#0d1b2e] border-[#0d1b2e] shadow-[2px_2px_0_0_#ffffff] translate-x-0.5 -translate-y-0.5'
                 : 'border-transparent text-slate-400 hover:text-white hover:bg-[#1e385c]/50'
-            }`}
+              }`}
           >
             <Settings className="w-3.5 h-3.5" /> CONFIGURACIÓN
           </button>
@@ -934,13 +913,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </header>
 
         {/* Dynamic Tab Rendering */}
-        
+
         {/* INICIO TAB */}
         {activeTab === 'inicio' && (
           <div className="space-y-8">
             {/* KPI Cards Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              
+
               <div className="bg-white border-2 border-[#0d1b2e] p-5 shadow-[4px_4px_0_0_#0d1b2e] hover:-translate-y-0.5 transition-all">
                 <span className="text-[10px] font-bold text-[#6180a6] uppercase block mb-1">Usuarios Registrados</span>
                 <span className="text-3xl font-bold text-[#0d1b2e] block">{totalStudents}</span>
@@ -1206,7 +1185,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <th className="p-3 font-semibold uppercase tracking-wider">Nombre</th>
                     <th className="p-3 font-semibold uppercase tracking-wider">Correo</th>
                     <th className="p-3 font-semibold uppercase tracking-wider">Rol</th>
-                    <th className="p-3 font-semibold uppercase tracking-wider">Curso</th>
                     <th className="p-3 font-semibold uppercase tracking-wider">Plataforma / Aula</th>
                     <th className="p-3 font-semibold uppercase tracking-wider">Estado</th>
                     <th className="p-3 font-semibold uppercase tracking-wider">Acciones</th>
@@ -1224,7 +1202,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <td className="p-3">
                       <span className="px-2.5 py-1 bg-amber-100 text-amber-700 border-2 border-amber-400 font-bold text-[10px] rounded shadow-[1px_1px_0_0_#b45309]">Admin</span>
                     </td>
-                    <td className="p-3 text-[#2a4e7c]">—</td>
                     <td className="p-3 text-[#2a4e7c]">—</td>
                     <td className="p-3">
                       <span className="px-3 py-1 bg-[#dcfce7] text-[#16a34a] border-2 border-[#0d1b2e] font-bold text-[10px] rounded">Activo</span>
@@ -1252,7 +1229,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           <option value="admin">Admin</option>
                         </select>
                       </td>
-                      <td className="p-3 text-[#2a4e7c]">{student.course}</td>
                       <td className="p-3">
                         {student.platformId ? (() => {
                           const plat = platforms.find(p => p.id === student.platformId);
@@ -1270,13 +1246,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       <td className="p-3 flex items-center gap-2">
                         <button
                           onClick={() => toggleStudentStatus(student.id)}
-                          className={`px-3 py-1 border-2 border-[#0d1b2e] font-bold text-[10px] rounded cursor-pointer transition-all shadow-[1px_1px_0_0_#1e3a8a] active:translate-y-[1px] active:shadow-[0px_0px_0_0_#0f172a] ${
-                            student.status === 'Activo'
+                          className={`px-3 py-1 border-2 border-[#0d1b2e] font-bold text-[10px] rounded cursor-pointer transition-all shadow-[1px_1px_0_0_#1e3a8a] active:translate-y-[1px] active:shadow-[0px_0px_0_0_#0f172a] ${student.status === 'Activo'
                               ? 'bg-[#dcfce7] text-[#16a34a]'
                               : student.status === 'Completado'
-                              ? 'bg-[#e0f2fe] text-[#0284c7]'
-                              : 'bg-[#fef9c3] text-[#ca8a04]'
-                          }`}
+                                ? 'bg-[#e0f2fe] text-[#0284c7]'
+                                : 'bg-[#fef9c3] text-[#ca8a04]'
+                            }`}
                           title="Cambiar estado"
                         >
                           {student.status}
@@ -1325,7 +1300,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               Cuerpo Docente y Directivos
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              
+
               <div className="bg-white border-2 border-[#0d1b2e] p-5 shadow-[4px_4px_0_0_#0d1b2e]">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded bg-[#f0f4f8] text-[#2a4e7c] flex items-center justify-center font-bold text-base border-2 border-[#0d1b2e] shadow-[1px_1px_0_0_#000000]">
@@ -1461,7 +1436,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 {showAddPostForm && (
                   <form onSubmit={handleCreatePost} className="bg-white border-2 border-[#0d1b2e] p-5 shadow-[4px_4px_0_0_#0d1b2e] space-y-4">
                     <h3 className="text-xs font-bold uppercase tracking-wider text-[#0d1b2e]">Crear Nueva Publicación como Administrador</h3>
-                    
+
                     <div className="space-y-1">
                       <label className="text-[10px] font-bold text-slate-655 block">Título</label>
                       <input
@@ -1685,11 +1660,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         {/* Botón de Like */}
                         <button
                           onClick={() => handleLikePostInteractive(post.id)}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold transition-all cursor-pointer ${
-                            hasLiked
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold transition-all cursor-pointer ${hasLiked
                               ? 'bg-rose-50 border-rose-300 text-rose-600 shadow-[1px_1px_0_0_#e11d48]'
                               : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100 shadow-[1px_1px_0_0_#cbd5e1]'
-                          }`}
+                            }`}
                         >
                           <Heart className={`w-3.5 h-3.5 ${hasLiked ? 'fill-rose-500 text-rose-600' : ''}`} />
                           <span>{post.likes}</span>
@@ -1704,11 +1678,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               <button
                                 key={emoji}
                                 onClick={() => handleReactToPostInteractive(post.id, emoji)}
-                                className={`px-2 py-1 rounded text-xs flex items-center gap-1 transition-all cursor-pointer ${
-                                  isSelected 
-                                    ? 'bg-[#ffe66d] border border-[#001f4a] font-bold scale-110' 
+                                className={`px-2 py-1 rounded text-xs flex items-center gap-1 transition-all cursor-pointer ${isSelected
+                                    ? 'bg-[#ffe66d] border border-[#001f4a] font-bold scale-110'
                                     : 'hover:bg-slate-200 border border-transparent'
-                                }`}
+                                  }`}
                                 title={`Reaccionar con ${emoji}`}
                               >
                                 <span>{emoji}</span>
@@ -1783,18 +1756,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               (() => {
                 const query = forumSearchQuery.toLowerCase().trim();
                 const filteredPosts = query
-                  ? posts.filter(post => 
-                      post.title.toLowerCase().includes(query) || 
-                      post.content.toLowerCase().includes(query) || 
-                      post.authorName.toLowerCase().includes(query)
-                    )
+                  ? posts.filter(post =>
+                    post.title.toLowerCase().includes(query) ||
+                    post.content.toLowerCase().includes(query) ||
+                    post.authorName.toLowerCase().includes(query)
+                  )
                   : posts;
                 return (
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                       {filteredPosts.map((post) => (
-                        <div 
-                          key={post.id} 
+                        <div
+                          key={post.id}
                           onClick={() => setSelectedPostId(post.id)}
                           className="bg-white border-2 border-[#0d1b2e] shadow-[4px_4px_0_0_#000000] flex flex-col justify-between overflow-hidden hover:translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#000000] cursor-pointer transition-all"
                         >
@@ -1847,8 +1820,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     {filteredPosts.length === 0 && (
                       <div className="p-12 text-center bg-white border-2 border-dashed border-slate-300 rounded shadow-[3px_3px_0_0_#cbd5e1]">
                         <p className="text-slate-400 text-xs italic font-medium">
-                          {posts.length === 0 
-                            ? "No hay ninguna publicación en el foro actualmente." 
+                          {posts.length === 0
+                            ? "No hay ninguna publicación en el foro actualmente."
                             : "No se encontraron publicaciones que coincidan con tu búsqueda."}
                         </p>
                       </div>
@@ -2004,88 +1977,41 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             <tbody>
                               {platform.aulas.map(aula => (
                                 editingAula?.platformId === platform.id && editingAula?.aulaId === aula.id ? (
-                                  <React.Fragment key={aula.id}>
-                                    <tr className="border-t border-slate-200 bg-[#f0f6ff]">
-                                      <td className="px-3 py-2">
-                                        <input value={editAulaName} onChange={e => setEditAulaName(e.target.value)} className="w-full px-2 py-1 border-2 border-[#2a4e7c] text-xs font-bold focus:outline-none" placeholder="Nombre del aula" />
-                                      </td>
-                                      <td className="px-3 py-2">
-                                        <input value={editAulaAge} onChange={e => setEditAulaAge(e.target.value)} className="w-full px-2 py-1 border border-slate-300 text-xs focus:outline-none" placeholder="Ej. 9 a 14 años" />
-                                      </td>
-                                      <td className="px-3 py-2">
-                                        <select value={editAulaModality} onChange={e => setEditAulaModality(e.target.value as 'Presencial' | 'Virtual')} className="px-2 py-1 border border-slate-300 text-xs focus:outline-none cursor-pointer bg-white">
-                                          <option value="Presencial">Presencial</option>
-                                          <option value="Virtual">Virtual</option>
-                                        </select>
-                                      </td>
-                                      <td className="px-3 py-2 hidden sm:table-cell">
-                                        <input value={editAulaSchedule} onChange={e => setEditAulaSchedule(e.target.value)} className="w-full px-2 py-1 border border-slate-300 text-xs focus:outline-none" placeholder="Ej. Lunes 18:00..." />
-                                      </td>
-                                      <td className="px-3 py-2 hidden sm:table-cell">
-                                        <input value={editAulaDesc} onChange={e => setEditAulaDesc(e.target.value)} className="w-full px-2 py-1 border border-slate-300 text-xs focus:outline-none" placeholder="Descripción..." />
-                                      </td>
-                                      <td className="px-3 py-2 text-center">
-                                        <div className="flex items-center justify-center gap-1.5">
-                                          <button onClick={() => handleSaveEditAula(platform.id, aula.id)} className="px-2 py-1 bg-[#2a4e7c] text-white text-[10px] font-bold border border-[#0d1b2e] cursor-pointer hover:bg-[#1e385c]">Guardar</button>
-                                          <button onClick={() => setEditingAula(null)} className="px-2 py-1 border border-slate-300 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer">Cancelar</button>
-                                        </div>
-                                      </td>
-                                    </tr>
-                                    <tr className="bg-[#f0f6ff] border-b-2 border-slate-300">
-                                      <td colSpan={6} className="px-3 pb-3">
-                                        <div className="space-y-1">
-                                          <label className="text-[9px] font-bold text-slate-600 block uppercase font-mono">Cursos Vinculados a este Aula</label>
-                                          <div className="flex flex-wrap gap-2 p-2 border-2 border-[#0d1b2e] bg-white rounded max-h-24 overflow-y-auto">
-                                            {courses.map(course => {
-                                              const isChecked = editAulaCourseIds.includes(course.id);
-                                              return (
-                                                <label key={course.id} className="flex items-center gap-1.5 px-2 py-0.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 cursor-pointer text-[10px]">
-                                                  <input 
-                                                    type="checkbox"
-                                                    checked={isChecked}
-                                                    onChange={(e) => {
-                                                      if (e.target.checked) {
-                                                        setEditAulaCourseIds([...editAulaCourseIds, course.id]);
-                                                      } else {
-                                                        setEditAulaCourseIds(editAulaCourseIds.filter(id => id !== course.id));
-                                                      }
-                                                    }}
-                                                    className="w-3 h-3 accent-[#2a4e7c] cursor-pointer"
-                                                  />
-                                                  <span className="font-semibold text-slate-700">{course.title}</span>
-                                                </label>
-                                              );
-                                            })}
-                                          </div>
-                                        </div>
-                                      </td>
-                                    </tr>
-                                  </React.Fragment>
+                                  <tr key={aula.id} className="border-t border-slate-200 bg-[#f0f6ff]">
+                                    <td className="px-3 py-2">
+                                      <input value={editAulaName} onChange={e => setEditAulaName(e.target.value)} className="w-full px-2 py-1 border-2 border-[#2a4e7c] text-xs font-bold focus:outline-none" placeholder="Nombre del aula" />
+                                    </td>
+                                    <td className="px-3 py-2">
+                                      <input value={editAulaAge} onChange={e => setEditAulaAge(e.target.value)} className="w-full px-2 py-1 border border-slate-300 text-xs focus:outline-none" placeholder="Ej. 9 a 14 años" />
+                                    </td>
+                                    <td className="px-3 py-2">
+                                      <select value={editAulaModality} onChange={e => setEditAulaModality(e.target.value as 'Presencial' | 'Virtual')} className="px-2 py-1 border border-slate-300 text-xs focus:outline-none cursor-pointer bg-white">
+                                        <option value="Presencial">Presencial</option>
+                                        <option value="Virtual">Virtual</option>
+                                      </select>
+                                    </td>
+                                    <td className="px-3 py-2 hidden sm:table-cell">
+                                      <input value={editAulaSchedule} onChange={e => setEditAulaSchedule(e.target.value)} className="w-full px-2 py-1 border border-slate-300 text-xs focus:outline-none" placeholder="Ej. Lunes 18:00..." />
+                                    </td>
+                                    <td className="px-3 py-2 hidden sm:table-cell">
+                                      <input value={editAulaDesc} onChange={e => setEditAulaDesc(e.target.value)} className="w-full px-2 py-1 border border-slate-300 text-xs focus:outline-none" placeholder="Descripción..." />
+                                    </td>
+                                    <td className="px-3 py-2 text-center">
+                                      <div className="flex items-center justify-center gap-1.5">
+                                        <button onClick={() => handleSaveEditAula(platform.id, aula.id)} className="px-2 py-1 bg-[#2a4e7c] text-white text-[10px] font-bold border border-[#0d1b2e] cursor-pointer hover:bg-[#1e385c]">Guardar</button>
+                                        <button onClick={() => setEditingAula(null)} className="px-2 py-1 border border-slate-300 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer">Cancelar</button>
+                                      </div>
+                                    </td>
+                                  </tr>
                                 ) : (
                                   <tr key={aula.id} className="border-t border-slate-200 hover:bg-slate-50 transition-colors">
-                                    <td className="px-3 py-2.5 font-bold text-[#0d1b2e]">
-                                      <div>{aula.name}</div>
-                                      {aula.courseIds && aula.courseIds.length > 0 && (
-                                        <div className="flex flex-wrap gap-1 mt-1">
-                                          {aula.courseIds.map(cid => {
-                                            const course = courses.find(c => c.id === cid);
-                                            if (!course) return null;
-                                            return (
-                                              <span key={cid} className="px-1.5 py-0.5 bg-[#f0f4f8] text-[#2a4e7c] border border-[#a3b8cc] text-[8px] font-bold uppercase rounded">
-                                                {course.title}
-                                              </span>
-                                            );
-                                          })}
-                                        </div>
-                                      )}
-                                    </td>
+                                    <td className="px-3 py-2.5 font-bold text-[#0d1b2e]">{aula.name}</td>
                                     <td className="px-3 py-2.5 text-slate-600">{aula.ageRange}</td>
                                     <td className="px-3 py-2.5">
-                                      <span className={`inline-block px-2 py-0.5 text-[9px] font-bold uppercase border ${
-                                        aula.modality === 'Virtual'
+                                      <span className={`inline-block px-2 py-0.5 text-[9px] font-bold uppercase border ${aula.modality === 'Virtual'
                                           ? 'bg-[#e8f0fe] text-[#2a4e7c] border-[#2a4e7c]'
                                           : 'bg-[#e8f7ee] text-[#2a6b3c] border-[#2a6b3c]'
-                                      }`}>
+                                        }`}>
                                         {aula.modality}
                                       </span>
                                     </td>
@@ -2182,7 +2108,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                   const isChecked = newAulaCourseIds.includes(course.id);
                                   return (
                                     <label key={course.id} className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 border border-slate-300 hover:bg-slate-100 cursor-pointer text-[10.5px]">
-                                      <input 
+                                      <input
                                         type="checkbox"
                                         checked={isChecked}
                                         onChange={(e) => {
@@ -2244,114 +2170,114 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             : lessons;
 
           return (
-          <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200 pb-4">
-              <div>
-                <h2 className="text-xl font-bold text-[#0d1b2e]">Contenido Educativo</h2>
-                <p className="text-xs text-[#6180a6] font-semibold mt-1">Crea y administra lecciones con código HTML interactivo para tus usuarios.</p>
-              </div>
-              <button
-                onClick={() => {
-                  setNewLessonTitle('');
-                  setNewLessonCourseName(classrooms[0]?.name || '');
-                  setNewLessonHtmlContent('');
-                  setShowAddLessonModal(true);
-                }}
-                className="px-3.5 py-2 bg-[#2a4e7c] hover:bg-[#1e385c] text-white font-bold border-2 border-[#0d1b2e] shadow-[3px_3px_0_0_#000000] active:translate-y-[3px] active:shadow-[0px_0px_0_0_#000000] transition-all flex items-center gap-2 cursor-pointer text-xs uppercase shrink-0"
-              >
-                <Plus className="w-4 h-4" /> Nueva Lección
-              </button>
-            </div>
-
-            {/* Predictive Search Bar */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6180a6] pointer-events-none" />
-              <input
-                type="text"
-                value={lessonSearchFilter}
-                onChange={(e) => setLessonSearchFilter(e.target.value)}
-                placeholder="Buscar lección por título o curso..."
-                className="w-full pl-10 pr-10 py-2.5 border-2 border-[#0d1b2e] bg-white text-sm text-slate-800 font-semibold rounded shadow-[2px_2px_0_0_#0d1b2e] focus:outline-none focus:ring-2 focus:ring-[#2a4e7c] focus:shadow-[3px_3px_0_0_#2a4e7c] transition-all placeholder:text-slate-400 placeholder:font-medium"
-              />
-              {lessonSearchFilter && (
+            <div className="space-y-6">
+              {/* Header */}
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200 pb-4">
+                <div>
+                  <h2 className="text-xl font-bold text-[#0d1b2e]">Contenido Educativo</h2>
+                  <p className="text-xs text-[#6180a6] font-semibold mt-1">Crea y administra lecciones con código HTML interactivo para tus usuarios.</p>
+                </div>
                 <button
-                  onClick={() => setLessonSearchFilter('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 font-bold text-xs cursor-pointer"
+                  onClick={() => {
+                    setNewLessonTitle('');
+                    setNewLessonCourseName(classrooms[0]?.name || '');
+                    setNewLessonHtmlContent('');
+                    setShowAddLessonModal(true);
+                  }}
+                  className="px-3.5 py-2 bg-[#2a4e7c] hover:bg-[#1e385c] text-white font-bold border-2 border-[#0d1b2e] shadow-[3px_3px_0_0_#000000] active:translate-y-[3px] active:shadow-[0px_0px_0_0_#000000] transition-all flex items-center gap-2 cursor-pointer text-xs uppercase shrink-0"
                 >
-                  ✕
+                  <Plus className="w-4 h-4" /> Nueva Lección
                 </button>
-              )}
-            </div>
+              </div>
 
-            {/* Stats Banner */}
-            <div className="flex items-center gap-4 text-[10px] font-bold uppercase text-[#6180a6]">
-              <span className="bg-[#f0f4f8] border border-[#a3b8cc] px-2.5 py-1 rounded">
-                {filteredLessons.length} {filteredLessons.length === 1 ? 'lección' : 'lecciones'}
-                {q && ` de ${lessons.length}`}
-              </span>
-              <span className="bg-[#f0f4f8] border border-[#a3b8cc] px-2.5 py-1 rounded">
-                {new Set(lessons.map(l => l.courseName)).size} cursos vinculados
-              </span>
-            </div>
+              {/* Predictive Search Bar */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6180a6] pointer-events-none" />
+                <input
+                  type="text"
+                  value={lessonSearchFilter}
+                  onChange={(e) => setLessonSearchFilter(e.target.value)}
+                  placeholder="Buscar lección por título o curso..."
+                  className="w-full pl-10 pr-10 py-2.5 border-2 border-[#0d1b2e] bg-white text-sm text-slate-800 font-semibold rounded shadow-[2px_2px_0_0_#0d1b2e] focus:outline-none focus:ring-2 focus:ring-[#2a4e7c] focus:shadow-[3px_3px_0_0_#2a4e7c] transition-all placeholder:text-slate-400 placeholder:font-medium"
+                />
+                {lessonSearchFilter && (
+                  <button
+                    onClick={() => setLessonSearchFilter('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 font-bold text-xs cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
 
-            {/* Lessons Table */}
-            <div className="bg-white border-2 border-[#0d1b2e] shadow-[4px_4px_0_0_#0d1b2e] overflow-x-auto">
-              <table className="w-full min-w-[700px] border-collapse text-left text-xs">
-                <thead>
-                  <tr className="bg-[#0d1b2e] text-white border-b-2 border-[#1e385c]">
-                    <th className="p-3 font-semibold uppercase tracking-wider">Título de la Lección</th>
-                    <th className="p-3 font-semibold uppercase tracking-wider">Curso Vinculado</th>
-                    <th className="p-3 font-semibold uppercase tracking-wider">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#a3b8cc]/30">
-                  {filteredLessons.map((lesson) => (
-                    <tr key={lesson.id} className="hover:bg-[#f0f4f8]/50 font-medium">
-                      <td className="p-3 text-[#0d1b2e] font-bold">{lesson.title}</td>
-                      <td className="p-3">
-                        <span className="inline-block bg-[#2a4e7c] text-white px-2 py-0.5 rounded font-bold text-[9px] uppercase tracking-wider">
-                          {lesson.courseName}
-                        </span>
-                      </td>
-                      <td className="p-3">
-                        <div className="flex items-center gap-2.5">
-                          <button
-                            onClick={() => setPreviewLesson(lesson)}
-                            className="text-slate-400 hover:text-indigo-650 p-1 cursor-pointer transition-colors"
-                            title="Vista previa"
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => handleStartEditLesson(lesson)}
-                            className="text-slate-400 hover:text-[#2a4e7c] p-1 cursor-pointer transition-colors"
-                            title="Editar Lección"
-                          >
-                            <Pencil className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteLesson(lesson.id)}
-                            className="text-slate-400 hover:text-red-600 p-1 cursor-pointer transition-colors"
-                            title="Eliminar Lección"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
+              {/* Stats Banner */}
+              <div className="flex items-center gap-4 text-[10px] font-bold uppercase text-[#6180a6]">
+                <span className="bg-[#f0f4f8] border border-[#a3b8cc] px-2.5 py-1 rounded">
+                  {filteredLessons.length} {filteredLessons.length === 1 ? 'lección' : 'lecciones'}
+                  {q && ` de ${lessons.length}`}
+                </span>
+                <span className="bg-[#f0f4f8] border border-[#a3b8cc] px-2.5 py-1 rounded">
+                  {new Set(lessons.map(l => l.courseName)).size} cursos vinculados
+                </span>
+              </div>
+
+              {/* Lessons Table */}
+              <div className="bg-white border-2 border-[#0d1b2e] shadow-[4px_4px_0_0_#0d1b2e] overflow-x-auto">
+                <table className="w-full min-w-[700px] border-collapse text-left text-xs">
+                  <thead>
+                    <tr className="bg-[#0d1b2e] text-white border-b-2 border-[#1e385c]">
+                      <th className="p-3 font-semibold uppercase tracking-wider">Título de la Lección</th>
+                      <th className="p-3 font-semibold uppercase tracking-wider">Curso Vinculado</th>
+                      <th className="p-3 font-semibold uppercase tracking-wider">Acciones</th>
                     </tr>
-                  ))}
-                  {filteredLessons.length === 0 && (
-                    <tr>
-                      <td colSpan={3} className="p-6 text-center text-slate-400 italic">
-                        No se encontraron lecciones.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-[#a3b8cc]/30">
+                    {filteredLessons.map((lesson) => (
+                      <tr key={lesson.id} className="hover:bg-[#f0f4f8]/50 font-medium">
+                        <td className="p-3 text-[#0d1b2e] font-bold">{lesson.title}</td>
+                        <td className="p-3">
+                          <span className="inline-block bg-[#2a4e7c] text-white px-2 py-0.5 rounded font-bold text-[9px] uppercase tracking-wider">
+                            {lesson.courseName}
+                          </span>
+                        </td>
+                        <td className="p-3">
+                          <div className="flex items-center gap-2.5">
+                            <button
+                              onClick={() => setPreviewLesson(lesson)}
+                              className="text-slate-400 hover:text-indigo-650 p-1 cursor-pointer transition-colors"
+                              title="Vista previa"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleStartEditLesson(lesson)}
+                              className="text-slate-400 hover:text-[#2a4e7c] p-1 cursor-pointer transition-colors"
+                              title="Editar Lección"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteLesson(lesson.id)}
+                              className="text-slate-400 hover:text-red-600 p-1 cursor-pointer transition-colors"
+                              title="Eliminar Lección"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {filteredLessons.length === 0 && (
+                      <tr>
+                        <td colSpan={3} className="p-6 text-center text-slate-400 italic">
+                          No se encontraron lecciones.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
           );
         })()}
 
@@ -2432,19 +2358,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <option value="docente">Docente</option>
                   <option value="profesor">Profesor</option>
                   <option value="admin">Admin</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="font-bold text-[#6180a6] block mb-1">Curso a Asignar</label>
-                <select
-                  value={newStudentCourse}
-                  onChange={(e) => setNewStudentCourse(e.target.value)}
-                  className="w-full p-2 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] bg-white font-semibold text-slate-900"
-                >
-                  {classrooms.map(c => (
-                    <option key={c.id} value={c.name}>{c.name}</option>
-                  ))}
                 </select>
               </div>
 
@@ -2557,19 +2470,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <option value="docente">Docente</option>
                   <option value="profesor">Profesor</option>
                   <option value="admin">Admin</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="font-bold text-[#6180a6] block mb-1">Curso a Asignar</label>
-                <select
-                  value={editStudentCourse}
-                  onChange={(e) => setEditStudentCourse(e.target.value)}
-                  className="w-full p-2 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] bg-white font-semibold text-slate-900"
-                >
-                  {classrooms.map(c => (
-                    <option key={c.id} value={c.name}>{c.name}</option>
-                  ))}
                 </select>
               </div>
 
@@ -2790,10 +2690,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       m.name.toLowerCase().includes(addMeetingSearch.toLowerCase()) ||
                       m.url.toLowerCase().includes(addMeetingSearch.toLowerCase())
                     ).length === 0 && (
-                      <div className="p-2.5 text-slate-400 italic text-[10px] text-center">
-                        No se encontraron salas.
-                      </div>
-                    )}
+                        <div className="p-2.5 text-slate-400 italic text-[10px] text-center">
+                          No se encontraron salas.
+                        </div>
+                      )}
                   </div>
                 )}
               </div>
@@ -2833,7 +2733,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       .filter(st =>
                         !selectedClassStudents.includes(st.id) &&
                         (st.name.toLowerCase().includes(addStudentSearch.toLowerCase()) ||
-                         st.course.toLowerCase().includes(addStudentSearch.toLowerCase()))
+                          (st.course || '').toLowerCase().includes(addStudentSearch.toLowerCase()))
                       )
                       .map(st => (
                         <button
@@ -2847,18 +2747,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           className="w-full text-left px-3 py-1.5 hover:bg-[#f0f4f8] border-b last:border-0 border-slate-100 flex flex-col cursor-pointer"
                         >
                           <span className="font-semibold text-slate-800">{st.name}</span>
-                          <span className="text-[9px] text-slate-400">{st.course}</span>
+                          <span className="text-[9px] text-slate-400">{st.course || 'Sin curso'}</span>
                         </button>
                       ))}
                     {students.filter(st =>
                       !selectedClassStudents.includes(st.id) &&
                       (st.name.toLowerCase().includes(addStudentSearch.toLowerCase()) ||
-                       st.course.toLowerCase().includes(addStudentSearch.toLowerCase()))
+                        (st.course || '').toLowerCase().includes(addStudentSearch.toLowerCase()))
                     ).length === 0 && (
-                      <div className="p-2.5 text-slate-400 italic text-[10px] text-center">
-                        No se encontraron usuarios disponibles.
-                      </div>
-                    )}
+                        <div className="p-2.5 text-slate-400 italic text-[10px] text-center">
+                          No se encontraron usuarios disponibles.
+                        </div>
+                      )}
                   </div>
                 )}
 
@@ -2923,7 +2823,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       .filter(l =>
                         !selectedClassLessons.includes(l.id) &&
                         (l.title.toLowerCase().includes(addClassLessonSearch.toLowerCase()) ||
-                         l.courseName.toLowerCase().includes(addClassLessonSearch.toLowerCase()))
+                          l.courseName.toLowerCase().includes(addClassLessonSearch.toLowerCase()))
                       )
                       .map(l => (
                         <button
@@ -2943,12 +2843,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     {lessons.filter(l =>
                       !selectedClassLessons.includes(l.id) &&
                       (l.title.toLowerCase().includes(addClassLessonSearch.toLowerCase()) ||
-                       l.courseName.toLowerCase().includes(addClassLessonSearch.toLowerCase()))
+                        l.courseName.toLowerCase().includes(addClassLessonSearch.toLowerCase()))
                     ).length === 0 && (
-                      <div className="p-2.5 text-slate-400 italic text-[10px] text-center">
-                        No se encontraron lecciones disponibles.
-                      </div>
-                    )}
+                        <div className="p-2.5 text-slate-400 italic text-[10px] text-center">
+                          No se encontraron lecciones disponibles.
+                        </div>
+                      )}
                   </div>
                 )}
 
@@ -3097,10 +2997,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       m.name.toLowerCase().includes(editMeetingSearch.toLowerCase()) ||
                       m.url.toLowerCase().includes(editMeetingSearch.toLowerCase())
                     ).length === 0 && (
-                      <div className="p-2.5 text-slate-400 italic text-[10px] text-center">
-                        No se encontraron salas.
-                      </div>
-                    )}
+                        <div className="p-2.5 text-slate-400 italic text-[10px] text-center">
+                          No se encontraron salas.
+                        </div>
+                      )}
                   </div>
                 )}
               </div>
@@ -3140,7 +3040,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       .filter(st =>
                         !selectedEditClassStudents.includes(st.id) &&
                         (st.name.toLowerCase().includes(editStudentSearch.toLowerCase()) ||
-                         st.course.toLowerCase().includes(editStudentSearch.toLowerCase()))
+                          (st.course || '').toLowerCase().includes(editStudentSearch.toLowerCase()))
                       )
                       .map(st => (
                         <button
@@ -3154,18 +3054,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           className="w-full text-left px-3 py-1.5 hover:bg-[#f0f4f8] border-b last:border-0 border-slate-100 flex flex-col cursor-pointer"
                         >
                           <span className="font-semibold text-slate-800">{st.name}</span>
-                          <span className="text-[9px] text-slate-400">{st.course}</span>
+                          <span className="text-[9px] text-slate-400">{st.course || 'Sin curso'}</span>
                         </button>
                       ))}
                     {students.filter(st =>
                       !selectedEditClassStudents.includes(st.id) &&
                       (st.name.toLowerCase().includes(editStudentSearch.toLowerCase()) ||
-                       st.course.toLowerCase().includes(editStudentSearch.toLowerCase()))
+                        (st.course || '').toLowerCase().includes(editStudentSearch.toLowerCase()))
                     ).length === 0 && (
-                      <div className="p-2.5 text-slate-400 italic text-[10px] text-center">
-                        No se encontraron usuarios disponibles.
-                      </div>
-                    )}
+                        <div className="p-2.5 text-slate-400 italic text-[10px] text-center">
+                          No se encontraron usuarios disponibles.
+                        </div>
+                      )}
                   </div>
                 )}
 
@@ -3230,7 +3130,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       .filter(l =>
                         !selectedEditClassLessons.includes(l.id) &&
                         (l.title.toLowerCase().includes(editClassLessonSearch.toLowerCase()) ||
-                         l.courseName.toLowerCase().includes(editClassLessonSearch.toLowerCase()))
+                          l.courseName.toLowerCase().includes(editClassLessonSearch.toLowerCase()))
                       )
                       .map(l => (
                         <button
@@ -3250,12 +3150,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     {lessons.filter(l =>
                       !selectedEditClassLessons.includes(l.id) &&
                       (l.title.toLowerCase().includes(editClassLessonSearch.toLowerCase()) ||
-                       l.courseName.toLowerCase().includes(editClassLessonSearch.toLowerCase()))
+                        l.courseName.toLowerCase().includes(editClassLessonSearch.toLowerCase()))
                     ).length === 0 && (
-                      <div className="p-2.5 text-slate-400 italic text-[10px] text-center">
-                        No se encontraron lecciones disponibles.
-                      </div>
-                    )}
+                        <div className="p-2.5 text-slate-400 italic text-[10px] text-center">
+                          No se encontraron lecciones disponibles.
+                        </div>
+                      )}
                   </div>
                 )}
 

@@ -31,7 +31,7 @@ interface Student {
   id: string;
   name: string;
   email: string;
-  course: string;
+  course?: string;
   status: 'Activo' | 'Completado' | 'Pendiente';
   bio?: string;
   avatar?: string;

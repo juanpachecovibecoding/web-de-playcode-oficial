@@ -28,7 +28,7 @@ interface Student {
   id: string;
   name: string;
   email: string;
-  course: string;
+  course?: string;
   status: 'Activo' | 'Completado' | 'Pendiente';
   bio?: string;
   avatar?: string;
@@ -427,7 +427,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   );
   const courseLessons = studentClassroomLessonIds.length > 0
     ? lessons.filter(l => studentClassroomLessonIds.includes(l.id))
-    : lessons.filter(l => l.courseName === student.course);
+    : lessons.filter(l => l.courseName === (student.course || ''));
 
   const completedLessonIds = student.completedLessonIds || [];
   const completedCourseLessons = courseLessons.filter(l => completedLessonIds.includes(l.id));
@@ -815,9 +815,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                   {student.platformId ? 'Mi Plataforma' : 'Mis Cursos Inscritos'}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {!student.platformId && (
+                  {!student.platformId && student.course && (
                     <div 
-                      onClick={() => setSelectedCourseName(student.course)}
+                      onClick={() => setSelectedCourseName(student.course || '')}
                       className={`${t.cardBg} ${t.cardBorder} p-6 ${t.cardShadow} hover:translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#000000] cursor-pointer transition-all flex flex-col justify-between`}
                     >
                       <div>
@@ -1192,9 +1192,19 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                   </p>
                 </div>
 
-                <div className={`mt-2 text-[10px] font-bold px-3 py-1 ${t.badgeBg} rounded-full`}>
-                  Curso: {student.course}
-                </div>
+                {student.platformId ? (() => {
+                  const plat = platforms.find(p => p.id === student.platformId);
+                  const aula = plat?.aulas.find(a => a.id === student.aulaId);
+                  return (
+                    <div className={`mt-2 text-[10px] font-bold px-3 py-1 ${t.badgeBg} rounded-full`}>
+                      Plataforma: {plat?.name} {aula ? `(${aula.name})` : ''}
+                    </div>
+                  );
+                })() : student.course ? (
+                  <div className={`mt-2 text-[10px] font-bold px-3 py-1 ${t.badgeBg} rounded-full`}>
+                    Curso: {student.course}
+                  </div>
+                ) : null}
               </div>
             </div>
 

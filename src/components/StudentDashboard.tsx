@@ -20,7 +20,8 @@ import {
   Plus,
   Trash2,
   Search,
-  X
+  X,
+  Clock
 } from 'lucide-react';
 
 interface Student {
@@ -36,6 +37,34 @@ interface Student {
   password?: string;
   completedLessonIds?: string[];
   role?: 'admin' | 'docente' | 'alumno' | 'profesor';
+  platformId?: string;
+  aulaId?: string;
+}
+
+interface Course {
+  id: string;
+  title: string;
+  ageGroup: string;
+  price: string;
+  type: 'Presencial' | 'Virtual';
+  studentsCount: number;
+}
+
+interface PlatformAula {
+  id: string;
+  name: string;
+  ageRange: string;
+  modality: 'Presencial' | 'Virtual';
+  description?: string;
+  schedule?: string;
+  courseIds?: string[];
+}
+
+interface Platform {
+  id: string;
+  name: string;
+  description?: string;
+  aulas: PlatformAula[];
 }
 
 interface Meeting {
@@ -91,6 +120,8 @@ interface StudentDashboardProps {
   classrooms: Classroom[];
   meetings: Meeting[];
   lessons: Lesson[];
+  courses: Course[];
+  platforms: Platform[];
   onLogout: () => void;
   onSaveProfile: (updated: Student) => void;
 }
@@ -178,6 +209,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   classrooms,
   meetings,
   lessons,
+  courses,
+  platforms,
   onLogout,
   onSaveProfile
 }) => {
@@ -356,6 +389,12 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   const [selectedCourseName, setSelectedCourseName] = useState<string | null>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
+  // Platform & Aula navigation states
+  const [insidePlatform, setInsidePlatform] = useState(false);
+  const [selectedPlatformAula, setSelectedPlatformAula] = useState<PlatformAula | null>(null);
+  const [selectedPlatformCourse, setSelectedPlatformCourse] = useState<Course | null>(null);
+  const [selectedPlatformLesson, setSelectedPlatformLesson] = useState<Lesson | null>(null);
+
   // Profile settings
   const [bio, setBio] = useState(student.bio || '¡Hola! Soy alumno en Play Code y estoy programando el futuro.');
   const [selectedAvatar, setSelectedAvatar] = useState(student.avatar || '🚀');
@@ -521,50 +560,341 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           </div>
         </header>
 
-        {/* TAB 1: MI APRENDIZAJE */}
-        {/* TAB 1: MI APRENDIZAJE */}
         {activeTab === 'aprendizaje' && (
           <div>
-            {!selectedCourseName ? (
+            {insidePlatform ? (
               <div className="space-y-6">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500">Mis Cursos Inscritos</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div 
-                    onClick={() => setSelectedCourseName(student.course)}
-                    className={`${t.cardBg} ${t.cardBorder} p-6 ${t.cardShadow} hover:translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#000000] cursor-pointer transition-all flex flex-col justify-between`}
-                  >
-                    <div>
-                      <div className="flex justify-between items-center mb-3">
-                        <span className={`text-[10px] font-mono font-bold px-2 py-0.5 ${t.badgeBg}`}>
-                          ACTIVO
-                        </span>
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                      </div>
-                      <h4 className="text-lg font-bold line-clamp-2">{student.course}</h4>
-                      <p className="text-[10px] text-slate-500 mt-1">Programa curricular Play Code</p>
-
-                      {/* Progress Bar */}
-                      <div className="mt-4 pt-4 border-t border-slate-100">
-                        <div className="flex justify-between items-center text-[9px] font-bold text-slate-500 mb-1">
-                          <span>PROGRESO DE LECCIONES</span>
-                          <span>{progressPercent}%</span>
-                        </div>
-                        <div className="w-full bg-slate-200 border border-[#0d1b2e] h-2">
-                          <div 
-                            className="bg-[#2a4e7c] h-full transition-all duration-300"
-                            style={{ width: `${progressPercent}%` }}
-                          />
-                        </div>
-                        <span className="text-[8px] text-slate-400 mt-1.5 block">
-                          {completedCourseLessons.length} de {courseLessons.length} lecciones completadas
-                        </span>
+                {/* Platform Navigation */}
+                {!selectedPlatformAula ? (
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <button 
+                          onClick={() => setInsidePlatform(false)}
+                          className="flex items-center gap-1.5 px-3 py-1 bg-slate-100 hover:bg-slate-200 border-2 border-[#0d1b2e] font-bold text-[10px] rounded cursor-pointer transition-all shadow-[1.5px_1.5px_0_0_#000000] active:translate-y-[1.5px] active:shadow-[0px_0px_0_0_#000000]"
+                        >
+                          <ArrowLeft className="w-3.5 h-3.5" /> Volver a mi Aprendizaje
+                        </button>
+                        <h3 className="text-xl font-bold mt-4 text-[#0d1b2e]">
+                          {platforms.find(p => p.id === student.platformId)?.name || 'Mi Plataforma'}
+                        </h3>
+                        <p className="text-xs text-slate-500 font-medium">
+                          {platforms.find(p => p.id === student.platformId)?.description || 'Accede a tus aulas y contenidos vinculados.'}
+                        </p>
                       </div>
                     </div>
-                    <div className="flex justify-between items-center pt-4 border-t border-slate-100 mt-4">
-                      <span className="text-[10px] font-bold text-[#2a4e7c] uppercase">Ver Clases del Curso</span>
-                      <ArrowRight className="w-4 h-4 text-[#2a4e7c]" />
+                    
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">Mis Aulas Inscritas</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {(() => {
+                        const myPlatformObj = platforms.find(p => p.id === student.platformId);
+                        const myAula = myPlatformObj?.aulas.find(a => a.id === student.aulaId);
+                        if (!myAula) {
+                          return (
+                            <div className="col-span-3 bg-yellow-50 border-2 border-yellow-300 p-4 font-semibold text-xs text-yellow-700">
+                              No tienes aulas asignadas en esta plataforma. Solicita acceso a tu administrador.
+                            </div>
+                          );
+                        }
+                        return (
+                          <div 
+                            onClick={() => setSelectedPlatformAula(myAula)}
+                            className={`${t.cardBg} ${t.cardBorder} p-6 ${t.cardShadow} hover:translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#000000] cursor-pointer transition-all flex flex-col justify-between`}
+                          >
+                            <div>
+                              <div className="flex justify-between items-center mb-3">
+                                <span className={`text-[10px] font-mono font-bold px-2 py-0.5 ${t.badgeBg}`}>
+                                  {myAula.modality.toUpperCase()}
+                                </span>
+                                <span className="text-[10px] font-bold text-slate-500">{myAula.ageRange}</span>
+                              </div>
+                              <h4 className="text-lg font-bold">{myAula.name}</h4>
+                              <p className="text-xs text-slate-500 mt-2">{myAula.description}</p>
+                              
+                              {myAula.schedule && (
+                                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-1.5 text-xs text-slate-600">
+                                  <Clock className="w-3.5 h-3.5 text-slate-400" />
+                                  <span>{myAula.schedule}</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex justify-between items-center pt-4 border-t border-slate-100 mt-4">
+                              <span className="text-[10px] font-bold text-[#2a4e7c] uppercase">Entrar al Aula</span>
+                              <ArrowRight className="w-4 h-4 text-[#2a4e7c]" />
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
+                ) : !selectedPlatformCourse ? (
+                  <div className="space-y-6">
+                    <div>
+                      <button 
+                        onClick={() => setSelectedPlatformAula(null)}
+                        className="flex items-center gap-1.5 px-3 py-1 bg-slate-100 hover:bg-slate-200 border-2 border-[#0d1b2e] font-bold text-[10px] rounded cursor-pointer transition-all shadow-[1.5px_1.5px_0_0_#000000] active:translate-y-[1.5px] active:shadow-[0px_0px_0_0_#000000]"
+                      >
+                        <ArrowLeft className="w-3.5 h-3.5" /> Volver a Aulas
+                      </button>
+                      <h3 className="text-xl font-bold mt-4 text-[#0d1b2e]">Aula: {selectedPlatformAula.name}</h3>
+                      <p className="text-xs text-slate-500 font-medium">{selectedPlatformAula.description}</p>
+                      {selectedPlatformAula.schedule && (
+                        <p className="text-[11px] text-[#2a4e7c] font-bold mt-1">Horario: {selectedPlatformAula.schedule}</p>
+                      )}
+                    </div>
+
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">Cursos de este Aula</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {(() => {
+                        const aulaCourses = courses.filter(c => selectedPlatformAula.courseIds?.includes(c.id));
+                        if (aulaCourses.length === 0) {
+                          return (
+                            <div className="col-span-3 bg-slate-50 border-2 border-dashed border-slate-300 p-8 text-center text-xs text-slate-500 font-medium">
+                              No hay cursos configurados para esta aula actualmente.
+                            </div>
+                          );
+                        }
+                        return aulaCourses.map(course => {
+                          const courseLessons = lessons.filter(l => l.courseName === course.title);
+                          const completedCourseLessons = courseLessons.filter(l => student.completedLessonIds?.includes(l.id));
+                          const progressPercent = courseLessons.length > 0 
+                            ? Math.round((completedCourseLessons.length / courseLessons.length) * 100) 
+                            : 0;
+
+                          return (
+                            <div 
+                              key={course.id}
+                              onClick={() => {
+                                setSelectedPlatformCourse(course);
+                                const courseLessons = lessons.filter(l => l.courseName === course.title);
+                                if (courseLessons.length > 0) {
+                                  setSelectedPlatformLesson(courseLessons[0]);
+                                } else {
+                                  setSelectedPlatformLesson(null);
+                                }
+                              }}
+                              className={`${t.cardBg} ${t.cardBorder} p-6 ${t.cardShadow} hover:translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#000000] cursor-pointer transition-all flex flex-col justify-between`}
+                            >
+                              <div>
+                                <div className="flex justify-between items-center mb-3">
+                                  <span className={`text-[10px] font-mono font-bold px-2 py-0.5 ${t.badgeBg}`}>
+                                    {course.type.toUpperCase()}
+                                  </span>
+                                  <span className="text-[10px] font-bold text-slate-500">{course.ageGroup}</span>
+                                </div>
+                                <h4 className="text-lg font-bold line-clamp-2">{course.title}</h4>
+                                
+                                <div className="mt-4 pt-4 border-t border-slate-100">
+                                  <div className="flex justify-between items-center text-[9px] font-bold text-slate-500 mb-1">
+                                    <span>PROGRESO</span>
+                                    <span>{progressPercent}%</span>
+                                  </div>
+                                  <div className="w-full bg-slate-200 border border-[#0d1b2e] h-2">
+                                    <div 
+                                      className="bg-[#2a4e7c] h-full transition-all duration-300"
+                                      style={{ width: `${progressPercent}%` }}
+                                    />
+                                  </div>
+                                  <span className="text-[8px] text-slate-400 mt-1.5 block">
+                                    {completedCourseLessons.length} de {courseLessons.length} lecciones completadas
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex justify-between items-center pt-4 border-t border-slate-100 mt-4">
+                                <span className="text-[10px] font-bold text-[#2a4e7c] uppercase">Ingresar al Curso</span>
+                                <ArrowRight className="w-4 h-4 text-[#2a4e7c]" />
+                              </div>
+                            </div>
+                          );
+                        });
+                      })()}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <div className="flex flex-wrap gap-2 items-center justify-between border-b border-slate-200 pb-4">
+                      <div>
+                        <button 
+                          onClick={() => {
+                            setSelectedPlatformCourse(null);
+                            setSelectedPlatformLesson(null);
+                          }}
+                          className="flex items-center gap-1.5 px-3 py-1 bg-slate-100 hover:bg-slate-200 border-2 border-[#0d1b2e] font-bold text-[10px] rounded cursor-pointer transition-all shadow-[1.5px_1.5px_0_0_#000000] active:translate-y-[1.5px] active:shadow-[0px_0px_0_0_#000000]"
+                        >
+                          <ArrowLeft className="w-3.5 h-3.5" /> Volver al Aula
+                        </button>
+                        <h3 className="text-xl font-bold mt-4 text-[#0d1b2e]">{selectedPlatformCourse.title}</h3>
+                        <p className="text-xs text-slate-500 font-medium">Contenido didáctico del curso en {selectedPlatformAula.name}</p>
+                      </div>
+                    </div>
+
+                    {(() => {
+                      const courseLessons = lessons.filter(l => l.courseName === selectedPlatformCourse.title);
+                      if (courseLessons.length === 0) {
+                        return (
+                          <div className="bg-slate-50 border-2 border-dashed border-slate-300 p-8 text-center text-xs text-slate-500">
+                            No hay lecciones cargadas para este curso en este momento.
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                          <div className="lg:col-span-4 space-y-3">
+                            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">Lecciones del Curso</h4>
+                            <div className="space-y-2">
+                              {courseLessons.map((l, index) => {
+                                const isSelected = selectedPlatformLesson?.id === l.id;
+                                const isCompleted = student.completedLessonIds?.includes(l.id);
+                                return (
+                                  <div
+                                    key={l.id}
+                                    onClick={() => setSelectedPlatformLesson(l)}
+                                    className={`p-3 border-2 border-[#0d1b2e] cursor-pointer transition-all flex items-center justify-between ${
+                                      isSelected 
+                                        ? 'bg-[#ffe66d] shadow-[2px_2px_0_0_#000000] translate-x-0.5 -translate-y-0.5' 
+                                        : 'bg-white hover:bg-slate-50 shadow-[1px_1px_0_0_#0d1b2e]'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                      <span className="text-[10px] font-mono font-bold bg-slate-100 border border-slate-300 px-1.5 py-0.5 rounded shrink-0">
+                                        L{index + 1}
+                                      </span>
+                                      <span className="text-xs font-bold text-slate-800 truncate">{l.title}</span>
+                                    </div>
+                                    <input
+                                      type="checkbox"
+                                      checked={isCompleted || false}
+                                      onChange={(e) => {
+                                        e.stopPropagation();
+                                        toggleLessonCompletion(l.id);
+                                      }}
+                                      className="w-3.5 h-3.5 border-2 border-[#0d1b2e] rounded-sm cursor-pointer accent-[#2a4e7c]"
+                                    />
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          <div className="lg:col-span-8">
+                            {selectedPlatformLesson ? (
+                              <div className="bg-white border-2 border-[#0d1b2e] shadow-[4px_4px_0_0_#0d1b2e] p-5 space-y-4">
+                                <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                                  <h4 className="text-base font-bold text-[#0d1b2e]">{selectedPlatformLesson.title}</h4>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[9px] font-bold text-slate-400">Marcar completada:</span>
+                                    <input
+                                      type="checkbox"
+                                      checked={student.completedLessonIds?.includes(selectedPlatformLesson.id) || false}
+                                      onChange={() => toggleLessonCompletion(selectedPlatformLesson.id)}
+                                      className="w-4 h-4 border-2 border-[#0d1b2e] rounded-sm cursor-pointer accent-[#2a4e7c]"
+                                    />
+                                  </div>
+                                </div>
+                                <div 
+                                  className="prose max-w-none text-xs text-slate-700 leading-relaxed overflow-x-auto"
+                                  dangerouslySetInnerHTML={{ __html: selectedPlatformLesson.htmlContent }}
+                                />
+                              </div>
+                            ) : (
+                              <div className="bg-slate-50 border-2 border-dashed border-slate-350 p-8 text-center text-xs text-slate-500">
+                                Selecciona una lección de la lista para comenzar a aprender.
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+              </div>
+            ) : !selectedCourseName ? (
+              <div className="space-y-6">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500">
+                  {student.platformId ? 'Mi Plataforma' : 'Mis Cursos Inscritos'}
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {!student.platformId && (
+                    <div 
+                      onClick={() => setSelectedCourseName(student.course)}
+                      className={`${t.cardBg} ${t.cardBorder} p-6 ${t.cardShadow} hover:translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#000000] cursor-pointer transition-all flex flex-col justify-between`}
+                    >
+                      <div>
+                        <div className="flex justify-between items-center mb-3">
+                          <span className={`text-[10px] font-mono font-bold px-2 py-0.5 ${t.badgeBg}`}>
+                            ACTIVO
+                          </span>
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        </div>
+                        <h4 className="text-lg font-bold line-clamp-2">{student.course}</h4>
+                        <p className="text-[10px] text-slate-500 mt-1">Programa curricular Play Code</p>
+
+                        {/* Progress Bar */}
+                        <div className="mt-4 pt-4 border-t border-slate-100">
+                          <div className="flex justify-between items-center text-[9px] font-bold text-slate-500 mb-1">
+                            <span>PROGRESO DE LECCIONES</span>
+                            <span>{progressPercent}%</span>
+                          </div>
+                          <div className="w-full bg-slate-200 border border-[#0d1b2e] h-2">
+                            <div 
+                              className="bg-[#2a4e7c] h-full transition-all duration-300"
+                              style={{ width: `${progressPercent}%` }}
+                            />
+                          </div>
+                          <span className="text-[8px] text-slate-400 mt-1.5 block">
+                            {completedCourseLessons.length} de {courseLessons.length} lecciones completadas
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center pt-4 border-t border-slate-100 mt-4">
+                        <span className="text-[10px] font-bold text-[#2a4e7c] uppercase">Ver Clases del Curso</span>
+                        <ArrowRight className="w-4 h-4 text-[#2a4e7c]" />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Render Platform card if platformId is assigned */}
+                  {student.platformId && platforms.find(p => p.id === student.platformId) && (() => {
+                    const myPlatform = platforms.find(p => p.id === student.platformId)!;
+                    return (
+                      <div 
+                        onClick={() => setInsidePlatform(true)}
+                        className={`${t.cardBg} ${t.cardBorder} p-6 ${t.cardShadow} hover:translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#000000] cursor-pointer transition-all flex flex-col justify-between border-dashed`}
+                      >
+                        <div>
+                          <div className="flex justify-between items-center mb-3">
+                            <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-amber-100 text-amber-700 border border-amber-400">
+                              MI PLATAFORMA
+                            </span>
+                            <Sparkles className="w-4 h-4 text-amber-500" />
+                          </div>
+                          <h4 className="text-lg font-bold line-clamp-2">{myPlatform.name}</h4>
+                          <p className="text-[10px] text-slate-500 mt-1">
+                            {myPlatform.description || 'Accede a tus aulas y contenidos vinculados.'}
+                          </p>
+                          
+                          {student.aulaId && (() => {
+                            const myAula = myPlatform.aulas.find(a => a.id === student.aulaId);
+                            if (!myAula) return null;
+                            return (
+                              <div className="mt-4 pt-4 border-t border-slate-100 space-y-1">
+                                <span className="text-[9px] font-bold text-slate-500 block uppercase">Aula Asignada:</span>
+                                <span className="text-xs font-bold text-slate-800 block">{myAula.name}</span>
+                                {myAula.schedule && (
+                                  <span className="text-[10px] text-slate-500 block">{myAula.schedule}</span>
+                                )}
+                              </div>
+                            );
+                          })()}
+                        </div>
+                        <div className="flex justify-between items-center pt-4 border-t border-slate-100 mt-4">
+                          <span className="text-[10px] font-bold text-amber-600 uppercase">Ingresar a mi Plataforma</span>
+                          <ArrowRight className="w-4 h-4 text-amber-600" />
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             ) : selectedClassroomForLessons ? (

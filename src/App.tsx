@@ -40,6 +40,25 @@ interface Student {
   password?: string;
   completedLessonIds?: string[];
   role?: 'admin' | 'docente' | 'alumno' | 'profesor';
+  platformId?: string;
+  aulaId?: string;
+}
+
+interface PlatformAula {
+  id: string;
+  name: string;
+  ageRange: string;
+  modality: 'Presencial' | 'Virtual';
+  description?: string;
+  schedule?: string;
+  courseIds?: string[];
+}
+
+interface Platform {
+  id: string;
+  name: string;
+  description?: string;
+  aulas: PlatformAula[];
 }
 
 interface Meeting {
@@ -173,7 +192,30 @@ const App: React.FC = () => {
     ];
   });
 
+  const [platforms, setPlatforms] = useState<Platform[]>(() => {
+    try {
+      const saved = localStorage.getItem('playcode_platforms');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [
+      {
+        id: 'platform-1',
+        name: 'Play Code',
+        description: 'Institución educativa de tecnología y programación para niños y jóvenes.',
+        aulas: [
+          { id: 'aula-1', name: 'Aula Maker', ageRange: '6 a 8 años', modality: 'Presencial', description: 'Introducción a la tecnología y la creatividad digital.', schedule: 'Lunes y Miércoles 18:00', courseIds: ['1'] },
+          { id: 'aula-2', name: 'Robótica y Programación', ageRange: '9 a 14 años', modality: 'Presencial', description: 'Programación con robots y proyectos STEAM.', schedule: 'Martes y Jueves 17:30', courseIds: ['2'] },
+          { id: 'aula-3', name: 'PlayCoders', ageRange: '9 a 13 años', modality: 'Virtual', description: 'Programación y desarrollo web en modalidad online.', schedule: 'Sábados 10:00', courseIds: ['3'] }
+        ]
+      }
+    ];
+  });
+
   // Sync state changes with localStorage
+  React.useEffect(() => {
+    localStorage.setItem('playcode_platforms', JSON.stringify(platforms));
+  }, [platforms]);
+
   React.useEffect(() => {
     localStorage.setItem('playcode_lessons', JSON.stringify(lessons));
   }, [lessons]);
@@ -361,6 +403,8 @@ const App: React.FC = () => {
         setClassrooms={setClassrooms}
         lessons={lessons}
         setLessons={setLessons}
+        platforms={platforms}
+        setPlatforms={setPlatforms}
       />
     );
   }
@@ -374,6 +418,8 @@ const App: React.FC = () => {
           classrooms={classrooms}
           meetings={meetings}
           lessons={lessons}
+          courses={courses}
+          platforms={platforms}
           onLogout={handleLogout}
           onSaveProfile={(updated) => {
             setStudents(prev => prev.map(s => s.id === updated.id ? updated : s));

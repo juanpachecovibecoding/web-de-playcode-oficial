@@ -44,6 +44,8 @@ interface Student {
   password?: string;
   completedLessonIds?: string[];
   role?: 'admin' | 'docente' | 'alumno' | 'profesor';
+  platformId?: string;
+  aulaId?: string;
 }
 
 interface Meeting {
@@ -77,6 +79,7 @@ interface PlatformAula {
   modality: 'Presencial' | 'Virtual';
   description?: string;
   schedule?: string;
+  courseIds?: string[];
 }
 
 interface Platform {
@@ -100,6 +103,8 @@ interface AdminDashboardProps {
   setClassrooms: React.Dispatch<React.SetStateAction<Classroom[]>>;
   lessons: Lesson[];
   setLessons: React.Dispatch<React.SetStateAction<Lesson[]>>;
+  platforms: Platform[];
+  setPlatforms: React.Dispatch<React.SetStateAction<Platform[]>>;
 }
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
@@ -115,30 +120,33 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   classrooms,
   setClassrooms,
   lessons,
-  setLessons
+  setLessons,
+  platforms,
+  setPlatforms
 }) => {
   const [activeTab, setActiveTab] = useState<'inicio' | 'cursos' | 'usuarios' | 'docentes' | 'clases' | 'meetings' | 'contenido' | 'config' | 'foro' | 'plataformas'>('inicio');
 
-  // Plataformas state
-  const [platforms, setPlatforms] = useState<Platform[]>(() => {
-    try {
-      const saved = localStorage.getItem('playcode_platforms');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return [
-      {
-        id: 'platform-1',
-        name: 'Play Code',
-        description: 'Institución educativa de tecnología y programación para niños y jóvenes.',
-        aulas: [
-          { id: 'aula-1', name: 'Aula Maker', ageRange: '6 a 8 años', modality: 'Presencial', description: 'Introducción a la tecnología y la creatividad digital.', schedule: 'Lunes y Miércoles 18:00' },
-          { id: 'aula-2', name: 'Robótica y Programación', ageRange: '9 a 14 años', modality: 'Presencial', description: 'Programación con robots y proyectos STEAM.', schedule: 'Martes y Jueves 17:30' },
-          { id: 'aula-3', name: 'PlayCoders', ageRange: '9 a 13 años', modality: 'Virtual', description: 'Programación y desarrollo web en modalidad online.', schedule: 'Sábados 10:00' }
-        ]
-      }
-    ];
-  });
+  // Platforms state is received from props!
   const [expandedPlatformId, setExpandedPlatformId] = useState<string | null>('platform-1');
+
+  // Aula course linkages
+  const [newAulaCourseIds, setNewAulaCourseIds] = useState<string[]>([]);
+  const [editAulaCourseIds, setEditAulaCourseIds] = useState<string[]>([]);
+
+  // Student creation platform fields
+  const [newStudentPlatformId, setNewStudentPlatformId] = useState('');
+  const [newStudentAulaId, setNewStudentAulaId] = useState('');
+
+  // Student editing states
+  const [showEditStudentModal, setShowEditStudentModal] = useState(false);
+  const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
+  const [editStudentName, setEditStudentName] = useState('');
+  const [editStudentEmail, setEditStudentEmail] = useState('');
+  const [editStudentRole, setEditStudentRole] = useState<'admin' | 'docente' | 'alumno' | 'profesor'>('alumno');
+  const [editStudentCourse, setEditStudentCourse] = useState('');
+  const [editStudentPassword, setEditStudentPassword] = useState('');
+  const [editStudentPlatformId, setEditStudentPlatformId] = useState('');
+  const [editStudentAulaId, setEditStudentAulaId] = useState('');
   // Platform creation
   const [showNewPlatformForm, setShowNewPlatformForm] = useState(false);
   const [newPlatformName, setNewPlatformName] = useState('');
@@ -218,11 +226,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
   }, [activeTab]);
 
-  // Sync platforms to localStorage
-  useEffect(() => {
-    localStorage.setItem('playcode_platforms', JSON.stringify(platforms));
-  }, [platforms]);
-
   // Platform CRUD handlers
   const handleCreatePlatform = (e: React.FormEvent) => {
     e.preventDefault();
@@ -270,7 +273,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       ageRange: newAulaAge.trim(),
       modality: newAulaModality,
       description: newAulaDesc.trim(),
-      schedule: newAulaSchedule.trim()
+      schedule: newAulaSchedule.trim(),
+      courseIds: newAulaCourseIds
     };
     setPlatforms(prev => prev.map(p =>
       p.id === platformId ? { ...p, aulas: [...p.aulas, newAula] } : p
@@ -280,6 +284,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setNewAulaModality('Presencial');
     setNewAulaDesc('');
     setNewAulaSchedule('');
+    setNewAulaCourseIds([]);
     setShowNewAulaForPlatform(null);
   };
 
@@ -296,6 +301,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setEditAulaModality(aula.modality);
     setEditAulaDesc(aula.description || '');
     setEditAulaSchedule(aula.schedule || '');
+    setEditAulaCourseIds(aula.courseIds || []);
   };
 
   const handleSaveEditAula = (platformId: string, aulaId: string) => {
@@ -306,12 +312,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             ...p,
             aulas: p.aulas.map(a =>
               a.id === aulaId
-                ? { ...a, name: editAulaName.trim(), ageRange: editAulaAge.trim(), modality: editAulaModality, description: editAulaDesc.trim(), schedule: editAulaSchedule.trim() }
+                ? { ...a, name: editAulaName.trim(), ageRange: editAulaAge.trim(), modality: editAulaModality, description: editAulaDesc.trim(), schedule: editAulaSchedule.trim(), courseIds: editAulaCourseIds }
                 : a
             )
           }
         : p
     ));
+    setEditAulaCourseIds([]);
     setEditingAula(null);
   };
 
@@ -563,7 +570,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       course: newStudentCourse,
       status: 'Activo',
       password: newStudentPassword || '123456',
-      role: newStudentRole
+      role: newStudentRole,
+      platformId: newStudentPlatformId || undefined,
+      aulaId: newStudentAulaId || undefined
     };
     setStudents([...students, newStudent]);
     
@@ -574,6 +583,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setNewStudentEmail('');
     setNewStudentPassword('123456');
     setNewStudentRole('alumno');
+    setNewStudentPlatformId('');
+    setNewStudentAulaId('');
     setShowAddStudentModal(false);
   };
 
@@ -595,6 +606,49 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       }
       return s;
     }));
+  };
+
+  const handleStartEditStudent = (student: Student) => {
+    setEditingStudentId(student.id);
+    setEditStudentName(student.name);
+    setEditStudentEmail(student.email);
+    setEditStudentRole(student.role || 'alumno');
+    setEditStudentCourse(student.course);
+    setEditStudentPassword(student.password || '123456');
+    setEditStudentPlatformId(student.platformId || '');
+    setEditStudentAulaId(student.aulaId || '');
+    setShowEditStudentModal(true);
+  };
+
+  const handleSaveEditStudent = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingStudentId || !editStudentName.trim() || !editStudentEmail.trim()) return;
+
+    setStudents(prev => prev.map(s => {
+      if (s.id === editingStudentId) {
+        return {
+          ...s,
+          name: editStudentName.trim(),
+          email: editStudentEmail.trim(),
+          role: editStudentRole,
+          course: editStudentCourse,
+          password: editStudentPassword || '123456',
+          platformId: editStudentPlatformId || undefined,
+          aulaId: editStudentAulaId || undefined
+        };
+      }
+      return s;
+    }));
+
+    setEditingStudentId(null);
+    setEditStudentName('');
+    setEditStudentEmail('');
+    setEditStudentRole('alumno');
+    setEditStudentCourse('');
+    setEditStudentPassword('');
+    setEditStudentPlatformId('');
+    setEditStudentAulaId('');
+    setShowEditStudentModal(false);
   };
 
   const handleAddMeeting = (e: React.FormEvent) => {
@@ -1145,7 +1199,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
 
             <div className="bg-white border-2 border-[#0d1b2e] shadow-[4px_4px_0_0_#0d1b2e] overflow-x-auto">
-              <table className="w-full min-w-[700px] border-collapse text-left text-xs">
+              <table className="w-full min-w-[750px] border-collapse text-left text-xs">
                 <thead>
                   <tr className="bg-[#0d1b2e] text-white border-b-2 border-[#1e385c]">
                     <th className="p-3 font-semibold uppercase tracking-wider">ID</th>
@@ -1153,6 +1207,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <th className="p-3 font-semibold uppercase tracking-wider">Correo</th>
                     <th className="p-3 font-semibold uppercase tracking-wider">Rol</th>
                     <th className="p-3 font-semibold uppercase tracking-wider">Curso</th>
+                    <th className="p-3 font-semibold uppercase tracking-wider">Plataforma / Aula</th>
                     <th className="p-3 font-semibold uppercase tracking-wider">Estado</th>
                     <th className="p-3 font-semibold uppercase tracking-wider">Acciones</th>
                   </tr>
@@ -1169,6 +1224,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <td className="p-3">
                       <span className="px-2.5 py-1 bg-amber-100 text-amber-700 border-2 border-amber-400 font-bold text-[10px] rounded shadow-[1px_1px_0_0_#b45309]">Admin</span>
                     </td>
+                    <td className="p-3 text-[#2a4e7c]">—</td>
                     <td className="p-3 text-[#2a4e7c]">—</td>
                     <td className="p-3">
                       <span className="px-3 py-1 bg-[#dcfce7] text-[#16a34a] border-2 border-[#0d1b2e] font-bold text-[10px] rounded">Activo</span>
@@ -1197,10 +1253,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         </select>
                       </td>
                       <td className="p-3 text-[#2a4e7c]">{student.course}</td>
+                      <td className="p-3">
+                        {student.platformId ? (() => {
+                          const plat = platforms.find(p => p.id === student.platformId);
+                          const aula = plat?.aulas.find(a => a.id === student.aulaId);
+                          return (
+                            <div className="flex flex-col">
+                              <span className="font-bold text-slate-800">{plat?.name}</span>
+                              <span className="text-[10px] text-slate-500 font-medium">{aula ? aula.name : 'Sin aula'}</span>
+                            </div>
+                          );
+                        })() : (
+                          <span className="text-slate-400 italic">No asignado</span>
+                        )}
+                      </td>
                       <td className="p-3 flex items-center gap-2">
                         <button
                           onClick={() => toggleStudentStatus(student.id)}
-                          className={`px-3 py-1 border-2 border-[#0d1b2e] font-bold text-[10px] rounded cursor-pointer transition-all shadow-[1px_1px_0_0_#0d1b2e] active:translate-y-[1px] active:shadow-[0px_0px_0_0_#0f172a] ${
+                          className={`px-3 py-1 border-2 border-[#0d1b2e] font-bold text-[10px] rounded cursor-pointer transition-all shadow-[1px_1px_0_0_#1e3a8a] active:translate-y-[1px] active:shadow-[0px_0px_0_0_#0f172a] ${
                             student.status === 'Activo'
                               ? 'bg-[#dcfce7] text-[#16a34a]'
                               : student.status === 'Completado'
@@ -1223,13 +1293,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         )}
                       </td>
                       <td className="p-3">
-                        <button
-                          onClick={() => handleDeleteStudent(student.id)}
-                          className="text-slate-400 hover:text-red-600 p-1 cursor-pointer transition-colors"
-                          title="Eliminar usuario"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleStartEditStudent(student)}
+                            className="px-2 py-1 bg-[#ffe66d] hover:bg-[#ffd166] text-[#001f4a] border-2 border-[#0d1b2e] font-bold text-[10px] rounded cursor-pointer transition-all shadow-[1.5px_1.5px_0_0_#000000] active:translate-y-[1.5px] active:shadow-[0px_0px_0_0_#000000]"
+                            title="Editar usuario"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => handleDeleteStudent(student.id)}
+                            className="text-slate-400 hover:text-red-600 p-1 cursor-pointer transition-colors"
+                            title="Eliminar usuario"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -1925,35 +2004,81 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             <tbody>
                               {platform.aulas.map(aula => (
                                 editingAula?.platformId === platform.id && editingAula?.aulaId === aula.id ? (
-                                  <tr key={aula.id} className="border-t border-slate-200 bg-[#f0f6ff]">
-                                    <td className="px-3 py-2">
-                                      <input value={editAulaName} onChange={e => setEditAulaName(e.target.value)} className="w-full px-2 py-1 border-2 border-[#2a4e7c] text-xs font-bold focus:outline-none" placeholder="Nombre del aula" />
-                                    </td>
-                                    <td className="px-3 py-2">
-                                      <input value={editAulaAge} onChange={e => setEditAulaAge(e.target.value)} className="w-full px-2 py-1 border border-slate-300 text-xs focus:outline-none" placeholder="Ej. 9 a 14 años" />
-                                    </td>
-                                    <td className="px-3 py-2">
-                                      <select value={editAulaModality} onChange={e => setEditAulaModality(e.target.value as 'Presencial' | 'Virtual')} className="px-2 py-1 border border-slate-300 text-xs focus:outline-none cursor-pointer bg-white">
-                                        <option value="Presencial">Presencial</option>
-                                        <option value="Virtual">Virtual</option>
-                                      </select>
-                                    </td>
-                                    <td className="px-3 py-2 hidden sm:table-cell">
-                                      <input value={editAulaSchedule} onChange={e => setEditAulaSchedule(e.target.value)} className="w-full px-2 py-1 border border-slate-300 text-xs focus:outline-none" placeholder="Ej. Lunes 18:00..." />
-                                    </td>
-                                    <td className="px-3 py-2 hidden sm:table-cell">
-                                      <input value={editAulaDesc} onChange={e => setEditAulaDesc(e.target.value)} className="w-full px-2 py-1 border border-slate-300 text-xs focus:outline-none" placeholder="Descripción..." />
-                                    </td>
-                                    <td className="px-3 py-2 text-center">
-                                      <div className="flex items-center justify-center gap-1.5">
-                                        <button onClick={() => handleSaveEditAula(platform.id, aula.id)} className="px-2 py-1 bg-[#2a4e7c] text-white text-[10px] font-bold border border-[#0d1b2e] cursor-pointer hover:bg-[#1e385c]">Guardar</button>
-                                        <button onClick={() => setEditingAula(null)} className="px-2 py-1 border border-slate-300 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer">Cancelar</button>
-                                      </div>
-                                    </td>
-                                  </tr>
+                                  <React.Fragment key={aula.id}>
+                                    <tr className="border-t border-slate-200 bg-[#f0f6ff]">
+                                      <td className="px-3 py-2">
+                                        <input value={editAulaName} onChange={e => setEditAulaName(e.target.value)} className="w-full px-2 py-1 border-2 border-[#2a4e7c] text-xs font-bold focus:outline-none" placeholder="Nombre del aula" />
+                                      </td>
+                                      <td className="px-3 py-2">
+                                        <input value={editAulaAge} onChange={e => setEditAulaAge(e.target.value)} className="w-full px-2 py-1 border border-slate-300 text-xs focus:outline-none" placeholder="Ej. 9 a 14 años" />
+                                      </td>
+                                      <td className="px-3 py-2">
+                                        <select value={editAulaModality} onChange={e => setEditAulaModality(e.target.value as 'Presencial' | 'Virtual')} className="px-2 py-1 border border-slate-300 text-xs focus:outline-none cursor-pointer bg-white">
+                                          <option value="Presencial">Presencial</option>
+                                          <option value="Virtual">Virtual</option>
+                                        </select>
+                                      </td>
+                                      <td className="px-3 py-2 hidden sm:table-cell">
+                                        <input value={editAulaSchedule} onChange={e => setEditAulaSchedule(e.target.value)} className="w-full px-2 py-1 border border-slate-300 text-xs focus:outline-none" placeholder="Ej. Lunes 18:00..." />
+                                      </td>
+                                      <td className="px-3 py-2 hidden sm:table-cell">
+                                        <input value={editAulaDesc} onChange={e => setEditAulaDesc(e.target.value)} className="w-full px-2 py-1 border border-slate-300 text-xs focus:outline-none" placeholder="Descripción..." />
+                                      </td>
+                                      <td className="px-3 py-2 text-center">
+                                        <div className="flex items-center justify-center gap-1.5">
+                                          <button onClick={() => handleSaveEditAula(platform.id, aula.id)} className="px-2 py-1 bg-[#2a4e7c] text-white text-[10px] font-bold border border-[#0d1b2e] cursor-pointer hover:bg-[#1e385c]">Guardar</button>
+                                          <button onClick={() => setEditingAula(null)} className="px-2 py-1 border border-slate-300 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer">Cancelar</button>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                    <tr className="bg-[#f0f6ff] border-b-2 border-slate-300">
+                                      <td colSpan={6} className="px-3 pb-3">
+                                        <div className="space-y-1">
+                                          <label className="text-[9px] font-bold text-slate-600 block uppercase font-mono">Cursos Vinculados a este Aula</label>
+                                          <div className="flex flex-wrap gap-2 p-2 border-2 border-[#0d1b2e] bg-white rounded max-h-24 overflow-y-auto">
+                                            {courses.map(course => {
+                                              const isChecked = editAulaCourseIds.includes(course.id);
+                                              return (
+                                                <label key={course.id} className="flex items-center gap-1.5 px-2 py-0.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 cursor-pointer text-[10px]">
+                                                  <input 
+                                                    type="checkbox"
+                                                    checked={isChecked}
+                                                    onChange={(e) => {
+                                                      if (e.target.checked) {
+                                                        setEditAulaCourseIds([...editAulaCourseIds, course.id]);
+                                                      } else {
+                                                        setEditAulaCourseIds(editAulaCourseIds.filter(id => id !== course.id));
+                                                      }
+                                                    }}
+                                                    className="w-3 h-3 accent-[#2a4e7c] cursor-pointer"
+                                                  />
+                                                  <span className="font-semibold text-slate-700">{course.title}</span>
+                                                </label>
+                                              );
+                                            })}
+                                          </div>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  </React.Fragment>
                                 ) : (
                                   <tr key={aula.id} className="border-t border-slate-200 hover:bg-slate-50 transition-colors">
-                                    <td className="px-3 py-2.5 font-bold text-[#0d1b2e]">{aula.name}</td>
+                                    <td className="px-3 py-2.5 font-bold text-[#0d1b2e]">
+                                      <div>{aula.name}</div>
+                                      {aula.courseIds && aula.courseIds.length > 0 && (
+                                        <div className="flex flex-wrap gap-1 mt-1">
+                                          {aula.courseIds.map(cid => {
+                                            const course = courses.find(c => c.id === cid);
+                                            if (!course) return null;
+                                            return (
+                                              <span key={cid} className="px-1.5 py-0.5 bg-[#f0f4f8] text-[#2a4e7c] border border-[#a3b8cc] text-[8px] font-bold uppercase rounded">
+                                                {course.title}
+                                              </span>
+                                            );
+                                          })}
+                                        </div>
+                                      )}
+                                    </td>
                                     <td className="px-3 py-2.5 text-slate-600">{aula.ageRange}</td>
                                     <td className="px-3 py-2.5">
                                       <span className={`inline-block px-2 py-0.5 text-[9px] font-bold uppercase border ${
@@ -2049,6 +2174,34 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 placeholder="Descripción breve..."
                                 className="w-full px-2 py-1.5 border-2 border-[#0d1b2e] text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#2a4e7c] bg-white"
                               />
+                            </div>
+                            <div className="space-y-1 col-span-full">
+                              <label className="text-[10px] font-bold text-slate-600 block font-mono">VINCULAR CURSOS A ESTA AULA</label>
+                              <div className="flex flex-wrap gap-2 p-2.5 border-2 border-[#0d1b2e] bg-white max-h-36 overflow-y-auto">
+                                {courses.map(course => {
+                                  const isChecked = newAulaCourseIds.includes(course.id);
+                                  return (
+                                    <label key={course.id} className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 border border-slate-300 hover:bg-slate-100 cursor-pointer text-[10.5px]">
+                                      <input 
+                                        type="checkbox"
+                                        checked={isChecked}
+                                        onChange={(e) => {
+                                          if (e.target.checked) {
+                                            setNewAulaCourseIds([...newAulaCourseIds, course.id]);
+                                          } else {
+                                            setNewAulaCourseIds(newAulaCourseIds.filter(id => id !== course.id));
+                                          }
+                                        }}
+                                        className="w-3.5 h-3.5 accent-[#2a4e7c] cursor-pointer"
+                                      />
+                                      <span className="font-bold text-slate-700">{course.title}</span>
+                                    </label>
+                                  );
+                                })}
+                                {courses.length === 0 && (
+                                  <span className="text-[10px] text-slate-400 italic">No hay cursos registrados en el sistema.</span>
+                                )}
+                              </div>
                             </div>
                           </div>
                           <div className="flex gap-2 justify-end">
@@ -2296,6 +2449,42 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </div>
 
               <div>
+                <label className="font-bold text-[#6180a6] block mb-1">Plataforma (Entidad)</label>
+                <select
+                  value={newStudentPlatformId}
+                  onChange={(e) => {
+                    setNewStudentPlatformId(e.target.value);
+                    setNewStudentAulaId('');
+                  }}
+                  className="w-full p-2 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] bg-white font-semibold text-slate-900"
+                >
+                  <option value="">Ninguna</option>
+                  {platforms.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {newStudentPlatformId && (() => {
+                const selectedPlat = platforms.find(p => p.id === newStudentPlatformId);
+                return (
+                  <div>
+                    <label className="font-bold text-[#6180a6] block mb-1">Aula</label>
+                    <select
+                      value={newStudentAulaId}
+                      onChange={(e) => setNewStudentAulaId(e.target.value)}
+                      className="w-full p-2 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] bg-white font-semibold text-slate-900"
+                    >
+                      <option value="">Seleccionar Aula...</option>
+                      {selectedPlat?.aulas.map(a => (
+                        <option key={a.id} value={a.id}>{a.name} ({a.ageRange})</option>
+                      ))}
+                    </select>
+                  </div>
+                );
+              })()}
+
+              <div>
                 <label className="font-bold text-[#6180a6] block mb-1">Contraseña de Acceso</label>
                 <input
                   type="text"
@@ -2320,6 +2509,131 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   className="px-3 py-1.5 bg-[#2a4e7c] hover:bg-[#1e385c] text-white font-bold border-2 border-[#0d1b2e] shadow-[1.5px_1.5px_0_0_#000000] active:translate-y-[1.5px] active:shadow-[0px_0px_0_0_#000000] transition-all cursor-pointer"
                 >
                   Registrar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT STUDENT MODAL */}
+      {showEditStudentModal && (
+        <div className="fixed inset-0 bg-[#0d1b2e]/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border-4 border-[#0d1b2e] shadow-[6px_6px_0_0_#000000] w-full max-w-sm p-5 animate-in fade-in zoom-in duration-155">
+            <h3 className="text-sm font-bold text-[#0d1b2e] mb-4 uppercase tracking-wider">Editar Usuario</h3>
+            <form onSubmit={handleSaveEditStudent} className="space-y-3.5 text-xs">
+              <div>
+                <label className="font-bold text-[#6180a6] block mb-1">Nombre Completo</label>
+                <input
+                  type="text"
+                  required
+                  value={editStudentName}
+                  onChange={(e) => setEditStudentName(e.target.value)}
+                  placeholder="ej. Sofía Díaz"
+                  className="w-full p-2 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-[#6180a6] block mb-1">Correo Electrónico</label>
+                <input
+                  type="email"
+                  required
+                  value={editStudentEmail}
+                  onChange={(e) => setEditStudentEmail(e.target.value)}
+                  placeholder="ej. sofia@hotmail.com"
+                  className="w-full p-2 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-[#6180a6] block mb-1">Rol del Usuario</label>
+                <select
+                  value={editStudentRole}
+                  onChange={(e) => setEditStudentRole(e.target.value as 'admin' | 'docente' | 'alumno' | 'profesor')}
+                  className="w-full p-2 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] bg-white font-semibold text-slate-900"
+                >
+                  <option value="alumno">Alumno</option>
+                  <option value="docente">Docente</option>
+                  <option value="profesor">Profesor</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="font-bold text-[#6180a6] block mb-1">Curso a Asignar</label>
+                <select
+                  value={editStudentCourse}
+                  onChange={(e) => setEditStudentCourse(e.target.value)}
+                  className="w-full p-2 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] bg-white font-semibold text-slate-900"
+                >
+                  {classrooms.map(c => (
+                    <option key={c.id} value={c.name}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="font-bold text-[#6180a6] block mb-1">Plataforma (Entidad)</label>
+                <select
+                  value={editStudentPlatformId}
+                  onChange={(e) => {
+                    setEditStudentPlatformId(e.target.value);
+                    setEditStudentAulaId('');
+                  }}
+                  className="w-full p-2 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] bg-white font-semibold text-slate-900"
+                >
+                  <option value="">Ninguna</option>
+                  {platforms.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {editStudentPlatformId && (() => {
+                const selectedPlat = platforms.find(p => p.id === editStudentPlatformId);
+                return (
+                  <div>
+                    <label className="font-bold text-[#6180a6] block mb-1">Aula</label>
+                    <select
+                      value={editStudentAulaId}
+                      onChange={(e) => setEditStudentAulaId(e.target.value)}
+                      className="w-full p-2 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] bg-white font-semibold text-slate-900"
+                    >
+                      <option value="">Seleccionar Aula...</option>
+                      {selectedPlat?.aulas.map(a => (
+                        <option key={a.id} value={a.id}>{a.name} ({a.ageRange})</option>
+                      ))}
+                    </select>
+                  </div>
+                );
+              })()}
+
+              <div>
+                <label className="font-bold text-[#6180a6] block mb-1">Contraseña de Acceso</label>
+                <input
+                  type="text"
+                  required
+                  value={editStudentPassword}
+                  onChange={(e) => setEditStudentPassword(e.target.value)}
+                  placeholder="ej. 123456"
+                  className="w-full p-2 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-slate-900"
+                />
+              </div>
+
+              <div className="flex gap-2 justify-end pt-3">
+                <button
+                  type="button"
+                  onClick={() => setShowEditStudentModal(false)}
+                  className="px-3 py-1.5 border border-slate-300 rounded font-semibold text-slate-650 hover:bg-slate-50 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-3 py-1.5 bg-[#2a4e7c] hover:bg-[#1e385c] text-white font-bold border-2 border-[#0d1b2e] shadow-[1.5px_1.5px_0_0_#000000] active:translate-y-[1.5px] active:shadow-[0px_0px_0_0_#000000] transition-all cursor-pointer"
+                >
+                  Guardar
                 </button>
               </div>
             </form>

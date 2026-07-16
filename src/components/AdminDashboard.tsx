@@ -133,6 +133,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   // Aula course linkages
   const [newAulaCourseIds, setNewAulaCourseIds] = useState<string[]>([]);
   const [editAulaCourseIds, setEditAulaCourseIds] = useState<string[]>([]);
+  const [editAulaCourseSearch, setEditAulaCourseSearch] = useState('');
+  const [isEditAulaCourseDropdownOpen, setIsEditAulaCourseDropdownOpen] = useState(false);
 
   // Student creation platform fields
   const [newStudentPlatformId, setNewStudentPlatformId] = useState('');
@@ -304,7 +306,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setEditAulaCourseIds(aula.courseIds || []);
   };
 
-  const handleSaveEditAula = (platformId: string, aulaId: string) => {
+  const handleSaveEditAula = (platformId: string, aulaId: string, e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!editAulaName.trim() || !editAulaAge.trim()) return;
     setPlatforms(prev => prev.map(p =>
       p.id === platformId
@@ -319,6 +322,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         : p
     ));
     setEditAulaCourseIds([]);
+    setEditAulaCourseSearch('');
+    setIsEditAulaCourseDropdownOpen(false);
     setEditingAula(null);
   };
 
@@ -1976,67 +1981,38 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             </thead>
                             <tbody>
                               {platform.aulas.map(aula => (
-                                editingAula?.platformId === platform.id && editingAula?.aulaId === aula.id ? (
-                                  <tr key={aula.id} className="border-t border-slate-200 bg-[#f0f6ff]">
-                                    <td className="px-3 py-2">
-                                      <input value={editAulaName} onChange={e => setEditAulaName(e.target.value)} className="w-full px-2 py-1 border-2 border-[#2a4e7c] text-xs font-bold focus:outline-none" placeholder="Nombre del aula" />
-                                    </td>
-                                    <td className="px-3 py-2">
-                                      <input value={editAulaAge} onChange={e => setEditAulaAge(e.target.value)} className="w-full px-2 py-1 border border-slate-300 text-xs focus:outline-none" placeholder="Ej. 9 a 14 años" />
-                                    </td>
-                                    <td className="px-3 py-2">
-                                      <select value={editAulaModality} onChange={e => setEditAulaModality(e.target.value as 'Presencial' | 'Virtual')} className="px-2 py-1 border border-slate-300 text-xs focus:outline-none cursor-pointer bg-white">
-                                        <option value="Presencial">Presencial</option>
-                                        <option value="Virtual">Virtual</option>
-                                      </select>
-                                    </td>
-                                    <td className="px-3 py-2 hidden sm:table-cell">
-                                      <input value={editAulaSchedule} onChange={e => setEditAulaSchedule(e.target.value)} className="w-full px-2 py-1 border border-slate-300 text-xs focus:outline-none" placeholder="Ej. Lunes 18:00..." />
-                                    </td>
-                                    <td className="px-3 py-2 hidden sm:table-cell">
-                                      <input value={editAulaDesc} onChange={e => setEditAulaDesc(e.target.value)} className="w-full px-2 py-1 border border-slate-300 text-xs focus:outline-none" placeholder="Descripción..." />
-                                    </td>
-                                    <td className="px-3 py-2 text-center">
-                                      <div className="flex items-center justify-center gap-1.5">
-                                        <button onClick={() => handleSaveEditAula(platform.id, aula.id)} className="px-2 py-1 bg-[#2a4e7c] text-white text-[10px] font-bold border border-[#0d1b2e] cursor-pointer hover:bg-[#1e385c]">Guardar</button>
-                                        <button onClick={() => setEditingAula(null)} className="px-2 py-1 border border-slate-300 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer">Cancelar</button>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                ) : (
-                                  <tr key={aula.id} className="border-t border-slate-200 hover:bg-slate-50 transition-colors">
-                                    <td className="px-3 py-2.5 font-bold text-[#0d1b2e]">{aula.name}</td>
-                                    <td className="px-3 py-2.5 text-slate-600">{aula.ageRange}</td>
-                                    <td className="px-3 py-2.5">
-                                      <span className={`inline-block px-2 py-0.5 text-[9px] font-bold uppercase border ${aula.modality === 'Virtual'
-                                          ? 'bg-[#e8f0fe] text-[#2a4e7c] border-[#2a4e7c]'
-                                          : 'bg-[#e8f7ee] text-[#2a6b3c] border-[#2a6b3c]'
-                                        }`}>
-                                        {aula.modality}
-                                      </span>
-                                    </td>
-                                    <td className="px-3 py-2.5 text-slate-600 hidden sm:table-cell max-w-[150px] truncate">{aula.schedule || '—'}</td>
-                                    <td className="px-3 py-2.5 text-slate-500 hidden sm:table-cell max-w-[150px] truncate">{aula.description || '—'}</td>
-                                    <td className="px-3 py-2.5">
-                                      <div className="flex items-center justify-center gap-1.5">
-                                        <button
-                                          onClick={() => handleStartEditAula(platform.id, aula)}
-                                          className="p-1.5 text-slate-400 hover:text-[#2a4e7c] border border-transparent hover:border-[#2a4e7c] transition-all cursor-pointer"
-                                          title="Editar aula"
-                                        >
-                                          <Pencil className="w-3.5 h-3.5" />
-                                        </button>
-                                        <button
-                                          onClick={() => handleDeleteAula(platform.id, aula.id)}
-                                          className="p-1.5 text-slate-400 hover:text-red-600 border border-transparent hover:border-red-400 transition-all cursor-pointer"
-                                          title="Eliminar aula"
-                                        >
-                                          <Trash2 className="w-3.5 h-3.5" />
-                                        </button>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                )
+                                <tr key={aula.id} className="border-t border-slate-200 hover:bg-slate-50 transition-colors">
+                                  <td className="px-3 py-2.5 font-bold text-[#0d1b2e]">{aula.name}</td>
+                                  <td className="px-3 py-2.5 text-slate-600">{aula.ageRange}</td>
+                                  <td className="px-3 py-2.5">
+                                    <span className={`inline-block px-2 py-0.5 text-[9px] font-bold uppercase border ${aula.modality === 'Virtual'
+                                        ? 'bg-[#e8f0fe] text-[#2a4e7c] border-[#2a4e7c]'
+                                        : 'bg-[#e8f7ee] text-[#2a6b3c] border-[#2a6b3c]'
+                                      }`}>
+                                      {aula.modality}
+                                    </span>
+                                  </td>
+                                  <td className="px-3 py-2.5 text-slate-600 hidden sm:table-cell max-w-[150px] truncate">{aula.schedule || '—'}</td>
+                                  <td className="px-3 py-2.5 text-slate-500 hidden sm:table-cell max-w-[150px] truncate">{aula.description || '—'}</td>
+                                  <td className="px-3 py-2.5">
+                                    <div className="flex items-center justify-center gap-1.5">
+                                      <button
+                                        onClick={() => handleStartEditAula(platform.id, aula)}
+                                        className="p-1.5 text-slate-400 hover:text-[#2a4e7c] border border-transparent hover:border-[#2a4e7c] transition-all cursor-pointer"
+                                        title="Editar aula"
+                                      >
+                                        <Pencil className="w-3.5 h-3.5" />
+                                      </button>
+                                      <button
+                                        onClick={() => handleDeleteAula(platform.id, aula.id)}
+                                        className="p-1.5 text-slate-400 hover:text-red-600 border border-transparent hover:border-red-400 transition-all cursor-pointer"
+                                        title="Eliminar aula"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
                               ))}
                             </tbody>
                           </table>
@@ -3330,6 +3306,182 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <button
                   type="button"
                   onClick={() => setEditingLesson(null)}
+                  className="px-3 py-1.5 border border-[#a3b8cc] rounded font-semibold text-slate-650 hover:bg-slate-50 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-3 py-1.5 bg-[#2a4e7c] hover:bg-[#1e385c] text-white font-bold border-2 border-[#0d1b2e] shadow-[1.5px_1.5px_0_0_#000000] active:translate-y-[1.5px] active:shadow-[0px_0px_0_0_#000000] transition-all cursor-pointer"
+                >
+                  Guardar Cambios
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {editingAula && (
+        <div className="fixed inset-0 bg-[#0d1b2e]/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border-4 border-[#0d1b2e] shadow-[6px_6px_0_0_#000000] w-full max-w-md p-5 animate-in fade-in zoom-in duration-150">
+            <h3 className="text-sm font-bold text-[#0d1b2e] mb-2 uppercase tracking-wider">Modificar Aula</h3>
+            <p className="text-[10px] text-slate-500 mb-4">Modifica la información general de esta aula y asocia los cursos correspondientes.</p>
+            <form onSubmit={(e) => handleSaveEditAula(editingAula.platformId, editingAula.aulaId, e)} className="space-y-3.5 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-[#6180a6] block mb-1">Nombre del Aula</label>
+                  <input
+                    type="text"
+                    required
+                    value={editAulaName}
+                    onChange={(e) => setEditAulaName(e.target.value)}
+                    placeholder="ej. Aula Maker"
+                    className="w-full p-2 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-slate-900 font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-[#6180a6] block mb-1">Rango de Edad</label>
+                  <input
+                    type="text"
+                    required
+                    value={editAulaAge}
+                    onChange={(e) => setEditAulaAge(e.target.value)}
+                    placeholder="ej. de 6 a 8 años"
+                    className="w-full p-2 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-slate-900 font-medium"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-[#6180a6] block mb-1">Modalidad</label>
+                  <select
+                    value={editAulaModality}
+                    onChange={(e) => setEditAulaModality(e.target.value as 'Presencial' | 'Virtual')}
+                    className="w-full p-2 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] bg-white font-semibold text-slate-900"
+                  >
+                    <option value="Presencial">Presencial</option>
+                    <option value="Virtual">Virtual</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="font-bold text-[#6180a6] block mb-1">Día y Horario</label>
+                  <input
+                    type="text"
+                    value={editAulaSchedule}
+                    onChange={(e) => setEditAulaSchedule(e.target.value)}
+                    placeholder="ej. Sábados 10:00 - 12:00"
+                    className="w-full p-2 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-slate-900 font-medium"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="font-bold text-[#6180a6] block mb-1">Descripción</label>
+                <textarea
+                  rows={2}
+                  value={editAulaDesc}
+                  onChange={(e) => setEditAulaDesc(e.target.value)}
+                  placeholder="ej. Aula enfocada en proyectos presenciales para los más pequeños..."
+                  className="w-full p-2 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-slate-900 font-medium resize-none"
+                />
+              </div>
+
+              {/* Buscador predictivo de cursos */}
+              <div className="relative">
+                <label className="font-bold text-[#6180a6] block mb-1">Buscar y Agregar Cursos</label>
+                <div className="relative flex items-center">
+                  <input
+                    type="text"
+                    placeholder="Escribe el nombre del curso..."
+                    value={editAulaCourseSearch}
+                    onChange={(e) => {
+                      setEditAulaCourseSearch(e.target.value);
+                      setIsEditAulaCourseDropdownOpen(true);
+                    }}
+                    onFocus={() => setIsEditAulaCourseDropdownOpen(true)}
+                    className="w-full p-2 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-slate-900 font-medium"
+                  />
+                  {editAulaCourseSearch && (
+                    <button
+                      type="button"
+                      onClick={() => { setEditAulaCourseSearch(''); setIsEditAulaCourseDropdownOpen(false); }}
+                      className="absolute right-2 text-slate-400 hover:text-slate-650 cursor-pointer"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                {isEditAulaCourseDropdownOpen && editAulaCourseSearch.trim().length > 0 && (() => {
+                  const filteredCourses = classrooms.filter(c =>
+                    !editAulaCourseIds.includes(c.id) &&
+                    c.name.toLowerCase().includes(editAulaCourseSearch.toLowerCase())
+                  );
+
+                  return (
+                    <div className="absolute z-50 w-full mt-1 bg-white border-2 border-[#0d1b2e] shadow-[3px_3px_0_0_#000000] max-h-40 overflow-y-auto rounded text-[11px]">
+                      {filteredCourses.map(course => (
+                        <button
+                          key={course.id}
+                          type="button"
+                          onClick={() => {
+                            setEditAulaCourseIds([...editAulaCourseIds, course.id]);
+                            setEditAulaCourseSearch('');
+                            setIsEditAulaCourseDropdownOpen(false);
+                          }}
+                          className="w-full text-left px-3 py-2 hover:bg-[#f0f4f8] border-b last:border-0 border-slate-100 flex flex-col cursor-pointer"
+                        >
+                          <span className="font-semibold text-slate-800">{course.name}</span>
+                        </button>
+                      ))}
+                      {filteredCourses.length === 0 && (
+                        <div className="p-2.5 text-slate-400 italic text-[10px] text-center">
+                          No se encontraron cursos disponibles.
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Badges de cursos seleccionados */}
+              {editAulaCourseIds.length > 0 && (
+                <div>
+                  <label className="font-semibold text-slate-500 block mb-1 text-[10px]">Cursos Vinculados a esta Aula:</label>
+                  <div className="flex flex-wrap gap-1.5 p-2 border border-slate-200 rounded bg-slate-50 max-h-24 overflow-y-auto">
+                    {editAulaCourseIds.map(id => {
+                      const course = classrooms.find(c => c.id === id);
+                      if (!course) return null;
+                      return (
+                        <span key={id} className="inline-flex items-center gap-1.5 px-2 py-1 bg-[#2a4e7c] text-white font-bold text-[9px] rounded uppercase shadow-[1px_1px_0_0_#000000]">
+                          {course.name}
+                          <button
+                            type="button"
+                            onClick={() => setEditAulaCourseIds(editAulaCourseIds.filter(cid => cid !== id))}
+                            className="text-[#ffe66d] hover:text-white font-bold ml-1 cursor-pointer"
+                          >
+                            ✕
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-2 justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingAula(null);
+                    setEditAulaCourseIds([]);
+                    setEditAulaCourseSearch('');
+                    setIsEditAulaCourseDropdownOpen(false);
+                  }}
                   className="px-3 py-1.5 border border-[#a3b8cc] rounded font-semibold text-slate-650 hover:bg-slate-50 cursor-pointer"
                 >
                   Cancelar

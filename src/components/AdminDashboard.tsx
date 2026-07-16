@@ -76,6 +76,7 @@ interface PlatformAula {
   ageRange: string;
   modality: 'Presencial' | 'Virtual';
   description?: string;
+  schedule?: string;
 }
 
 interface Platform {
@@ -130,9 +131,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         name: 'Play Code',
         description: 'Institución educativa de tecnología y programación para niños y jóvenes.',
         aulas: [
-          { id: 'aula-1', name: 'Aula Maker', ageRange: '6 a 8 años', modality: 'Presencial', description: 'Introducción a la tecnología y la creatividad digital.' },
-          { id: 'aula-2', name: 'Robótica y Programación', ageRange: '9 a 14 años', modality: 'Presencial', description: 'Programación con robots y proyectos STEAM.' },
-          { id: 'aula-3', name: 'PlayCoders', ageRange: '9 a 13 años', modality: 'Virtual', description: 'Programación y desarrollo web en modalidad online.' }
+          { id: 'aula-1', name: 'Aula Maker', ageRange: '6 a 8 años', modality: 'Presencial', description: 'Introducción a la tecnología y la creatividad digital.', schedule: 'Lunes y Miércoles 18:00' },
+          { id: 'aula-2', name: 'Robótica y Programación', ageRange: '9 a 14 años', modality: 'Presencial', description: 'Programación con robots y proyectos STEAM.', schedule: 'Martes y Jueves 17:30' },
+          { id: 'aula-3', name: 'PlayCoders', ageRange: '9 a 13 años', modality: 'Virtual', description: 'Programación y desarrollo web en modalidad online.', schedule: 'Sábados 10:00' }
         ]
       }
     ];
@@ -146,18 +147,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [editingPlatformId, setEditingPlatformId] = useState<string | null>(null);
   const [editPlatformName, setEditPlatformName] = useState('');
   const [editPlatformDesc, setEditPlatformDesc] = useState('');
-  // Aula creation (per platform)
   const [showNewAulaForPlatform, setShowNewAulaForPlatform] = useState<string | null>(null);
   const [newAulaName, setNewAulaName] = useState('');
   const [newAulaAge, setNewAulaAge] = useState('');
   const [newAulaModality, setNewAulaModality] = useState<'Presencial' | 'Virtual'>('Presencial');
   const [newAulaDesc, setNewAulaDesc] = useState('');
+  const [newAulaSchedule, setNewAulaSchedule] = useState('');
   // Aula editing
   const [editingAula, setEditingAula] = useState<{ platformId: string; aulaId: string } | null>(null);
   const [editAulaName, setEditAulaName] = useState('');
   const [editAulaAge, setEditAulaAge] = useState('');
   const [editAulaModality, setEditAulaModality] = useState<'Presencial' | 'Virtual'>('Presencial');
   const [editAulaDesc, setEditAulaDesc] = useState('');
+  const [editAulaSchedule, setEditAulaSchedule] = useState('');
 
   // Forum moderation state
   const [posts, setPosts] = useState<any[]>([]);
@@ -267,7 +269,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       name: newAulaName.trim(),
       ageRange: newAulaAge.trim(),
       modality: newAulaModality,
-      description: newAulaDesc.trim()
+      description: newAulaDesc.trim(),
+      schedule: newAulaSchedule.trim()
     };
     setPlatforms(prev => prev.map(p =>
       p.id === platformId ? { ...p, aulas: [...p.aulas, newAula] } : p
@@ -276,6 +279,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setNewAulaAge('');
     setNewAulaModality('Presencial');
     setNewAulaDesc('');
+    setNewAulaSchedule('');
     setShowNewAulaForPlatform(null);
   };
 
@@ -291,6 +295,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setEditAulaAge(aula.ageRange);
     setEditAulaModality(aula.modality);
     setEditAulaDesc(aula.description || '');
+    setEditAulaSchedule(aula.schedule || '');
   };
 
   const handleSaveEditAula = (platformId: string, aulaId: string) => {
@@ -301,7 +306,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             ...p,
             aulas: p.aulas.map(a =>
               a.id === aulaId
-                ? { ...a, name: editAulaName.trim(), ageRange: editAulaAge.trim(), modality: editAulaModality, description: editAulaDesc.trim() }
+                ? { ...a, name: editAulaName.trim(), ageRange: editAulaAge.trim(), modality: editAulaModality, description: editAulaDesc.trim(), schedule: editAulaSchedule.trim() }
                 : a
             )
           }
@@ -1912,6 +1917,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 <th className="text-left px-3 py-2 font-bold text-[#0d1b2e] uppercase tracking-wider">Aula</th>
                                 <th className="text-left px-3 py-2 font-bold text-[#0d1b2e] uppercase tracking-wider">Edades</th>
                                 <th className="text-left px-3 py-2 font-bold text-[#0d1b2e] uppercase tracking-wider">Modalidad</th>
+                                <th className="text-left px-3 py-2 font-bold text-[#0d1b2e] uppercase tracking-wider hidden sm:table-cell">Día y Horario</th>
                                 <th className="text-left px-3 py-2 font-bold text-[#0d1b2e] uppercase tracking-wider hidden sm:table-cell">Descripción</th>
                                 <th className="text-center px-3 py-2 font-bold text-[#0d1b2e] uppercase tracking-wider">Acciones</th>
                               </tr>
@@ -1931,6 +1937,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         <option value="Presencial">Presencial</option>
                                         <option value="Virtual">Virtual</option>
                                       </select>
+                                    </td>
+                                    <td className="px-3 py-2 hidden sm:table-cell">
+                                      <input value={editAulaSchedule} onChange={e => setEditAulaSchedule(e.target.value)} className="w-full px-2 py-1 border border-slate-300 text-xs focus:outline-none" placeholder="Ej. Lunes 18:00..." />
                                     </td>
                                     <td className="px-3 py-2 hidden sm:table-cell">
                                       <input value={editAulaDesc} onChange={e => setEditAulaDesc(e.target.value)} className="w-full px-2 py-1 border border-slate-300 text-xs focus:outline-none" placeholder="Descripción..." />
@@ -1955,7 +1964,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         {aula.modality}
                                       </span>
                                     </td>
-                                    <td className="px-3 py-2.5 text-slate-500 hidden sm:table-cell max-w-[180px] truncate">{aula.description || '—'}</td>
+                                    <td className="px-3 py-2.5 text-slate-600 hidden sm:table-cell max-w-[150px] truncate">{aula.schedule || '—'}</td>
+                                    <td className="px-3 py-2.5 text-slate-500 hidden sm:table-cell max-w-[150px] truncate">{aula.description || '—'}</td>
                                     <td className="px-3 py-2.5">
                                       <div className="flex items-center justify-center gap-1.5">
                                         <button
@@ -1986,7 +1996,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       {showNewAulaForPlatform === platform.id ? (
                         <form onSubmit={e => handleCreateAula(e, platform.id)} className="border-2 border-dashed border-[#2a4e7c] bg-[#f0f6ff] p-4 space-y-3">
                           <h4 className="text-[10px] font-bold uppercase tracking-wider text-[#2a4e7c]">Nueva Aula en {platform.name}</h4>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                             <div className="space-y-1">
                               <label className="text-[10px] font-bold text-slate-600 block">Nombre del Aula *</label>
                               <input
@@ -2021,6 +2031,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               </select>
                             </div>
                             <div className="space-y-1">
+                              <label className="text-[10px] font-bold text-slate-600 block">Día y Horario</label>
+                              <input
+                                type="text"
+                                value={newAulaSchedule}
+                                onChange={e => setNewAulaSchedule(e.target.value)}
+                                placeholder="Ej. Lunes 18:00"
+                                className="w-full px-2 py-1.5 border-2 border-[#0d1b2e] text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#2a4e7c] bg-white"
+                              />
+                            </div>
+                            <div className="space-y-1">
                               <label className="text-[10px] font-bold text-slate-600 block">Descripción</label>
                               <input
                                 type="text"
@@ -2032,7 +2052,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             </div>
                           </div>
                           <div className="flex gap-2 justify-end">
-                            <button type="button" onClick={() => setShowNewAulaForPlatform(null)} className="px-3 py-1.5 border border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer">Cancelar</button>
+                            <button type="button" onClick={() => { setShowNewAulaForPlatform(null); setNewAulaSchedule(''); }} className="px-3 py-1.5 border border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer">Cancelar</button>
                             <button type="submit" className="px-3 py-1.5 bg-[#2a4e7c] hover:bg-[#1e385c] text-white text-xs font-bold border-2 border-[#0d1b2e] shadow-[1.5px_1.5px_0_0_#000000] cursor-pointer">Agregar Aula</button>
                           </div>
                         </form>

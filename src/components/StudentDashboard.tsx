@@ -214,6 +214,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   onLogout,
   onSaveProfile
 }) => {
+  void courses; // courses prop kept for API compatibility; aula courses now use classrooms
   const [activeTab, setActiveTab] = useState<'aprendizaje' | 'perfil' | 'foro'>('aprendizaje');
   const [palette, setPalette] = useState<'default' | 'cyberpunk' | 'playcode'>(student.theme || 'default');
 
@@ -392,7 +393,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   // Platform & Aula navigation states
   const [insidePlatform, setInsidePlatform] = useState(false);
   const [selectedPlatformAula, setSelectedPlatformAula] = useState<PlatformAula | null>(null);
-  const [selectedPlatformCourse, setSelectedPlatformCourse] = useState<Course | null>(null);
+  const [selectedPlatformCourse, setSelectedPlatformCourse] = useState<Classroom | null>(null);
   const [selectedPlatformLesson, setSelectedPlatformLesson] = useState<Lesson | null>(null);
 
   // Profile settings
@@ -646,7 +647,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                     <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">Cursos de este Aula</h4>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       {(() => {
-                        const aulaCourses = courses.filter(c => selectedPlatformAula.courseIds?.includes(c.id));
+                        // courseIds en el aula referencia IDs de classrooms (c1, c2...), no del catálogo
+                        const aulaCourses = classrooms.filter(c => selectedPlatformAula.courseIds?.includes(c.id));
                         if (aulaCourses.length === 0) {
                           return (
                             <div className="col-span-3 bg-slate-50 border-2 border-dashed border-slate-300 p-8 text-center text-xs text-slate-500 font-medium">
@@ -655,7 +657,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                           );
                         }
                         return aulaCourses.map(course => {
-                          const courseLessons = lessons.filter(l => l.courseName === course.title);
+                          const courseLessons = lessons.filter(l => l.courseName === course.name);
                           const completedCourseLessons = courseLessons.filter(l => student.completedLessonIds?.includes(l.id));
                           const progressPercent = courseLessons.length > 0 
                             ? Math.round((completedCourseLessons.length / courseLessons.length) * 100) 
@@ -666,9 +668,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                               key={course.id}
                               onClick={() => {
                                 setSelectedPlatformCourse(course);
-                                const courseLessons = lessons.filter(l => l.courseName === course.title);
-                                if (courseLessons.length > 0) {
-                                  setSelectedPlatformLesson(courseLessons[0]);
+                                const cLessons = lessons.filter(l => l.courseName === course.name);
+                                if (cLessons.length > 0) {
+                                  setSelectedPlatformLesson(cLessons[0]);
                                 } else {
                                   setSelectedPlatformLesson(null);
                                 }
@@ -676,13 +678,11 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                               className={`${t.cardBg} ${t.cardBorder} p-6 ${t.cardShadow} hover:translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#000000] cursor-pointer transition-all flex flex-col justify-between`}
                             >
                               <div>
-                                <div className="flex justify-between items-center mb-3">
-                                  <span className={`text-[10px] font-mono font-bold px-2 py-0.5 ${t.badgeBg}`}>
-                                    {course.type.toUpperCase()}
-                                  </span>
-                                  <span className="text-[10px] font-bold text-slate-500">{course.ageGroup}</span>
-                                </div>
-                                <h4 className="text-lg font-bold line-clamp-2">{course.title}</h4>
+                                {course.imageUrl && (
+                                  <img src={course.imageUrl} alt={course.name} className="w-full h-28 object-cover mb-3 rounded" />
+                                )}
+                                <h4 className="text-lg font-bold line-clamp-2">{course.name}</h4>
+                                <p className="text-xs text-slate-500 mt-1 line-clamp-2">{course.description}</p>
                                 
                                 <div className="mt-4 pt-4 border-t border-slate-100">
                                   <div className="flex justify-between items-center text-[9px] font-bold text-slate-500 mb-1">
@@ -723,13 +723,13 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                         >
                           <ArrowLeft className="w-3.5 h-3.5" /> Volver al Aula
                         </button>
-                        <h3 className="text-xl font-bold mt-4 text-[#0d1b2e]">{selectedPlatformCourse.title}</h3>
+                        <h3 className="text-xl font-bold mt-4 text-[#0d1b2e]">{selectedPlatformCourse.name}</h3>
                         <p className="text-xs text-slate-500 font-medium">Contenido didáctico del curso en {selectedPlatformAula.name}</p>
                       </div>
                     </div>
 
                     {(() => {
-                      const courseLessons = lessons.filter(l => l.courseName === selectedPlatformCourse.title);
+                      const courseLessons = lessons.filter(l => l.courseName === selectedPlatformCourse.name);
                       if (courseLessons.length === 0) {
                         return (
                           <div className="bg-slate-50 border-2 border-dashed border-slate-300 p-8 text-center text-xs text-slate-500">

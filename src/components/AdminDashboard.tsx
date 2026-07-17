@@ -2153,11 +2153,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         {activeTab === 'contenido' && (() => {
           const q = lessonSearchFilter.toLowerCase();
           const filteredLessons = q
-            ? lessons.filter(l =>
-                l.title.toLowerCase().includes(q) ||
-                l.courseName.toLowerCase().includes(q) ||
-                classrooms.some(c => c.lessonIds?.includes(l.id) && c.name.toLowerCase().includes(q))
-              )
+            ? lessons.filter(l => l.title.toLowerCase().includes(q))
             : lessons;
 
           return (
@@ -2188,7 +2184,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   type="text"
                   value={lessonSearchFilter}
                   onChange={(e) => setLessonSearchFilter(e.target.value)}
-                  placeholder="Buscar lección por título o curso..."
+                  placeholder="Buscar lección por título..."
                   className="w-full pl-10 pr-10 py-2.5 border-2 border-[#0d1b2e] bg-white text-sm text-slate-800 font-semibold rounded shadow-[2px_2px_0_0_#0d1b2e] focus:outline-none focus:ring-2 focus:ring-[#2a4e7c] focus:shadow-[3px_3px_0_0_#2a4e7c] transition-all placeholder:text-slate-400 placeholder:font-medium"
                 />
                 {lessonSearchFilter && (
@@ -2207,9 +2203,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   {filteredLessons.length} {filteredLessons.length === 1 ? 'lección' : 'lecciones'}
                   {q && ` de ${lessons.length}`}
                 </span>
-                <span className="bg-[#f0f4f8] border border-[#a3b8cc] px-2.5 py-1 rounded">
-                  {lessons.filter(l => classrooms.some(c => c.lessonIds?.includes(l.id))).length} lecciones vinculadas
-                </span>
               </div>
 
               {/* Lessons Table */}
@@ -2218,7 +2211,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <thead>
                     <tr className="bg-[#0d1b2e] text-white border-b-2 border-[#1e385c]">
                       <th className="p-3 font-semibold uppercase tracking-wider">Título de la Lección</th>
-                      <th className="p-3 font-semibold uppercase tracking-wider">Curso Vinculado</th>
                       <th className="p-3 font-semibold uppercase tracking-wider">Acciones</th>
                     </tr>
                   </thead>
@@ -2226,30 +2218,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     {filteredLessons.map((lesson) => (
                       <tr key={lesson.id} className="hover:bg-[#f0f4f8]/50 font-medium">
                         <td className="p-3 text-[#0d1b2e] font-bold">{lesson.title}</td>
-                        <td className="p-3">
-                          {(() => {
-                            const linkedCourses = classrooms.filter(c => c.lessonIds?.includes(lesson.id));
-                            if (linkedCourses.length > 0) {
-                              return (
-                                <div className="flex flex-wrap gap-1">
-                                  {linkedCourses.map(c => (
-                                    <span key={c.id} className="inline-block bg-[#2a4e7c] text-white px-2 py-0.5 rounded font-bold text-[9px] uppercase tracking-wider">
-                                      {c.name}
-                                    </span>
-                                  ))}
-                                </div>
-                              );
-                            }
-                            if (lesson.courseName) {
-                              return (
-                                <span className="inline-block bg-slate-400 text-white px-2 py-0.5 rounded font-bold text-[9px] uppercase tracking-wider">
-                                  {lesson.courseName}
-                                </span>
-                              );
-                            }
-                            return <span className="text-slate-400 italic">Sin vincular</span>;
-                          })()}
-                        </td>
                         <td className="p-3">
                           <div className="flex items-center gap-2.5">
                             <button
@@ -2299,12 +2267,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <div className="bg-gradient-to-r from-[#0d1b2e] to-[#1e385c] px-5 py-3 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-3">
                   <Eye className="w-4 h-4 text-white/60" />
-                  <div>
-                    <h3 className="text-sm font-bold text-white">{previewLesson.title}</h3>
-                    <span className="text-[9px] text-white/50 font-bold uppercase tracking-wider">
-                      {classrooms.filter(c => c.lessonIds?.includes(previewLesson.id)).map(c => c.name).join(', ') || previewLesson.courseName || 'Sin curso asignado'}
-                    </span>
-                  </div>
+                  <h3 className="text-sm font-bold text-white">{previewLesson.title}</h3>
                 </div>
                 <button
                   onClick={() => setPreviewLesson(null)}

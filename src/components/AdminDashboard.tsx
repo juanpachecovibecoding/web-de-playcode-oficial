@@ -1511,8 +1511,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       {/* Vista previa */}
                       <div className="bg-slate-50 border border-slate-200 rounded p-4 flex flex-col items-center justify-center text-center gap-3">
                         <span className="text-[9px] font-bold text-[#6180a6] block uppercase tracking-wider">Vista Previa</span>
-                        <div className="w-14 h-14 rounded-full bg-white border-2 border-[#0d1b2e] flex items-center justify-center font-bold text-2xl shadow-[2.5px_2.5px_0_0_#0d1b2e]">
-                          {adminForumAvatar}
+                        <div className="w-14 h-14 rounded-full bg-white border-2 border-[#0d1b2e] flex items-center justify-center font-bold text-2xl shadow-[2.5px_2.5px_0_0_#0d1b2e] overflow-hidden">
+                          {adminForumAvatar.startsWith('http') || adminForumAvatar.startsWith('/') || adminForumAvatar.startsWith('data:') ? (
+                            <img src={adminForumAvatar} alt="Avatar" className="w-full h-full object-cover" />
+                          ) : (
+                            adminForumAvatar
+                          )}
                         </div>
                         <div>
                           <span className="text-xs font-bold text-slate-800 block leading-tight">{adminForumName}</span>
@@ -1540,9 +1544,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             <input
                               type="text"
                               maxLength={3}
-                              required
-                              value={adminForumAvatar}
-                              onChange={(e) => setAdminForumAvatar(e.target.value)}
+                              value={!(adminForumAvatar.startsWith('http') || adminForumAvatar.startsWith('/') || adminForumAvatar.startsWith('data:')) ? adminForumAvatar : ''}
+                              onChange={(e) => setAdminForumAvatar(e.target.value || '🧠')}
                               placeholder="Ej. 🧠 o 👨‍💻"
                               className="w-16 px-3 py-2 border-2 border-[#0d1b2e] rounded text-center text-lg font-bold focus:outline-none focus:ring-2 focus:ring-[#2a4e7c] text-slate-900 bg-white"
                             />
@@ -1559,6 +1562,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               ))}
                             </div>
                           </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 block">O URL de Imagen de Avatar</label>
+                          <input
+                            type="url"
+                            value={(adminForumAvatar.startsWith('http') || adminForumAvatar.startsWith('/') || adminForumAvatar.startsWith('data:')) ? adminForumAvatar : ''}
+                            onChange={(e) => setAdminForumAvatar(e.target.value)}
+                            placeholder="https://ejemplo.com/mi-avatar.png"
+                            className="w-full px-3 py-2 border-2 border-[#0d1b2e] rounded text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#2a4e7c] text-slate-900 bg-white"
+                          />
                         </div>
                       </div>
                     </div>
@@ -1738,8 +1752,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       {/* Autor, fecha y acción principal de borrar */}
                       <div className="flex justify-between items-start pb-2.5 border-b border-slate-100">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-full bg-[#f0f4f8] border border-slate-350 flex items-center justify-center font-bold text-sm shadow-[1px_1px_0_0_#0d1b2e]">
-                            {post.authorAvatar || '🚀'}
+                          <div className="w-8 h-8 rounded-full bg-[#f0f4f8] border border-slate-350 flex items-center justify-center font-bold text-sm shadow-[1px_1px_0_0_#0d1b2e] overflow-hidden">
+                            {post.authorAvatar && (post.authorAvatar.startsWith('http') || post.authorAvatar.startsWith('/') || post.authorAvatar.startsWith('data:')) ? (
+                              <img src={post.authorAvatar} alt="Avatar" className="w-full h-full object-cover" />
+                            ) : (
+                              post.authorAvatar || '🚀'
+                            )}
                           </div>
                           <div>
                             <span className="text-xs font-bold text-slate-800 block leading-tight">{post.authorName}</span>
@@ -1922,8 +1940,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             <div>
                               {/* Autor & Fecha */}
                               <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-100">
-                                <div className="w-6 h-6 rounded-full bg-[#f0f4f8] border border-slate-350 flex items-center justify-center font-bold text-xs shadow-[0.5px_0.5px_0_0_#0d1b2e]">
-                                  {post.authorAvatar || '🚀'}
+                                <div className="w-6 h-6 rounded-full bg-[#f0f4f8] border border-slate-350 flex items-center justify-center font-bold text-xs shadow-[0.5px_0.5px_0_0_#0d1b2e] overflow-hidden">
+                                  {post.authorAvatar && (post.authorAvatar.startsWith('http') || post.authorAvatar.startsWith('/') || post.authorAvatar.startsWith('data:')) ? (
+                                    <img src={post.authorAvatar} alt="Avatar" className="w-full h-full object-cover" />
+                                  ) : (
+                                    post.authorAvatar || '🚀'
+                                  )}
                                 </div>
                                 <div className="min-w-0">
                                   <span className="text-[10px] font-bold text-slate-800 block truncate leading-none">{post.authorName}</span>

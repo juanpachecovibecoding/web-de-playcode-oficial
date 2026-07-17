@@ -1561,8 +1561,12 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                       {/* Header: Autor y Fecha */}
                       <div className="flex justify-between items-center pb-2.5 border-b border-slate-100">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-full bg-[#f0f4f8] border border-slate-300 flex items-center justify-center font-bold text-sm shadow-[1px_1px_0_0_#0d1b2e]">
-                            {post.authorAvatar || '🚀'}
+                          <div className="w-8 h-8 rounded-full bg-[#f0f4f8] border border-slate-300 flex items-center justify-center font-bold text-sm shadow-[1px_1px_0_0_#0d1b2e] overflow-hidden">
+                            {post.authorAvatar && (post.authorAvatar.startsWith('http') || post.authorAvatar.startsWith('/') || post.authorAvatar.startsWith('data:')) ? (
+                              <img src={post.authorAvatar} alt="Avatar" className="w-full h-full object-cover" />
+                            ) : (
+                              post.authorAvatar || '🚀'
+                            )}
                           </div>
                           <div>
                             <span className="text-xs font-bold text-slate-800 block leading-tight">{post.authorName}</span>
@@ -1733,8 +1737,12 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                             <div>
                               {/* Autor & Fecha */}
                               <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-100">
-                                <div className="w-6 h-6 rounded-full bg-[#f0f4f8] border border-slate-350 flex items-center justify-center font-bold text-xs shadow-[0.5px_0.5px_0_0_#0d1b2e]">
-                                  {post.authorAvatar || '🚀'}
+                                <div className="w-6 h-6 rounded-full bg-[#f0f4f8] border border-slate-350 flex items-center justify-center font-bold text-xs shadow-[0.5px_0.5px_0_0_#0d1b2e] overflow-hidden">
+                                  {post.authorAvatar && (post.authorAvatar.startsWith('http') || post.authorAvatar.startsWith('/') || post.authorAvatar.startsWith('data:')) ? (
+                                    <img src={post.authorAvatar} alt="Avatar" className="w-full h-full object-cover" />
+                                  ) : (
+                                    post.authorAvatar || '🚀'
+                                  )}
                                 </div>
                                 <div className="min-w-0">
                                   <span className="text-[10px] font-bold text-slate-800 block truncate leading-none">{post.authorName}</span>

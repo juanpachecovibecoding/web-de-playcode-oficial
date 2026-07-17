@@ -48,6 +48,9 @@ interface Student {
   aulaIds?: string[];
   googleAuthAllowed?: boolean;
   googleEmail?: string;
+  inventory?: string[];
+  unopenedChestsCount?: number;
+  unlockedBadgeIds?: string[];
 }
 
 interface PlatformAula {
@@ -115,6 +118,7 @@ interface ForumPost {
   reactedBy: { [userUsername: string]: string }; // userUsername -> emoji
   createdAt: string;
   comments: ForumComment[];
+  chestAwarded?: boolean;
 }
 
 const App: React.FC = () => {
@@ -512,12 +516,49 @@ const App: React.FC = () => {
     );
   }
 
+  React.useEffect(() => {
+    if (loading || !dbLoaded) return;
+    
+    let studentsUpdated = false;
+    let postsUpdated = false;
+    
+    const nextStudents = [...students];
+    const nextPosts = forumPosts.map(post => {
+      const checkReactionsCount = post.reactions?.['✅'] || 0;
+      if (checkReactionsCount >= 10 && !post.chestAwarded) {
+        const studentIndex = nextStudents.findIndex(s => s.username === post.authorUsername);
+        if (studentIndex !== -1) {
+          const currentCount = nextStudents[studentIndex].unopenedChestsCount || 0;
+          nextStudents[studentIndex] = {
+            ...nextStudents[studentIndex],
+            unopenedChestsCount: currentCount + 1
+          };
+          studentsUpdated = true;
+        }
+        postsUpdated = true;
+        return {
+          ...post,
+          chestAwarded: true
+        };
+      }
+      return post;
+    });
+
+    if (postsUpdated) {
+      setForumPosts(nextPosts);
+    }
+    if (studentsUpdated) {
+      setStudents(nextStudents);
+    }
+  }, [forumPosts, students, loading, dbLoaded]);
+
   if (view === 'student_dashboard' && user && user.id) {
     const studentInfo = students.find(s => s.id === user.id);
     if (studentInfo) {
       return (
         <StudentDashboard
           student={studentInfo}
+          students={students}
           classrooms={classrooms}
           meetings={meetings}
           lessons={lessons}

@@ -46,6 +46,9 @@ interface Student {
   aulaIds?: string[];
   googleAuthAllowed?: boolean;
   googleEmail?: string;
+  inventory?: string[];
+  unopenedChestsCount?: number;
+  unlockedBadgeIds?: string[];
 }
 
 interface Course {
@@ -122,10 +125,61 @@ interface ForumPost {
   reactedBy: { [userUsername: string]: string }; // userUsername -> emoji
   createdAt: string;
   comments: ForumComment[];
+  chestAwarded?: boolean;
 }
+
+interface GameItem {
+  id: string;
+  name: string;
+  type: string;
+  emoji: string;
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  description: string;
+  badgeName: string;
+}
+
+export const GAME_ITEMS: Record<string, GameItem> = {
+  'libro-sabiduria': {
+    id: 'libro-sabiduria',
+    name: 'Códice del Bit',
+    type: 'Libro de Sabiduría',
+    emoji: '📖',
+    rarity: 'common',
+    description: 'Otorgado a los aprendices que acceden al portal de Play Code por primera vez.',
+    badgeName: 'Aprendiz Curioso'
+  },
+  'baston-codigo': {
+    id: 'baston-codigo',
+    name: 'Bastón del Compilador',
+    type: 'Bastón de Mago',
+    emoji: '🪄',
+    rarity: 'rare',
+    description: 'Otorgado a los magos que completan al menos 5 lecciones de programación.',
+    badgeName: 'Mago del Código'
+  },
+  'espada-verdad': {
+    id: 'espada-verdad',
+    name: 'La Palabra de Verdad',
+    type: 'Espada Legendaria',
+    emoji: '🗡️',
+    rarity: 'epic',
+    description: 'Forjada cuando tus publicaciones del foro reciben 10 o más reacciones ✅ por veracidad.',
+    badgeName: 'Portador de la Verdad'
+  },
+  'escudo-debug': {
+    id: 'escudo-debug',
+    name: 'Escudo Anti-Bugs',
+    type: 'Escudo Protector',
+    emoji: '🛡️',
+    rarity: 'legendary',
+    description: 'Entregado a los guardianes digitales que completan el 100% de un curso oficial.',
+    badgeName: 'Guardián Digital'
+  }
+};
 
 interface StudentDashboardProps {
   student: Student;
+  students: Student[];
   classrooms: Classroom[];
   meetings: Meeting[];
   lessons: Lesson[];
@@ -268,6 +322,94 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   const [selectedCertificateCourse, setSelectedCertificateCourse] = useState<Classroom | null>(null);
   const [hideLessonsSidebar, setHideLessonsSidebar] = useState(false);
   const [palette, setPalette] = useState<'default' | 'cyberpunk' | 'playcode'>(student.theme || 'default');
+  const [isOpeningChest, setIsOpeningChest] = useState(false);
+  const [chestOpened, setChestOpened] = useState(false);
+  const [revealedItem, setRevealedItem] = useState<GameItem | null>(null);
+  const [showChestModal, setShowChestModal] = useState(false);
+
+  // Auto-award items based on Firestore student logs
+  useEffect(() => {
+    const inv = student.inventory || [];
+    const badges = student.unlockedBadgeIds || [];
+    let updated = false;
+    const nextStudent = { ...student };
+    
+    // 1. Initial item: libro-sabiduria
+    if (!inv.includes('libro-sabiduria')) {
+      nextStudent.inventory = [...inv, 'libro-sabiduria'];
+      if (!badges.includes('Aprendiz Curioso')) {
+        nextStudent.unlockedBadgeIds = [...badges, 'Aprendiz Curioso'];
+      }
+      updated = true;
+    }
+    
+    // 2. Baston del Compilador: Completed >= 5 lessons
+    const lessonsCount = student.completedLessonIds?.length || 0;
+    if (lessonsCount >= 5 && !inv.includes('baston-codigo') && !badges.includes('Mago del Código') && (student.unopenedChestsCount || 0) === 0) {
+      nextStudent.unopenedChestsCount = (student.unopenedChestsCount || 0) + 1;
+      updated = true;
+    }
+    
+    // 3. Escudo Anti-Bugs: 100% course lessons completed
+    const studentClassrooms = classrooms.filter(c => student.aulaIds?.includes(c.id));
+    const allLessonIds = Array.from(new Set(studentClassrooms.flatMap(c => c.lessonIds || [])));
+    const completedCount = allLessonIds.filter(id => student.completedLessonIds?.includes(id)).length;
+    const progress = allLessonIds.length > 0 ? (completedCount / allLessonIds.length) * 100 : 0;
+    
+    if (progress === 100 && allLessonIds.length > 0 && !inv.includes('escudo-debug') && !badges.includes('Guardián Digital') && (student.unopenedChestsCount || 0) === 0) {
+      nextStudent.unopenedChestsCount = (student.unopenedChestsCount || 0) + 1;
+      updated = true;
+    }
+
+    if (updated) {
+      onSaveProfile(nextStudent);
+    }
+  }, [student, classrooms, onSaveProfile]);
+
+  const handleOpenChest = () => {
+    if ((student.unopenedChestsCount || 0) <= 0 || isOpeningChest || chestOpened) return;
+    
+    setIsOpeningChest(true);
+    
+    setTimeout(() => {
+      setIsOpeningChest(false);
+      
+      const inv = student.inventory || [];
+      const hasQualifiedForumPost = posts.some(p => p.authorUsername === student.username && (p.reactions?.['✅'] || 0) >= 10);
+      let itemToGive: GameItem = GAME_ITEMS['libro-sabiduria'];
+      
+      if (hasQualifiedForumPost && !inv.includes('espada-verdad')) {
+        itemToGive = GAME_ITEMS['espada-verdad'];
+      } else if ((student.completedLessonIds?.length || 0) >= 5 && !inv.includes('baston-codigo')) {
+        itemToGive = GAME_ITEMS['baston-codigo'];
+      } else {
+        const studentClassrooms = classrooms.filter(c => student.aulaIds?.includes(c.id));
+        const allLessonIds = Array.from(new Set(studentClassrooms.flatMap(c => c.lessonIds || [])));
+        const completedCount = allLessonIds.filter(id => student.completedLessonIds?.includes(id)).length;
+        const progress = allLessonIds.length > 0 ? (completedCount / allLessonIds.length) * 100 : 0;
+        
+        if (progress === 100 && allLessonIds.length > 0 && !inv.includes('escudo-debug')) {
+          itemToGive = GAME_ITEMS['escudo-debug'];
+        } else {
+          const pool = Object.keys(GAME_ITEMS);
+          const randomId = pool[Math.floor(Math.random() * pool.length)];
+          itemToGive = GAME_ITEMS[randomId];
+        }
+      }
+      
+      setRevealedItem(itemToGive);
+      setChestOpened(true);
+      
+      const nextStudent = {
+        ...student,
+        unopenedChestsCount: Math.max(0, (student.unopenedChestsCount || 1) - 1),
+        inventory: [...inv, itemToGive.id],
+        unlockedBadgeIds: Array.from(new Set([...(student.unlockedBadgeIds || []), itemToGive.badgeName]))
+      };
+      
+      onSaveProfile(nextStudent);
+    }, 1200);
+  };
 
   const [newPostTitle, setNewPostTitle] = useState('');
   const [newPostContent, setNewPostContent] = useState('');
@@ -451,6 +593,40 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
     ? Math.round((completedCourseLessons.length / courseLessons.length) * 100) 
     : 0;
 
+  const leaderboardStudents = React.useMemo(() => {
+    const activeStudentAulaIds = student.aulaIds || [];
+    const filtered = students.filter(s => {
+      const isSameRole = s.role === 'alumno' || !s.role;
+      const sharesAula = (s.aulaIds || []).some(id => activeStudentAulaIds.includes(id));
+      return isSameRole && sharesAula;
+    });
+
+    if (filtered.length === 0) {
+      const activePlatformIds = student.platformIds || (student.platformId ? [student.platformId] : []);
+      const platformFiltered = students.filter(s => {
+        const isSameRole = s.role === 'alumno' || !s.role;
+        const sharesPlatform = (s.platformIds || []).some(id => activePlatformIds.includes(id)) || s.platformId === student.platformId;
+        return isSameRole && sharesPlatform;
+      });
+      filtered.push(...platformFiltered);
+    }
+
+    const uniqueStudentsMap = new Map<string, Student>();
+    filtered.forEach(s => uniqueStudentsMap.set(s.id, s));
+    
+    if (!uniqueStudentsMap.has(student.id)) {
+      uniqueStudentsMap.set(student.id, student);
+    }
+    
+    const uniqueList = Array.from(uniqueStudentsMap.values());
+
+    return uniqueList.sort((a, b) => {
+      const xpA = (a.completedLessonIds?.length || 0) * 100;
+      const xpB = (b.completedLessonIds?.length || 0) * 100;
+      return xpB - xpA;
+    });
+  }, [students, student, classrooms]);
+
   const toggleLessonCompletion = (lessonId: string) => {
     let updatedCompleted: string[];
     if (completedLessonIds.includes(lessonId)) {
@@ -523,6 +699,16 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                 <span className="text-[9px] text-slate-400 block truncate">{student.username}</span>
               </div>
             </div>
+
+            {student.unopenedChestsCount && student.unopenedChestsCount > 0 ? (
+              <button
+                onClick={() => setShowChestModal(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-900 border-2 border-slate-900 shadow-[1.5px_1.5px_0_0_#000000] active:shadow-[0px_0px_0_0_#000000] active:translate-y-[1.5px] active:translate-x-[1.5px] font-extrabold text-xs transition-all cursor-pointer animate-pulse rounded"
+              >
+                <span>🎁</span>
+                <span>¡Cofre Listo!</span>
+              </button>
+            ) : null}
 
             <button
               onClick={onLogout}
@@ -631,6 +817,24 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
         {/* TAB 0A: PANEL DE CONTROL */}
         {activeTab === 'dashboard' && (
           <div className="space-y-6 animate-in fade-in duration-200">
+            {student.unopenedChestsCount && student.unopenedChestsCount > 0 ? (
+              <div className="p-5 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-2 border-amber-500 rounded flex flex-col sm:flex-row items-center justify-between gap-4 animate-pulse">
+                <div className="flex items-center gap-4">
+                  <span className="text-4xl animate-bounce">🎁</span>
+                  <div>
+                    <h3 className="font-bold text-lg text-amber-600">¡Tienes recompensas pendientes!</h3>
+                    <p className="text-xs text-slate-500 font-semibold">Has recibido un cofre de recompensas. Ábrelo ahora para descubrir tu ítem especial e insignias.</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowChestModal(true)}
+                  className="px-6 py-2 bg-amber-500 hover:bg-amber-400 text-slate-900 font-extrabold border-2 border-slate-900 shadow-[4px_4px_0_0_#000000] active:translate-y-0.5 active:shadow-[2px_2px_0_0_#000000] transition-all rounded text-xs shrink-0 cursor-pointer"
+                >
+                  ¡ABRIR COFRE AHORA!
+                </button>
+              </div>
+            ) : null}
+
             {/* Grid for Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               
@@ -1018,7 +1222,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
             <div className="pb-4 border-b border-slate-200">
               <h2 className="text-xl font-bold">Mis Logros y Clasificación</h2>
               <p className="text-xs text-slate-500 mt-1">
-                Gana puntos XP completando lecciones y participando activamente en la comunidad. ¡Desbloquea insignias especiales!
+                Gana puntos XP completando lecciones y participando activamente en la comunidad. ¡Desbloquea insignias y recolecta ítems legendarios!
               </p>
             </div>
 
@@ -1031,51 +1235,93 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
               </div>
               <div className="bg-amber-400 text-[#0d1b2e] border-2 border-[#0d1b2e] shadow-[4px_4px_0_0_#000000] p-5 text-center space-y-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider block opacity-85">Puntos Totales (XP)</span>
-                <span className="text-3xl font-bold block font-mono">{completedLessonIds.length * 100} XP</span>
+                <span className="text-3xl font-bold block font-mono">{(student.completedLessonIds?.length || 0) * 100} XP</span>
                 <span className="text-[9px] block opacity-75">100 XP por cada lección completada</span>
               </div>
               <div className="bg-[#2ec4b6] text-white border-2 border-[#0d1b2e] shadow-[4px_4px_0_0_#000000] p-5 text-center space-y-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider block opacity-85">Insignias Desbloqueadas</span>
                 <span className="text-3xl font-bold block font-mono">
-                  {(() => {
-                    let count = 1;
-                    if (completedLessonIds.length > 0) count++;
-                    if (posts.some(p => p.authorUsername === student.username)) count++;
-                    if (progressPercent === 100) count++;
-                    if (completedLessonIds.length * 100 >= 500) count++;
-                    return count;
-                  })()} / 5
+                  {(student.unlockedBadgeIds || []).length} / 4
                 </span>
-                <span className="text-[9px] block opacity-75">¡Sigue programando para obtenerlas todas!</span>
+                <span className="text-[9px] block opacity-75">¡Abre cofres para obtenerlas todas!</span>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-4">
+            {/* Inventario RPG de Ítems */}
+            <div className="bg-slate-900 border-4 border-amber-500 rounded p-6 shadow-[4px_4px_0_0_#0d1b2e] text-slate-100">
+              <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-800">
+                <span className="text-2xl">🎒</span>
+                <div className="text-left">
+                  <h3 className="font-bold text-sm uppercase tracking-wider text-amber-400">Inventario RPG del Programador</h3>
+                  <p className="text-[9px] text-slate-400">Objetos mágicos obtenidos de cofres tras tus logros académicos y aportes de veracidad en el foro.</p>
+                </div>
+              </div>
+
+              {/* Grid de Celdas de Inventario */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                {Object.values(GAME_ITEMS).map((item) => {
+                  const hasItem = (student.inventory || []).includes(item.id);
+                  let borderClass = 'border-slate-800 bg-slate-950/40 opacity-40';
+                  
+                  if (hasItem) {
+                    if (item.rarity === 'common') borderClass = 'border-slate-400 bg-slate-800';
+                    if (item.rarity === 'rare') borderClass = 'border-blue-500 bg-blue-950/30';
+                    if (item.rarity === 'epic') borderClass = 'border-purple-500 bg-purple-950/30 animate-pulse';
+                    if (item.rarity === 'legendary') borderClass = 'border-amber-500 bg-amber-950/30 animate-glow';
+                  }
+
+                  return (
+                    <div 
+                      key={item.id}
+                      className={`border-2 p-4 rounded flex flex-col items-center text-center transition-all ${borderClass}`}
+                    >
+                      <span className={`text-4xl mb-2 select-none filter ${hasItem ? 'drop-shadow-[0_0_10px_rgba(251,191,36,0.4)]' : 'grayscale'}`}>
+                        {item.emoji}
+                      </span>
+                      <h4 className="text-xs font-bold text-slate-100 truncate w-full">{item.name}</h4>
+                      <span className="text-[8px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">
+                        {item.rarity === 'common' && 'Común'}
+                        {item.rarity === 'rare' && 'Raro'}
+                        {item.rarity === 'epic' && 'Épico'}
+                        {item.rarity === 'legendary' && 'Legendario'}
+                      </span>
+                      <p className="text-[9px] text-slate-400 mt-2 font-medium leading-tight line-clamp-2">
+                        {hasItem ? item.description : '¡Cofre Requerido!'}
+                      </p>
+                      {hasItem ? (
+                        <span className="text-[8px] font-extrabold text-emerald-400 mt-2">✓ OBTENIDO</span>
+                      ) : (
+                        <span className="text-[8px] font-bold text-slate-500 mt-2">🔒 BLOQUEADO</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-2">
               
               {/* Badges List */}
               <div className="lg:col-span-7 space-y-4">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Mis Insignias</h3>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Badge 1: Welcome */}
-                  <div className="p-4 bg-white border-2 border-[#0d1b2e] rounded flex items-center gap-3">
-                    <span className="text-3xl">🚀</span>
-                    <div>
-                      <h4 className="text-xs font-bold text-slate-800">Bienvenido a Bordo</h4>
-                      <p className="text-[9px] text-slate-400 mt-0.5">Ingresar al portal de Play Code por primera vez.</p>
-                      <span className="text-[8px] font-bold text-emerald-600 block mt-1">✓ DESBLOQUEADO</span>
-                    </div>
-                  </div>
-
-                  {/* Badge 2: First Lesson */}
-                  {(() => {
-                    const unlocked = completedLessonIds.length > 0;
+                  {[
+                    { name: 'Aprendiz Curioso', emoji: '📖', desc: 'Otorgado por ingresar al portal y reclamar el Códice del Bit.' },
+                    { name: 'Mago del Código', emoji: '🪄', desc: 'Completar al menos 5 lecciones de programación en Play Code.' },
+                    { name: 'Portador de la Verdad', emoji: '🗡️', desc: 'Recibir 10 o más reacciones ✅ por veracidad en el foro.' },
+                    { name: 'Guardián Digital', emoji: '🛡️', desc: 'Completar el 100% de las clases de un curso oficial.' }
+                  ].map((badge) => {
+                    const unlocked = (student.unlockedBadgeIds || []).includes(badge.name);
                     return (
-                      <div className={`p-4 border-2 border-[#0d1b2e] rounded flex items-center gap-3 ${unlocked ? 'bg-white' : 'bg-slate-50 opacity-60'}`}>
-                        <span className="text-3xl">📖</span>
-                        <div>
-                          <h4 className="text-xs font-bold text-slate-800">Estudiante Dedicado</h4>
-                          <p className="text-[9px] text-slate-400 mt-0.5">Completar la primera lección oficial de tu curso.</p>
+                      <div 
+                        key={badge.name}
+                        className={`p-4 border-2 border-[#0d1b2e] rounded flex items-center gap-3 ${unlocked ? 'bg-white' : 'bg-slate-50 opacity-60'}`}
+                      >
+                        <span className="text-3xl">{badge.emoji}</span>
+                        <div className="text-left">
+                          <h4 className="text-xs font-bold text-slate-800">{badge.name}</h4>
+                          <p className="text-[9px] text-slate-400 mt-0.5">{badge.desc}</p>
                           {unlocked ? (
                             <span className="text-[8px] font-bold text-emerald-600 block mt-1">✓ DESBLOQUEADO</span>
                           ) : (
@@ -1084,64 +1330,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                         </div>
                       </div>
                     );
-                  })()}
-
-                  {/* Badge 3: Forum Post */}
-                  {(() => {
-                    const unlocked = posts.some(p => p.authorUsername === student.username);
-                    return (
-                      <div className={`p-4 border-2 border-[#0d1b2e] rounded flex items-center gap-3 ${unlocked ? 'bg-white' : 'bg-slate-50 opacity-60'}`}>
-                        <span className="text-3xl">💬</span>
-                        <div>
-                          <h4 className="text-xs font-bold text-slate-800">Líder de Opinión</h4>
-                          <p className="text-[9px] text-slate-400 mt-0.5">Publicar un tema de conversación en el foro.</p>
-                          {unlocked ? (
-                            <span className="text-[8px] font-bold text-emerald-600 block mt-1">✓ DESBLOQUEADO</span>
-                          ) : (
-                            <span className="text-[8px] font-bold text-slate-400 block mt-1">BLOQUEADO</span>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                  {/* Badge 4: Course Completed */}
-                  {(() => {
-                    const unlocked = progressPercent === 100 && courseLessons.length > 0;
-                    return (
-                      <div className={`p-4 border-2 border-[#0d1b2e] rounded flex items-center gap-3 ${unlocked ? 'bg-white' : 'bg-slate-50 opacity-60'}`}>
-                        <span className="text-3xl">🌟</span>
-                        <div>
-                          <h4 className="text-xs font-bold text-slate-800">Perfeccionista</h4>
-                          <p className="text-[9px] text-slate-400 mt-0.5">Completar el 100% de las clases de un curso.</p>
-                          {unlocked ? (
-                            <span className="text-[8px] font-bold text-emerald-600 block mt-1">✓ DESBLOQUEADO</span>
-                          ) : (
-                            <span className="text-[8px] font-bold text-slate-400 block mt-1">BLOQUEADO</span>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                  {/* Badge 5: 500 XP */}
-                  {(() => {
-                    const unlocked = (completedLessonIds.length * 100) >= 500;
-                    return (
-                      <div className={`p-4 border-2 border-[#0d1b2e] rounded flex items-center gap-3 ${unlocked ? 'bg-white' : 'bg-slate-50 opacity-60'}`}>
-                        <span className="text-3xl">🏆</span>
-                        <div>
-                          <h4 className="text-xs font-bold text-slate-800">Súper Estudiante</h4>
-                          <p className="text-[9px] text-slate-400 mt-0.5">Alcanzar los 500 puntos de experiencia totales.</p>
-                          {unlocked ? (
-                            <span className="text-[8px] font-bold text-emerald-600 block mt-1">✓ DESBLOQUEADO</span>
-                          ) : (
-                            <span className="text-[8px] font-bold text-slate-400 block mt-1">BLOQUEADO</span>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })()}
+                  })}
                 </div>
               </div>
 
@@ -1159,31 +1348,32 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 font-semibold">
-                      <tr className="bg-amber-50">
-                        <td className="px-4 py-3">🥇 1</td>
-                        <td className="px-4 py-3">Lucas Gómez</td>
-                        <td className="px-4 py-3 text-right text-amber-700">1200 XP</td>
-                      </tr>
-                      <tr>
-                        <td className="px-4 py-3">🥈 2</td>
-                        <td className="px-4 py-3">Mateo Fernández</td>
-                        <td className="px-4 py-3 text-right">800 XP</td>
-                      </tr>
-                      <tr className="bg-blue-50 border-y-2 border-blue-200">
-                        <td className="px-4 py-3">🥉 3</td>
-                        <td className="px-4 py-3 text-blue-900">{student.name} (Tú)</td>
-                        <td className="px-4 py-3 text-right text-blue-850 font-bold">{completedLessonIds.length * 100} XP</td>
-                      </tr>
-                      <tr>
-                        <td className="px-4 py-3">4</td>
-                        <td className="px-4 py-3">Martina Rossi</td>
-                        <td className="px-4 py-3 text-right">300 XP</td>
-                      </tr>
-                      <tr>
-                        <td className="px-4 py-3">5</td>
-                        <td className="px-4 py-3">Sofía Díaz</td>
-                        <td className="px-4 py-3 text-right">100 XP</td>
-                      </tr>
+                      {leaderboardStudents.map((s, index) => {
+                        const isSelf = s.id === student.id;
+                        const pos = index + 1;
+                        let posDisplay = `${pos}`;
+                        if (pos === 1) posDisplay = '🥇 1';
+                        if (pos === 2) posDisplay = '🥈 2';
+                        if (pos === 3) posDisplay = '🥉 3';
+
+                        const rowClass = isSelf 
+                          ? 'bg-blue-50 border-y-2 border-blue-200' 
+                          : pos === 1 
+                            ? 'bg-amber-50' 
+                            : '';
+                            
+                        const nameColor = isSelf ? 'text-blue-900 font-extrabold' : 'text-slate-800';
+
+                        return (
+                          <tr key={s.id} className={rowClass}>
+                            <td className="px-4 py-3 font-bold">{posDisplay}</td>
+                            <td className={`px-4 py-3 ${nameColor}`}>{s.name} {isSelf && '(Tú)'}</td>
+                            <td className={`px-4 py-3 text-right font-mono ${isSelf ? 'text-blue-800 font-extrabold' : 'text-slate-750'}`}>
+                              {(s.completedLessonIds?.length || 0) * 100} XP
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -2407,6 +2597,150 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           </div>
         )}
       </main>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes shake {
+          0%, 100% { transform: rotate(0deg); }
+          10%, 30%, 50%, 70%, 90% { transform: translate(-2px, 1px) rotate(-1deg); }
+          20%, 40%, 60%, 80% { transform: translate(2px, -1px) rotate(1deg); }
+        }
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+        @keyframes glow {
+          0%, 100% { filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.6)); }
+          50% { filter: drop-shadow(0 0 25px rgba(251, 191, 36, 0.9)); }
+        }
+        @keyframes pop-in {
+          0% { transform: scale(0); opacity: 0; }
+          80% { transform: scale(1.15); opacity: 1; }
+          100% { transform: scale(1); }
+        }
+        @keyframes particle-up {
+          0% { transform: translateY(0) scale(1); opacity: 1; }
+          100% { transform: translateY(-80px) scale(0.5); opacity: 0; }
+        }
+        .animate-shake {
+          animation: shake 0.5s ease-in-out infinite;
+        }
+        .animate-float {
+          animation: float 2.5s ease-in-out infinite;
+        }
+        .animate-glow {
+          animation: glow 2s ease-in-out infinite;
+        }
+        .animate-pop-in {
+          animation: pop-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        .animate-particle-1 { animation: particle-up 1.5s ease-out infinite; }
+        .animate-particle-2 { animation: particle-up 1.8s ease-out infinite 0.3s; }
+        .animate-particle-3 { animation: particle-up 1.2s ease-out infinite 0.6s; }
+      `}} />
+
+      {showChestModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
+          <div className="relative w-full max-w-md bg-slate-900 text-slate-100 border-4 border-amber-500 rounded-lg shadow-2xl p-6 overflow-hidden flex flex-col items-center">
+            
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(251,191,36,0.15),transparent_60%)] pointer-events-none" />
+
+            <button 
+              onClick={() => {
+                if (!isOpeningChest) {
+                  setShowChestModal(false);
+                  setChestOpened(false);
+                  setRevealedItem(null);
+                }
+              }}
+              className="absolute top-3 right-3 text-slate-400 hover:text-slate-200 text-lg font-bold disabled:opacity-50"
+              disabled={isOpeningChest}
+            >
+              ✕
+            </button>
+
+            {!chestOpened ? (
+              <div className="flex flex-col items-center py-6 text-center">
+                <h2 className="text-xl font-bold text-amber-400 mb-6 tracking-wide uppercase">Cofre de Recompensas</h2>
+                
+                <div className="relative w-48 h-48 flex items-center justify-center my-4">
+                  {isOpeningChest && (
+                    <div className="absolute inset-0 w-full h-full rounded-full bg-amber-400/20 blur-xl animate-pulse" />
+                  )}
+                  
+                  <div 
+                    onClick={handleOpenChest}
+                    className={`cursor-pointer transition-transform duration-300 transform hover:scale-105 active:scale-95 ${isOpeningChest ? 'animate-shake' : 'animate-float'}`}
+                    style={{ fontSize: '90px' }}
+                  >
+                    📦
+                  </div>
+                </div>
+
+                <p className="text-sm text-slate-350 max-w-xs mt-4">
+                  {isOpeningChest ? '¡Abriendo el cofre...!' : '¡Haz clic sobre el cofre para revelar tu recompensa legendaria!'}
+                </p>
+
+                {!isOpeningChest && (
+                  <button
+                    onClick={handleOpenChest}
+                    className="mt-6 px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 font-extrabold border-2 border-slate-900 shadow-[4px_4px_0_0_#000] rounded text-xs tracking-wider"
+                  >
+                    ABRIR COFRE 🗝️
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center py-6 text-center animate-pop-in">
+                <h2 className="text-lg font-extrabold text-emerald-400 mb-2 uppercase tracking-wider">¡RECOMPENSA REVELADA!</h2>
+                <span className="text-[9px] text-amber-400 font-extrabold uppercase tracking-widest bg-amber-400/10 px-2.5 py-1 rounded border border-amber-500/30">
+                  {revealedItem?.rarity === 'common' && 'Común'}
+                  {revealedItem?.rarity === 'rare' && 'Raro'}
+                  {revealedItem?.rarity === 'epic' && 'Épico'}
+                  {revealedItem?.rarity === 'legendary' && 'Legendario'}
+                </span>
+
+                <div className="relative w-40 h-40 flex items-center justify-center my-6 animate-float">
+                  <div className="absolute inset-0 w-full h-full rounded-full bg-amber-400/15 blur-lg animate-glow" />
+                  
+                  <span className="absolute text-xl animate-particle-1" style={{ top: '20%', left: '20%' }}>✨</span>
+                  <span className="absolute text-xl animate-particle-2" style={{ top: '30%', right: '20%' }}>🌟</span>
+                  <span className="absolute text-xl animate-particle-3" style={{ bottom: '20%', left: '30%' }}>✨</span>
+
+                  <span className="text-8xl select-none filter drop-shadow-[0_0_15px_rgba(251,191,36,0.6)]">
+                    {revealedItem?.emoji}
+                  </span>
+                </div>
+
+                <h3 className="text-xl font-extrabold text-slate-100 mb-1">{revealedItem?.name}</h3>
+                <p className="text-[10px] text-amber-500 font-extrabold uppercase tracking-wider mb-3">Tipo: {revealedItem?.type}</p>
+                
+                <p className="text-xs text-slate-350 max-w-xs px-2 mb-6 font-semibold leading-relaxed">
+                  {revealedItem?.description}
+                </p>
+
+                <div className="w-full bg-slate-950/50 border border-slate-800 p-3.5 rounded mb-6 flex items-center gap-3">
+                  <div className="text-2xl">🏆</div>
+                  <div className="text-left">
+                    <p className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">Insignia Desbloqueada</p>
+                    <p className="text-xs font-extrabold text-amber-400">{revealedItem?.badgeName}</p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setShowChestModal(false);
+                    setChestOpened(false);
+                    setRevealedItem(null);
+                  }}
+                  className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-extrabold border-2 border-slate-900 shadow-[4px_4px_0_0_#000] rounded uppercase tracking-wider text-xs transition-transform active:translate-y-0.5 cursor-pointer"
+                >
+                  Guardar en mi Inventario
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

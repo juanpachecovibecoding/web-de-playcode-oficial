@@ -51,6 +51,9 @@ interface Student {
   aulaIds?: string[];
   googleAuthAllowed?: boolean;
   googleEmail?: string;
+  inventory?: string[];
+  unopenedChestsCount?: number;
+  unlockedBadgeIds?: string[];
 }
 
 interface Meeting {

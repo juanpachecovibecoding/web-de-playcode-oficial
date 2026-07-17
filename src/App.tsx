@@ -44,6 +44,8 @@ interface Student {
   role?: 'admin' | 'docente' | 'alumno' | 'profesor';
   platformId?: string;
   aulaId?: string;
+  platformIds?: string[];
+  aulaIds?: string[];
 }
 
 interface PlatformAula {

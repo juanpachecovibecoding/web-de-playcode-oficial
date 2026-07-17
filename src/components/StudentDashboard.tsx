@@ -39,6 +39,8 @@ interface Student {
   role?: 'admin' | 'docente' | 'alumno' | 'profesor';
   platformId?: string;
   aulaId?: string;
+  platformIds?: string[];
+  aulaIds?: string[];
 }
 
 interface Course {
@@ -395,6 +397,12 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
   // Platform & Aula navigation states
   const [insidePlatform, setInsidePlatform] = useState(false);
+  const [currentPlatformId, setCurrentPlatformId] = useState<string | null>(() => {
+    if (student.platformIds && student.platformIds.length > 0) {
+      return student.platformIds[0];
+    }
+    return student.platformId || null;
+  });
   const [selectedPlatformAula, setSelectedPlatformAula] = useState<PlatformAula | null>(null);
   const [selectedPlatformCourse, setSelectedPlatformCourse] = useState<Classroom | null>(null);
   const [selectedPlatformLesson, setSelectedPlatformLesson] = useState<Lesson | null>(null);
@@ -580,10 +588,10 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                           <ArrowLeft className="w-3.5 h-3.5" /> Volver a mi Aprendizaje
                         </button>
                         <h3 className="text-xl font-bold mt-4 text-[#0d1b2e]">
-                          {platforms.find(p => p.id === student.platformId)?.name || 'Mi Plataforma'}
+                          {platforms.find(p => p.id === (currentPlatformId || student.platformId))?.name || 'Mi Plataforma'}
                         </h3>
                         <p className="text-xs text-slate-500 font-medium">
-                          {platforms.find(p => p.id === student.platformId)?.description || 'Accede a tus aulas y contenidos vinculados.'}
+                          {platforms.find(p => p.id === (currentPlatformId || student.platformId))?.description || 'Accede a tus aulas y contenidos vinculados.'}
                         </p>
                       </div>
                     </div>
@@ -591,17 +599,23 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                     <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">Mis Aulas Inscritas</h4>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       {(() => {
-                        const myPlatformObj = platforms.find(p => p.id === student.platformId);
-                        const myAula = myPlatformObj?.aulas.find(a => a.id === student.aulaId);
-                        if (!myAula) {
+                        const myPlatformObj = platforms.find(p => p.id === (currentPlatformId || student.platformId));
+                        if (!myPlatformObj) return null;
+
+                        const currentAulaIds = student.aulaIds || (student.aulaId ? [student.aulaId] : []);
+                        const platformAulas = myPlatformObj.aulas.filter(a => currentAulaIds.includes(a.id));
+
+                        if (platformAulas.length === 0) {
                           return (
                             <div className="col-span-3 bg-yellow-50 border-2 border-yellow-300 p-4 font-semibold text-xs text-yellow-700">
                               No tienes aulas asignadas en esta plataforma. Solicita acceso a tu administrador.
                             </div>
                           );
                         }
-                        return (
+                        
+                        return platformAulas.map(myAula => (
                           <div 
+                            key={myAula.id}
                             onClick={() => setSelectedPlatformAula(myAula)}
                             className={`${t.cardBg} ${t.cardBorder} p-6 ${t.cardShadow} hover:translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#000000] cursor-pointer transition-all flex flex-col justify-between`}
                           >
@@ -627,7 +641,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                               <ArrowRight className="w-4 h-4 text-[#2a4e7c]" />
                             </div>
                           </div>
-                        );
+                        ));
                       })()}
                     </div>
                   </div>
@@ -860,7 +874,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
             ) : !selectedCourseName ? (
               <div className="space-y-6">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500">
-                  {student.platformId ? 'Mi Plataforma' : 'Mis Cursos Inscritos'}
+                  {(student.platformId || (student.platformIds && student.platformIds.length > 0)) ? 'Mis Plataformas' : 'Mis Cursos Inscritos'}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {!student.platformId && student.course && (
@@ -877,7 +891,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                         </div>
                         <h4 className="text-lg font-bold line-clamp-2">{student.course}</h4>
                         <p className="text-[10px] text-slate-500 mt-1">Programa curricular Play Code</p>
-
+ 
                         {/* Progress Bar */}
                         <div className="mt-4 pt-4 border-t border-slate-100">
                           <div className="flex justify-between items-center text-[9px] font-bold text-slate-500 mb-1">
@@ -901,47 +915,57 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                       </div>
                     </div>
                   )}
+ 
+                  {/* Render Platform cards if platformIds or platformId is assigned */}
+                  {(() => {
+                    const currentPlatformIds = student.platformIds || (student.platformId ? [student.platformId] : []);
+                    const assignedPlatforms = platforms.filter(p => currentPlatformIds.includes(p.id));
 
-                  {/* Render Platform card if platformId is assigned */}
-                  {student.platformId && platforms.find(p => p.id === student.platformId) && (() => {
-                    const myPlatform = platforms.find(p => p.id === student.platformId)!;
-                    return (
-                      <div 
-                        onClick={() => setInsidePlatform(true)}
-                        className={`${t.cardBg} ${t.cardBorder} p-6 ${t.cardShadow} hover:translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#000000] cursor-pointer transition-all flex flex-col justify-between border-dashed`}
-                      >
-                        <div>
-                          <div className="flex justify-between items-center mb-3">
-                            <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-amber-100 text-amber-700 border border-amber-400">
-                              MI PLATAFORMA
-                            </span>
-                            <Sparkles className="w-4 h-4 text-amber-500" />
-                          </div>
-                          <h4 className="text-lg font-bold line-clamp-2">{myPlatform.name}</h4>
-                          <p className="text-[10px] text-slate-500 mt-1">
-                            {myPlatform.description || 'Accede a tus aulas y contenidos vinculados.'}
-                          </p>
-                          
-                          {student.aulaId && (() => {
-                            const myAula = myPlatform.aulas.find(a => a.id === student.aulaId);
-                            if (!myAula) return null;
-                            return (
+                    return assignedPlatforms.map(myPlatform => {
+                      const currentAulaIds = student.aulaIds || (student.aulaId ? [student.aulaId] : []);
+                      const platformAulas = myPlatform.aulas.filter(a => currentAulaIds.includes(a.id));
+
+                      return (
+                        <div 
+                          key={myPlatform.id}
+                          onClick={() => {
+                            setCurrentPlatformId(myPlatform.id);
+                            setInsidePlatform(true);
+                          }}
+                          className={`${t.cardBg} ${t.cardBorder} p-6 ${t.cardShadow} hover:translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#000000] cursor-pointer transition-all flex flex-col justify-between border-dashed`}
+                        >
+                          <div>
+                            <div className="flex justify-between items-center mb-3">
+                              <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-amber-100 text-amber-700 border border-amber-400">
+                                PLATAFORMA
+                              </span>
+                              <Sparkles className="w-4 h-4 text-amber-500" />
+                            </div>
+                            <h4 className="text-lg font-bold line-clamp-2">{myPlatform.name}</h4>
+                            <p className="text-[10px] text-slate-500 mt-1">
+                              {myPlatform.description || 'Accede a tus aulas y contenidos vinculados.'}
+                            </p>
+                            
+                            {platformAulas.length > 0 && (
                               <div className="mt-4 pt-4 border-t border-slate-100 space-y-1">
-                                <span className="text-[9px] font-bold text-slate-500 block uppercase">Aula Asignada:</span>
-                                <span className="text-xs font-bold text-slate-800 block">{myAula.name}</span>
-                                {myAula.schedule && (
-                                  <span className="text-[10px] text-slate-500 block">{myAula.schedule}</span>
-                                )}
+                                <span className="text-[9px] font-bold text-slate-500 block uppercase">Aulas Asignadas ({platformAulas.length}):</span>
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {platformAulas.map(a => (
+                                    <span key={a.id} className="text-[10px] font-semibold text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">
+                                      {a.name}
+                                    </span>
+                                  ))}
+                                </div>
                               </div>
-                            );
-                          })()}
+                            )}
+                          </div>
+                          <div className="flex justify-between items-center pt-4 border-t border-slate-100 mt-4">
+                            <span className="text-[10px] font-bold text-amber-600 uppercase">Ingresar a la Plataforma</span>
+                            <ArrowRight className="w-4 h-4 text-amber-600" />
+                          </div>
                         </div>
-                        <div className="flex justify-between items-center pt-4 border-t border-slate-100 mt-4">
-                          <span className="text-[10px] font-bold text-amber-600 uppercase">Ingresar a mi Plataforma</span>
-                          <ArrowRight className="w-4 h-4 text-amber-600" />
-                        </div>
-                      </div>
-                    );
+                      );
+                    });
                   })()}
                 </div>
               </div>
@@ -1224,19 +1248,35 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                   </p>
                 </div>
 
-                {student.platformId ? (() => {
-                  const plat = platforms.find(p => p.id === student.platformId);
-                  const aula = plat?.aulas.find(a => a.id === student.aulaId);
-                  return (
-                    <div className={`mt-2 text-[10px] font-bold px-3 py-1 ${t.badgeBg} rounded-full`}>
-                      Plataforma: {plat?.name} {aula ? `(${aula.name})` : ''}
-                    </div>
-                  );
-                })() : student.course ? (
-                  <div className={`mt-2 text-[10px] font-bold px-3 py-1 ${t.badgeBg} rounded-full`}>
-                    Curso: {student.course}
-                  </div>
-                ) : null}
+                {(() => {
+                  const currentPlatformIds = student.platformIds || (student.platformId ? [student.platformId] : []);
+                  const currentAulaIds = student.aulaIds || (student.aulaId ? [student.aulaId] : []);
+
+                  if (currentPlatformIds.length > 0) {
+                    return (
+                      <div className="flex flex-wrap gap-1 mt-2 justify-center">
+                        {currentPlatformIds.map(pId => {
+                          const plat = platforms.find(p => p.id === pId);
+                          if (!plat) return null;
+                          const platAulas = plat.aulas.filter(a => currentAulaIds.includes(a.id));
+                          const aulasStr = platAulas.map(a => a.name).join(', ');
+                          return (
+                            <div key={pId} className={`text-[10px] font-bold px-3 py-1 ${t.badgeBg} rounded-full`}>
+                              Plataforma: {plat.name} {aulasStr ? `(${aulasStr})` : ''}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  } else if (student.course) {
+                    return (
+                      <div className={`mt-2 text-[10px] font-bold px-3 py-1 ${t.badgeBg} rounded-full`}>
+                        Curso: {student.course}
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
             </div>
 

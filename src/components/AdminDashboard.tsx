@@ -46,6 +46,8 @@ interface Student {
   role?: 'admin' | 'docente' | 'alumno' | 'profesor';
   platformId?: string;
   aulaId?: string;
+  platformIds?: string[];
+  aulaIds?: string[];
 }
 
 interface Meeting {
@@ -138,8 +140,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [isEditAulaCourseDropdownOpen, setIsEditAulaCourseDropdownOpen] = useState(false);
 
   // Student creation platform fields
-  const [newStudentPlatformId, setNewStudentPlatformId] = useState('');
-  const [newStudentAulaId, setNewStudentAulaId] = useState('');
+  const [newStudentPlatformIds, setNewStudentPlatformIds] = useState<string[]>([]);
+  const [newStudentAulaIds, setNewStudentAulaIds] = useState<string[]>([]);
+  const [newStudentPlatformSearch, setNewStudentPlatformSearch] = useState('');
+  const [newStudentAulaSearch, setNewStudentAulaSearch] = useState('');
+  const [isNewStudentPlatformDropdownOpen, setIsNewStudentPlatformDropdownOpen] = useState(false);
+  const [isNewStudentAulaDropdownOpen, setIsNewStudentAulaDropdownOpen] = useState(false);
 
   // Student editing states
   const [showEditStudentModal, setShowEditStudentModal] = useState(false);
@@ -148,8 +154,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [editStudentEmail, setEditStudentEmail] = useState('');
   const [editStudentRole, setEditStudentRole] = useState<'admin' | 'docente' | 'alumno' | 'profesor'>('alumno');
   const [editStudentPassword, setEditStudentPassword] = useState('');
-  const [editStudentPlatformId, setEditStudentPlatformId] = useState('');
-  const [editStudentAulaId, setEditStudentAulaId] = useState('');
+  const [editStudentPlatformIds, setEditStudentPlatformIds] = useState<string[]>([]);
+  const [editStudentAulaIds, setEditStudentAulaIds] = useState<string[]>([]);
+  const [editStudentPlatformSearch, setEditStudentPlatformSearch] = useState('');
+  const [editStudentAulaSearch, setEditStudentAulaSearch] = useState('');
+  const [isEditStudentPlatformDropdownOpen, setIsEditStudentPlatformDropdownOpen] = useState(false);
+  const [isEditStudentAulaDropdownOpen, setIsEditStudentAulaDropdownOpen] = useState(false);
   // Platform creation
   const [showNewPlatformForm, setShowNewPlatformForm] = useState(false);
   const [newPlatformName, setNewPlatformName] = useState('');
@@ -584,8 +594,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       status: 'Activo',
       password: newStudentPassword || '123456',
       role: newStudentRole,
-      platformId: newStudentPlatformId || undefined,
-      aulaId: newStudentAulaId || undefined
+      platformIds: newStudentPlatformIds,
+      aulaIds: newStudentAulaIds
     };
     setStudents([...students, newStudent]);
 
@@ -593,8 +603,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setNewStudentEmail('');
     setNewStudentPassword('123456');
     setNewStudentRole('alumno');
-    setNewStudentPlatformId('');
-    setNewStudentAulaId('');
+    setNewStudentPlatformIds([]);
+    setNewStudentAulaIds([]);
+    setNewStudentPlatformSearch('');
+    setNewStudentAulaSearch('');
     setShowAddStudentModal(false);
   };
 
@@ -620,8 +632,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setEditStudentEmail(student.email);
     setEditStudentRole(student.role || 'alumno');
     setEditStudentPassword(student.password || '123456');
-    setEditStudentPlatformId(student.platformId || '');
-    setEditStudentAulaId(student.aulaId || '');
+    setEditStudentPlatformIds(student.platformIds || (student.platformId ? [student.platformId] : []));
+    setEditStudentAulaIds(student.aulaIds || (student.aulaId ? [student.aulaId] : []));
+    setEditStudentPlatformSearch('');
+    setEditStudentAulaSearch('');
     setShowEditStudentModal(true);
   };
 
@@ -637,8 +651,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           email: editStudentEmail.trim(),
           role: editStudentRole,
           password: editStudentPassword || '123456',
-          platformId: editStudentPlatformId || undefined,
-          aulaId: editStudentAulaId || undefined
+          platformIds: editStudentPlatformIds,
+          aulaIds: editStudentAulaIds
         };
       }
       return s;
@@ -649,8 +663,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setEditStudentEmail('');
     setEditStudentRole('alumno');
     setEditStudentPassword('');
-    setEditStudentPlatformId('');
-    setEditStudentAulaId('');
+    setEditStudentPlatformIds([]);
+    setEditStudentAulaIds([]);
+    setEditStudentPlatformSearch('');
+    setEditStudentAulaSearch('');
     setShowEditStudentModal(false);
   };
 
@@ -1221,18 +1237,40 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         </select>
                       </td>
                       <td className="p-3">
-                        {student.platformId ? (() => {
-                          const plat = platforms.find(p => p.id === student.platformId);
-                          const aula = plat?.aulas.find(a => a.id === student.aulaId);
+                        {(() => {
+                          const currentPlatformIds = student.platformIds || (student.platformId ? [student.platformId] : []);
+                          const currentAulaIds = student.aulaIds || (student.aulaId ? [student.aulaId] : []);
+
+                          if (currentPlatformIds.length === 0) {
+                            return <span className="text-slate-400 italic">No asignado</span>;
+                          }
+
                           return (
-                            <div className="flex flex-col">
-                              <span className="font-bold text-slate-800">{plat?.name}</span>
-                              <span className="text-[10px] text-slate-500 font-medium">{aula ? aula.name : 'Sin aula'}</span>
+                            <div className="space-y-1.5">
+                              {currentPlatformIds.map(pId => {
+                                const plat = platforms.find(p => p.id === pId);
+                                if (!plat) return null;
+                                const platformAulas = plat.aulas.filter(a => currentAulaIds.includes(a.id));
+                                return (
+                                  <div key={pId} className="border-b border-slate-100 pb-1 last:border-0 last:pb-0">
+                                    <span className="font-bold text-slate-800 block text-[11px]">{plat.name}</span>
+                                    {platformAulas.length > 0 ? (
+                                      <div className="flex flex-wrap gap-1 mt-0.5">
+                                        {platformAulas.map(a => (
+                                          <span key={a.id} className="text-[9px] bg-slate-100 text-slate-700 border border-slate-300 px-1.5 py-0.2 rounded font-medium">
+                                            {a.name}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <span className="text-[9px] text-slate-400 italic">Sin aula asignada</span>
+                                    )}
+                                  </div>
+                                );
+                              })}
                             </div>
                           );
-                        })() : (
-                          <span className="text-slate-400 italic">No asignado</span>
-                        )}
+                        })()}
                       </td>
                       <td className="p-3 flex items-center gap-2">
                         <button
@@ -2336,41 +2374,181 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </select>
               </div>
 
+              {/* Plataformas (Multi-Select Predictivo) */}
               <div>
-                <label className="font-bold text-[#6180a6] block mb-1">Plataforma (Entidad)</label>
-                <select
-                  value={newStudentPlatformId}
-                  onChange={(e) => {
-                    setNewStudentPlatformId(e.target.value);
-                    setNewStudentAulaId('');
-                  }}
-                  className="w-full p-2 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] bg-white font-semibold text-slate-900"
-                >
-                  <option value="">Ninguna</option>
-                  {platforms.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
+                <label className="font-bold text-[#6180a6] block mb-1">Plataformas (Entidades)</label>
+                <div className="relative">
+                  <div className="flex flex-wrap gap-1.5 p-2 border border-slate-300 rounded bg-white min-h-[38px] items-center">
+                    {newStudentPlatformIds.map(pId => {
+                      const plat = platforms.find(p => p.id === pId);
+                      return (
+                        <span key={pId} className="flex items-center gap-1 text-[10px] font-bold bg-[#ffe66d] text-[#0d1b2e] border border-[#0d1b2e] px-2 py-0.5 rounded shadow-[1px_1px_0_0_#000000]">
+                          {plat?.name}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updatedPlats = newStudentPlatformIds.filter(id => id !== pId);
+                              setNewStudentPlatformIds(updatedPlats);
+                              // Also remove any assigned aulas that belong to this platform
+                              const platAulas = plat?.aulas.map(a => a.id) || [];
+                              setNewStudentAulaIds(prev => prev.filter(aId => !platAulas.includes(aId)));
+                            }}
+                            className="text-[#0d1b2e] hover:text-red-600 font-bold ml-0.5 focus:outline-none cursor-pointer"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      );
+                    })}
+                    <input
+                      type="text"
+                      value={newStudentPlatformSearch}
+                      onChange={(e) => {
+                        setNewStudentPlatformSearch(e.target.value);
+                        setIsNewStudentPlatformDropdownOpen(true);
+                      }}
+                      onFocus={() => setIsNewStudentPlatformDropdownOpen(true)}
+                      placeholder={newStudentPlatformIds.length === 0 ? "Buscar y seleccionar plataformas..." : "Agregar más..."}
+                      className="flex-1 bg-transparent border-0 p-0 text-xs focus:ring-0 focus:outline-none text-slate-900 placeholder-slate-455 min-w-[120px]"
+                    />
+                  </div>
+
+                  {isNewStudentPlatformDropdownOpen && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setIsNewStudentPlatformDropdownOpen(false)} />
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-[#0d1b2e] rounded shadow-lg max-h-48 overflow-y-auto">
+                        {(() => {
+                          const filtered = platforms.filter(p => 
+                            !newStudentPlatformIds.includes(p.id) &&
+                            p.name.toLowerCase().includes(newStudentPlatformSearch.toLowerCase())
+                          );
+                          if (filtered.length === 0) {
+                            return (
+                              <div className="p-2 text-slate-500 text-center text-xs">
+                                No se encontraron plataformas
+                              </div>
+                            );
+                          }
+                          return filtered.map(p => (
+                            <div
+                              key={p.id}
+                              onClick={() => {
+                                setNewStudentPlatformIds([...newStudentPlatformIds, p.id]);
+                                setNewStudentPlatformSearch('');
+                                setIsNewStudentPlatformDropdownOpen(false);
+                              }}
+                              className="p-2 hover:bg-slate-100 cursor-pointer font-semibold text-slate-800 text-xs flex justify-between items-center"
+                            >
+                              <span>{p.name}</span>
+                              <span className="text-[9px] text-slate-400 font-normal">Hacer clic para agregar</span>
+                            </div>
+                          ));
+                        })()}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
 
-              {newStudentPlatformId && (() => {
-                const selectedPlat = platforms.find(p => p.id === newStudentPlatformId);
-                return (
-                  <div>
-                    <label className="font-bold text-[#6180a6] block mb-1">Aula</label>
-                    <select
-                      value={newStudentAulaId}
-                      onChange={(e) => setNewStudentAulaId(e.target.value)}
-                      className="w-full p-2 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] bg-white font-semibold text-slate-900"
-                    >
-                      <option value="">Seleccionar Aula...</option>
-                      {selectedPlat?.aulas.map(a => (
-                        <option key={a.id} value={a.id}>{a.name} ({a.ageRange})</option>
-                      ))}
-                    </select>
+              {/* Aulas (Multi-Select Predictivo) */}
+              <div>
+                <label className="font-bold text-[#6180a6] block mb-1">Aulas</label>
+                <div className="relative">
+                  <div className="flex flex-wrap gap-1.5 p-2 border border-slate-300 rounded bg-white min-h-[38px] items-center">
+                    {newStudentAulaIds.map(aId => {
+                      let aulaName = '';
+                      let platformName = '';
+                      for (const p of platforms) {
+                        if (newStudentPlatformIds.includes(p.id)) {
+                          const match = p.aulas.find(a => a.id === aId);
+                          if (match) {
+                            aulaName = match.name;
+                            platformName = p.name;
+                            break;
+                          }
+                        }
+                      }
+                      if (!aulaName) return null;
+                      return (
+                        <span key={aId} className="flex items-center gap-1 text-[10px] font-bold bg-[#ffe66d]/40 text-[#0d1b2e] border border-[#0d1b2e] px-2 py-0.5 rounded shadow-[1px_1px_0_0_#000000]">
+                          {aulaName} <span className="text-[8px] font-normal text-slate-500">({platformName})</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setNewStudentAulaIds(newStudentAulaIds.filter(id => id !== aId));
+                            }}
+                            className="text-[#0d1b2e] hover:text-red-600 font-bold ml-0.5 focus:outline-none cursor-pointer"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      );
+                    })}
+                    <input
+                      type="text"
+                      disabled={newStudentPlatformIds.length === 0}
+                      value={newStudentAulaSearch}
+                      onChange={(e) => {
+                        setNewStudentAulaSearch(e.target.value);
+                        setIsNewStudentAulaDropdownOpen(true);
+                      }}
+                      onFocus={() => setIsNewStudentAulaDropdownOpen(true)}
+                      placeholder={
+                        newStudentPlatformIds.length === 0 
+                          ? "Primero agrega plataformas..." 
+                          : newStudentAulaIds.length === 0 
+                            ? "Buscar y seleccionar aulas..." 
+                            : "Agregar más..."
+                      }
+                      className="flex-1 bg-transparent border-0 p-0 text-xs focus:ring-0 focus:outline-none text-slate-900 placeholder-slate-455 min-w-[120px] disabled:cursor-not-allowed"
+                    />
                   </div>
-                );
-              })()}
+
+                  {isNewStudentAulaDropdownOpen && newStudentPlatformIds.length > 0 && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setIsNewStudentAulaDropdownOpen(false)} />
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-[#0d1b2e] rounded shadow-lg max-h-48 overflow-y-auto">
+                        {(() => {
+                          const available = platforms
+                            .filter(p => newStudentPlatformIds.includes(p.id))
+                            .flatMap(p => p.aulas.map(a => ({ ...a, platformName: p.name })))
+                            .filter(a => 
+                              !newStudentAulaIds.includes(a.id) &&
+                              a.name.toLowerCase().includes(newStudentAulaSearch.toLowerCase())
+                            );
+
+                          if (available.length === 0) {
+                            return (
+                              <div className="p-2 text-slate-500 text-center text-xs">
+                                No se encontraron aulas disponibles
+                              </div>
+                            );
+                          }
+                          return available.map(a => (
+                            <div
+                              key={a.id}
+                              onClick={() => {
+                                setNewStudentAulaIds([...newStudentAulaIds, a.id]);
+                                setNewStudentAulaSearch('');
+                                setIsNewStudentAulaDropdownOpen(false);
+                              }}
+                              className="p-2 hover:bg-slate-100 cursor-pointer font-semibold text-slate-800 text-xs flex justify-between items-center"
+                            >
+                              <div>
+                                <span>{a.name}</span>
+                                <span className="text-[9px] text-slate-500 ml-1.5">({a.ageRange})</span>
+                              </div>
+                              <span className="text-[9px] bg-slate-100 text-slate-500 px-1.5 py-0.5 border border-slate-200 rounded font-normal">
+                                {a.platformName}
+                              </span>
+                            </div>
+                          ));
+                        })()}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
 
               <div>
                 <label className="font-bold text-[#6180a6] block mb-1">Contraseña de Acceso</label>
@@ -2448,41 +2626,181 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </select>
               </div>
 
+              {/* Plataformas (Multi-Select Predictivo) */}
               <div>
-                <label className="font-bold text-[#6180a6] block mb-1">Plataforma (Entidad)</label>
-                <select
-                  value={editStudentPlatformId}
-                  onChange={(e) => {
-                    setEditStudentPlatformId(e.target.value);
-                    setEditStudentAulaId('');
-                  }}
-                  className="w-full p-2 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] bg-white font-semibold text-slate-900"
-                >
-                  <option value="">Ninguna</option>
-                  {platforms.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
+                <label className="font-bold text-[#6180a6] block mb-1">Plataformas (Entidades)</label>
+                <div className="relative">
+                  <div className="flex flex-wrap gap-1.5 p-2 border border-slate-300 rounded bg-white min-h-[38px] items-center">
+                    {editStudentPlatformIds.map(pId => {
+                      const plat = platforms.find(p => p.id === pId);
+                      return (
+                        <span key={pId} className="flex items-center gap-1 text-[10px] font-bold bg-[#ffe66d] text-[#0d1b2e] border border-[#0d1b2e] px-2 py-0.5 rounded shadow-[1px_1px_0_0_#000000]">
+                          {plat?.name}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updatedPlats = editStudentPlatformIds.filter(id => id !== pId);
+                              setEditStudentPlatformIds(updatedPlats);
+                              // Also remove any assigned aulas that belong to this platform
+                              const platAulas = plat?.aulas.map(a => a.id) || [];
+                              setEditStudentAulaIds(prev => prev.filter(aId => !platAulas.includes(aId)));
+                            }}
+                            className="text-[#0d1b2e] hover:text-red-600 font-bold ml-0.5 focus:outline-none cursor-pointer"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      );
+                    })}
+                    <input
+                      type="text"
+                      value={editStudentPlatformSearch}
+                      onChange={(e) => {
+                        setEditStudentPlatformSearch(e.target.value);
+                        setIsEditStudentPlatformDropdownOpen(true);
+                      }}
+                      onFocus={() => setIsEditStudentPlatformDropdownOpen(true)}
+                      placeholder={editStudentPlatformIds.length === 0 ? "Buscar y seleccionar plataformas..." : "Agregar más..."}
+                      className="flex-1 bg-transparent border-0 p-0 text-xs focus:ring-0 focus:outline-none text-slate-900 placeholder-slate-455 min-w-[120px]"
+                    />
+                  </div>
+
+                  {isEditStudentPlatformDropdownOpen && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setIsEditStudentPlatformDropdownOpen(false)} />
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-[#0d1b2e] rounded shadow-lg max-h-48 overflow-y-auto">
+                        {(() => {
+                          const filtered = platforms.filter(p => 
+                            !editStudentPlatformIds.includes(p.id) &&
+                            p.name.toLowerCase().includes(editStudentPlatformSearch.toLowerCase())
+                          );
+                          if (filtered.length === 0) {
+                            return (
+                              <div className="p-2 text-slate-500 text-center text-xs">
+                                No se encontraron plataformas
+                              </div>
+                            );
+                          }
+                          return filtered.map(p => (
+                            <div
+                              key={p.id}
+                              onClick={() => {
+                                setEditStudentPlatformIds([...editStudentPlatformIds, p.id]);
+                                setEditStudentPlatformSearch('');
+                                setIsEditStudentPlatformDropdownOpen(false);
+                              }}
+                              className="p-2 hover:bg-slate-100 cursor-pointer font-semibold text-slate-800 text-xs flex justify-between items-center"
+                            >
+                              <span>{p.name}</span>
+                              <span className="text-[9px] text-slate-400 font-normal">Hacer clic para agregar</span>
+                            </div>
+                          ));
+                        })()}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
 
-              {editStudentPlatformId && (() => {
-                const selectedPlat = platforms.find(p => p.id === editStudentPlatformId);
-                return (
-                  <div>
-                    <label className="font-bold text-[#6180a6] block mb-1">Aula</label>
-                    <select
-                      value={editStudentAulaId}
-                      onChange={(e) => setEditStudentAulaId(e.target.value)}
-                      className="w-full p-2 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] bg-white font-semibold text-slate-900"
-                    >
-                      <option value="">Seleccionar Aula...</option>
-                      {selectedPlat?.aulas.map(a => (
-                        <option key={a.id} value={a.id}>{a.name} ({a.ageRange})</option>
-                      ))}
-                    </select>
+              {/* Aulas (Multi-Select Predictivo) */}
+              <div>
+                <label className="font-bold text-[#6180a6] block mb-1">Aulas</label>
+                <div className="relative">
+                  <div className="flex flex-wrap gap-1.5 p-2 border border-slate-300 rounded bg-white min-h-[38px] items-center">
+                    {editStudentAulaIds.map(aId => {
+                      let aulaName = '';
+                      let platformName = '';
+                      for (const p of platforms) {
+                        if (editStudentPlatformIds.includes(p.id)) {
+                          const match = p.aulas.find(a => a.id === aId);
+                          if (match) {
+                            aulaName = match.name;
+                            platformName = p.name;
+                            break;
+                          }
+                        }
+                      }
+                      if (!aulaName) return null;
+                      return (
+                        <span key={aId} className="flex items-center gap-1 text-[10px] font-bold bg-[#ffe66d]/40 text-[#0d1b2e] border border-[#0d1b2e] px-2 py-0.5 rounded shadow-[1px_1px_0_0_#000000]">
+                          {aulaName} <span className="text-[8px] font-normal text-slate-500">({platformName})</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditStudentAulaIds(editStudentAulaIds.filter(id => id !== aId));
+                            }}
+                            className="text-[#0d1b2e] hover:text-red-600 font-bold ml-0.5 focus:outline-none cursor-pointer"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      );
+                    })}
+                    <input
+                      type="text"
+                      disabled={editStudentPlatformIds.length === 0}
+                      value={editStudentAulaSearch}
+                      onChange={(e) => {
+                        setEditStudentAulaSearch(e.target.value);
+                        setIsEditStudentAulaDropdownOpen(true);
+                      }}
+                      onFocus={() => setIsEditStudentAulaDropdownOpen(true)}
+                      placeholder={
+                        editStudentPlatformIds.length === 0 
+                          ? "Primero agrega plataformas..." 
+                          : editStudentAulaIds.length === 0 
+                            ? "Buscar y seleccionar aulas..." 
+                            : "Agregar más..."
+                      }
+                      className="flex-1 bg-transparent border-0 p-0 text-xs focus:ring-0 focus:outline-none text-slate-900 placeholder-slate-455 min-w-[120px] disabled:cursor-not-allowed"
+                    />
                   </div>
-                );
-              })()}
+
+                  {isEditStudentAulaDropdownOpen && editStudentPlatformIds.length > 0 && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setIsEditStudentAulaDropdownOpen(false)} />
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-[#0d1b2e] rounded shadow-lg max-h-48 overflow-y-auto">
+                        {(() => {
+                          const available = platforms
+                            .filter(p => editStudentPlatformIds.includes(p.id))
+                            .flatMap(p => p.aulas.map(a => ({ ...a, platformName: p.name })))
+                            .filter(a => 
+                              !editStudentAulaIds.includes(a.id) &&
+                              a.name.toLowerCase().includes(editStudentAulaSearch.toLowerCase())
+                            );
+
+                          if (available.length === 0) {
+                            return (
+                              <div className="p-2 text-slate-500 text-center text-xs">
+                                No se encontraron aulas disponibles
+                              </div>
+                            );
+                          }
+                          return available.map(a => (
+                            <div
+                              key={a.id}
+                              onClick={() => {
+                                setEditStudentAulaIds([...editStudentAulaIds, a.id]);
+                                setEditStudentAulaSearch('');
+                                setIsEditStudentAulaDropdownOpen(false);
+                              }}
+                              className="p-2 hover:bg-slate-100 cursor-pointer font-semibold text-slate-800 text-xs flex justify-between items-center"
+                            >
+                              <div>
+                                <span>{a.name}</span>
+                                <span className="text-[9px] text-slate-500 ml-1.5">({a.ageRange})</span>
+                              </div>
+                              <span className="text-[9px] bg-slate-100 text-slate-500 px-1.5 py-0.5 border border-slate-200 rounded font-normal">
+                                {a.platformName}
+                              </span>
+                            </div>
+                          ));
+                        })()}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
 
               <div>
                 <label className="font-bold text-[#6180a6] block mb-1">Contraseña de Acceso</label>

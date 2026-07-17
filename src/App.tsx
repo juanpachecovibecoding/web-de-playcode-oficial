@@ -548,7 +548,7 @@ const App: React.FC = () => {
     localStorage.removeItem('playcode_attempted_name');
   };
 
-  if (loading) {
+  if (loading && (view === 'dashboard' || view === 'student_dashboard' || view === 'pending_activation')) {
     return (
       <div className="min-h-screen bg-[#0d1b2e] flex flex-col items-center justify-center text-white font-sans">
         <div className="flex flex-col items-center gap-4">

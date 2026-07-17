@@ -675,7 +675,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                           );
                         }
                         return aulaCourses.map(course => {
-                          const courseLessons = lessons.filter(l => l.courseName === course.name);
+                          const courseLessons = course.lessonIds && course.lessonIds.length > 0
+                            ? lessons.filter(l => course.lessonIds!.includes(l.id))
+                            : lessons.filter(l => l.courseName === course.name);
                           const completedCourseLessons = courseLessons.filter(l => student.completedLessonIds?.includes(l.id));
                           const progressPercent = courseLessons.length > 0 
                             ? Math.round((completedCourseLessons.length / courseLessons.length) * 100) 
@@ -686,7 +688,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                               key={course.id}
                               onClick={() => {
                                 setSelectedPlatformCourse(course);
-                                const cLessons = lessons.filter(l => l.courseName === course.name);
+                                const cLessons = course.lessonIds && course.lessonIds.length > 0
+                                  ? lessons.filter(l => course.lessonIds!.includes(l.id))
+                                  : lessons.filter(l => l.courseName === course.name);
                                 if (cLessons.length > 0) {
                                   setSelectedPlatformLesson(cLessons[0]);
                                 } else {
@@ -747,7 +751,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                     </div>
 
                     {(() => {
-                      const courseLessons = lessons.filter(l => l.courseName === selectedPlatformCourse.name);
+                      const courseLessons = selectedPlatformCourse.lessonIds && selectedPlatformCourse.lessonIds.length > 0
+                        ? lessons.filter(l => selectedPlatformCourse.lessonIds!.includes(l.id))
+                        : lessons.filter(l => l.courseName === selectedPlatformCourse.name);
                       if (courseLessons.length === 0) {
                         return (
                           <div className="bg-slate-50 border-2 border-dashed border-slate-300 p-8 text-center text-xs text-slate-500">

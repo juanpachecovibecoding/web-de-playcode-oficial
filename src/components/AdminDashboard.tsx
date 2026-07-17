@@ -678,11 +678,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const handleAddLesson = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newLessonTitle || !newLessonCourseName || !newLessonHtmlContent) return;
+    if (!newLessonTitle || !newLessonHtmlContent) return;
     const newLesson: Lesson = {
       id: 'l' + Date.now().toString(),
       title: newLessonTitle,
-      courseName: newLessonCourseName,
+      courseName: newLessonCourseName || '',
       htmlContent: newLessonHtmlContent
     };
     setLessons([...lessons, newLesson]);
@@ -701,17 +701,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const handleStartEditLesson = (lesson: Lesson) => {
     setEditingLesson(lesson);
     setEditLessonTitle(lesson.title);
-    setEditLessonCourseName(lesson.courseName);
+    setEditLessonCourseName(lesson.courseName || '');
     setEditLessonHtmlContent(lesson.htmlContent);
   };
 
   const handleSaveEditLesson = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingLesson || !editLessonTitle || !editLessonCourseName || !editLessonHtmlContent) return;
+    if (!editingLesson || !editLessonTitle || !editLessonHtmlContent) return;
     setLessons(lessons.map(l => l.id === editingLesson.id ? {
       ...l,
       title: editLessonTitle,
-      courseName: editLessonCourseName,
+      courseName: editLessonCourseName || '',
       htmlContent: editLessonHtmlContent
     } : l));
     setEditingLesson(null);
@@ -2153,7 +2153,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         {activeTab === 'contenido' && (() => {
           const q = lessonSearchFilter.toLowerCase();
           const filteredLessons = q
-            ? lessons.filter(l => l.title.toLowerCase().includes(q) || l.courseName.toLowerCase().includes(q))
+            ? lessons.filter(l =>
+                l.title.toLowerCase().includes(q) ||
+                l.courseName.toLowerCase().includes(q) ||
+                classrooms.some(c => c.lessonIds?.includes(l.id) && c.name.toLowerCase().includes(q))
+              )
             : lessons;
 
           return (
@@ -2167,7 +2171,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <button
                   onClick={() => {
                     setNewLessonTitle('');
-                    setNewLessonCourseName(classrooms[0]?.name || '');
+                    setNewLessonCourseName('');
                     setNewLessonHtmlContent('');
                     setShowAddLessonModal(true);
                   }}
@@ -2204,7 +2208,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   {q && ` de ${lessons.length}`}
                 </span>
                 <span className="bg-[#f0f4f8] border border-[#a3b8cc] px-2.5 py-1 rounded">
-                  {new Set(lessons.map(l => l.courseName)).size} cursos vinculados
+                  {lessons.filter(l => classrooms.some(c => c.lessonIds?.includes(l.id))).length} lecciones vinculadas
                 </span>
               </div>
 
@@ -2223,9 +2227,28 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       <tr key={lesson.id} className="hover:bg-[#f0f4f8]/50 font-medium">
                         <td className="p-3 text-[#0d1b2e] font-bold">{lesson.title}</td>
                         <td className="p-3">
-                          <span className="inline-block bg-[#2a4e7c] text-white px-2 py-0.5 rounded font-bold text-[9px] uppercase tracking-wider">
-                            {lesson.courseName}
-                          </span>
+                          {(() => {
+                            const linkedCourses = classrooms.filter(c => c.lessonIds?.includes(lesson.id));
+                            if (linkedCourses.length > 0) {
+                              return (
+                                <div className="flex flex-wrap gap-1">
+                                  {linkedCourses.map(c => (
+                                    <span key={c.id} className="inline-block bg-[#2a4e7c] text-white px-2 py-0.5 rounded font-bold text-[9px] uppercase tracking-wider">
+                                      {c.name}
+                                    </span>
+                                  ))}
+                                </div>
+                              );
+                            }
+                            if (lesson.courseName) {
+                              return (
+                                <span className="inline-block bg-slate-400 text-white px-2 py-0.5 rounded font-bold text-[9px] uppercase tracking-wider">
+                                  {lesson.courseName}
+                                </span>
+                              );
+                            }
+                            return <span className="text-slate-400 italic">Sin vincular</span>;
+                          })()}
                         </td>
                         <td className="p-3">
                           <div className="flex items-center gap-2.5">
@@ -2278,7 +2301,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <Eye className="w-4 h-4 text-white/60" />
                   <div>
                     <h3 className="text-sm font-bold text-white">{previewLesson.title}</h3>
-                    <span className="text-[9px] text-white/50 font-bold uppercase tracking-wider">{previewLesson.courseName}</span>
+                    <span className="text-[9px] text-white/50 font-bold uppercase tracking-wider">
+                      {classrooms.filter(c => c.lessonIds?.includes(previewLesson.id)).map(c => c.name).join(', ') || previewLesson.courseName || 'Sin curso asignado'}
+                    </span>
                   </div>
                 </div>
                 <button
@@ -3069,30 +3094,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <h3 className="text-sm font-bold text-[#0d1b2e] mb-2 uppercase tracking-wider">Nueva Lección</h3>
             <p className="text-[10px] text-slate-500 mb-4">Crea contenido estructurado. Puedes usar cualquier etiqueta HTML, estilos en línea (inline CSS) y scripts básicos.</p>
             <form onSubmit={handleAddLesson} className="space-y-4 text-xs">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="font-bold text-[#6180a6] block mb-1">Nombre de la Lección</label>
-                  <input
-                    type="text"
-                    required
-                    value={newLessonTitle}
-                    onChange={(e) => setNewLessonTitle(e.target.value)}
-                    placeholder="ej. Introducción a Loops en Scratch"
-                    className="w-full p-2 border border-[#a3b8cc] rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-slate-900 font-semibold"
-                  />
-                </div>
-                <div>
-                  <label className="font-bold text-[#6180a6] block mb-1">Curso Vinculado</label>
-                  <select
-                    value={newLessonCourseName}
-                    onChange={(e) => setNewLessonCourseName(e.target.value)}
-                    className="w-full p-2 border border-[#a3b8cc] rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-slate-900 bg-white font-semibold"
-                  >
-                    {classrooms.map(c => (
-                      <option key={c.id} value={c.name}>{c.name}</option>
-                    ))}
-                  </select>
-                </div>
+              <div>
+                <label className="font-bold text-[#6180a6] block mb-1">Nombre de la Lección</label>
+                <input
+                  type="text"
+                  required
+                  value={newLessonTitle}
+                  onChange={(e) => setNewLessonTitle(e.target.value)}
+                  placeholder="ej. Introducción a Loops en Scratch"
+                  className="w-full p-2 border border-[#a3b8cc] rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-slate-900 font-semibold"
+                />
               </div>
 
               <div>
@@ -3140,29 +3151,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <h3 className="text-sm font-bold text-[#0d1b2e] mb-2 uppercase tracking-wider">Editar Lección</h3>
             <p className="text-[10px] text-slate-500 mb-4">Modifica los detalles y actualiza el código HTML de la lección.</p>
             <form onSubmit={handleSaveEditLesson} className="space-y-4 text-xs">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="font-bold text-[#6180a6] block mb-1">Nombre de la Lección</label>
-                  <input
-                    type="text"
-                    required
-                    value={editLessonTitle}
-                    onChange={(e) => setEditLessonTitle(e.target.value)}
-                    className="w-full p-2 border border-[#a3b8cc] rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-slate-900 font-semibold"
-                  />
-                </div>
-                <div>
-                  <label className="font-bold text-[#6180a6] block mb-1">Curso Vinculado</label>
-                  <select
-                    value={editLessonCourseName}
-                    onChange={(e) => setEditLessonCourseName(e.target.value)}
-                    className="w-full p-2 border border-[#a3b8cc] rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-slate-900 bg-white font-semibold"
-                  >
-                    {classrooms.map(c => (
-                      <option key={c.id} value={c.name}>{c.name}</option>
-                    ))}
-                  </select>
-                </div>
+              <div>
+                <label className="font-bold text-[#6180a6] block mb-1">Nombre de la Lección</label>
+                <input
+                  type="text"
+                  required
+                  value={editLessonTitle}
+                  onChange={(e) => setEditLessonTitle(e.target.value)}
+                  className="w-full p-2 border border-[#a3b8cc] rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-slate-900 font-semibold"
+                />
               </div>
 
               <div>

@@ -818,13 +818,13 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                                     </button>
                                     <h4 className="text-base font-bold text-[#0d1b2e] truncate">{selectedPlatformLesson.title}</h4>
                                   </div>
-                                  <div className="flex items-center gap-2 shrink-0">
-                                    <span className="text-[9px] font-bold text-slate-400">Marcar completada:</span>
+                                  <div className="flex items-center gap-2.5 shrink-0 bg-[#ffe66d]/30 border-2 border-[#0d1b2e] shadow-[2px_2px_0_0_#0d1b2e] px-3 py-1.5 rounded">
+                                    <span className="text-[10px] font-bold text-[#0d1b2e] uppercase tracking-wider">Marcar completada</span>
                                     <input
                                       type="checkbox"
                                       checked={student.completedLessonIds?.includes(selectedPlatformLesson.id) || false}
                                       onChange={() => toggleLessonCompletion(selectedPlatformLesson.id)}
-                                      className="w-4 h-4 border-2 border-[#0d1b2e] rounded-sm cursor-pointer accent-[#2a4e7c]"
+                                      className="w-4 h-4 border-2 border-[#0d1b2e] rounded-sm cursor-pointer accent-[#2a4e7c] bg-white"
                                     />
                                   </div>
                                 </div>

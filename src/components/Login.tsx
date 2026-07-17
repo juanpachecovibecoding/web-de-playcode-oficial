@@ -4,14 +4,14 @@ import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
 
 interface LoginProps {
-  onLogin: (email: string, password?: string, name?: string) => { success: boolean; error?: string };
+  onLogin: (username: string, password?: string, name?: string) => { success: boolean; error?: string };
   onBack: () => void;
 }
 
 export const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [emailInput, setEmailInput] = useState('');
+  const [usernameInput, setUsernameInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
 
   const handleGoogleLogin = async () => {
@@ -42,19 +42,18 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
 
   const handleManualLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!emailInput.trim() || !passwordInput) {
+    if (!usernameInput.trim() || !passwordInput) {
       setError('Por favor, ingresa tu usuario y contraseña.');
       return;
     }
     setLoading(true);
     setError('');
-    const res = onLogin(emailInput.trim(), passwordInput);
+    const res = onLogin(usernameInput.trim(), passwordInput);
     setLoading(false);
     if (!res.success) {
       setError(res.error || 'Usuario o contraseña incorrectos.');
     }
   };
-
   return (
     <div className="min-h-screen bg-slate-50 relative flex flex-col items-center justify-center p-4">
       {/* Pixel Grid Background */}
@@ -123,13 +122,13 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
           {/* Manual Login Form */}
           <form onSubmit={handleManualLogin} className="space-y-4 text-xs">
             <div>
-              <label className="font-bold text-slate-500 block mb-1">Usuario o Correo Electrónico</label>
+              <label className="font-bold text-slate-500 block mb-1">Nombre de Usuario</label>
               <input
-                type="email"
+                type="text"
                 required
-                value={emailInput}
-                onChange={(e) => setEmailInput(e.target.value)}
-                placeholder="ejemplo@correo.com"
+                value={usernameInput}
+                onChange={(e) => setUsernameInput(e.target.value.toLowerCase().replace(/\s+/g, ''))}
+                placeholder="ejemplo_usuario"
                 className="w-full p-2.5 border-2 border-slate-350 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-slate-900 font-semibold"
               />
             </div>

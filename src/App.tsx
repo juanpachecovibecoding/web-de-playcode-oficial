@@ -14,7 +14,7 @@ import { db } from './firebase';
 import { collection, doc, setDoc, getDocs, deleteDoc } from 'firebase/firestore';
 
 interface LoggedInUser {
-  email: string;
+  username: string;
   name: string;
   role: 'superadmin' | 'student';
   id?: string;
@@ -32,7 +32,7 @@ interface Course {
 interface Student {
   id: string;
   name: string;
-  email: string;
+  username: string;
   course?: string;
   status: 'Activo' | 'Completado' | 'Pendiente';
   bio?: string;
@@ -94,7 +94,7 @@ interface ForumComment {
   id: string;
   content: string;
   authorName: string;
-  authorEmail: string;
+  authorUsername: string;
   createdAt: string;
 }
 
@@ -103,13 +103,13 @@ interface ForumPost {
   title: string;
   content: string;
   authorName: string;
-  authorEmail: string;
+  authorUsername: string;
   authorAvatar?: string;
   imageUrl?: string; // base64
   likes: number;
-  likedBy: string[]; // emails of users who liked
+  likedBy: string[]; // usernames of users who liked
   reactions: { [key: string]: number }; // emoji -> count
-  reactedBy: { [userEmail: string]: string }; // userEmail -> emoji
+  reactedBy: { [userUsername: string]: string }; // userUsername -> emoji
   createdAt: string;
   comments: ForumComment[];
 }
@@ -125,8 +125,8 @@ const App: React.FC = () => {
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
-  const [attemptedEmail, setAttemptedEmail] = useState(() => {
-    return localStorage.getItem('playcode_attempted_email') || '';
+  const [attemptedUsername, setAttemptedUsername] = useState(() => {
+    return localStorage.getItem('playcode_attempted_username') || '';
   });
 
   const [attemptedName, setAttemptedName] = useState(() => {
@@ -218,7 +218,7 @@ const App: React.FC = () => {
               title: '¡Bienvenidos al Foro Estudiantil de Play Code! 🚀',
               content: '¡Hola a todos! Este es nuestro espacio para compartir dudas, proyectos y aprender juntos. ¡Cuéntanos qué estás programando hoy!',
               authorName: 'Juan Pacheco',
-              authorEmail: 'juanpacheco@playcode.com.ar',
+              authorUsername: 'juanpacheco',
               authorAvatar: '🧠',
               likes: 3,
               likedBy: [],
@@ -230,7 +230,7 @@ const App: React.FC = () => {
                   id: 'comment-1',
                   content: '¡Me encanta este nuevo foro! Voy a subir un screenshot de mi proyecto de HTML pronto.',
                   authorName: 'Lucas Pérez',
-                  authorEmail: 'lucas@playcode.com',
+                  authorUsername: 'lucasperez',
                   createdAt: new Date(Date.now() - 3600000 * 20).toISOString()
                 }
               ]
@@ -327,36 +327,37 @@ const App: React.FC = () => {
   }, [view]);
 
   React.useEffect(() => {
-    localStorage.setItem('playcode_attempted_email', attemptedEmail);
-  }, [attemptedEmail]);
+    localStorage.setItem('playcode_attempted_username', attemptedUsername);
+  }, [attemptedUsername]);
 
   React.useEffect(() => {
     localStorage.setItem('playcode_attempted_name', attemptedName);
   }, [attemptedName]);
 
-  const handleLogin = (email: string, password?: string, name?: string): { success: boolean; error?: string } => {
-    const formattedEmail = email.toLowerCase().trim();
+  const handleLogin = (username: string, password?: string, name?: string): { success: boolean; error?: string } => {
+    // Force username to be lowercase and without spaces
+    const formattedUsername = username.toLowerCase().replace(/\s+/g, '').trim();
 
     // 1. Superadmin verification
-    if (formattedEmail === 'juanpacheco@playcode.com.ar') {
+    if (formattedUsername === 'juanpacheco') {
       if (password !== undefined) {
         if (password !== 'admin123') {
           return { success: false, error: 'Contraseña de administrador incorrecta.' };
         }
       }
-      const u: LoggedInUser = { email: formattedEmail, name: name || 'Juan Pacheco', role: 'superadmin' };
+      const u: LoggedInUser = { username: formattedUsername, name: name || 'Juan Pacheco', role: 'superadmin' };
       setUser(u);
       setView('dashboard');
       return { success: true };
     }
 
     // 2. Student verification
-    const existingStudent = students.find(s => s.email === formattedEmail);
+    const existingStudent = students.find(s => s.username === formattedUsername);
 
     if (password !== undefined) {
-      // Trying email & password login
+      // Trying username & password login
       if (!existingStudent) {
-        return { success: false, error: 'No se encontró ninguna cuenta asociada a este correo electrónico.' };
+        return { success: false, error: 'No se encontró ninguna cuenta asociada a este usuario.' };
       }
       const expectedPassword = existingStudent.password || '123456';
       if (password !== expectedPassword) {
@@ -364,40 +365,44 @@ const App: React.FC = () => {
       }
 
       if (existingStudent.status === 'Pendiente') {
-        setAttemptedEmail(formattedEmail);
+        setAttemptedUsername(formattedUsername);
         setAttemptedName(existingStudent.name);
         setView('pending_activation');
         return { success: true };
       }
 
-      const u: LoggedInUser = { email: formattedEmail, name: existingStudent.name, role: 'student', id: existingStudent.id };
+      const u: LoggedInUser = { username: formattedUsername, name: existingStudent.name, role: 'student', id: existingStudent.id };
       setUser(u);
       setView('student_dashboard');
       return { success: true };
     } else {
       // Google Login (password is undefined)
-      if (!existingStudent) {
+      // Extract username from email or name
+      const generatedUsername = formattedUsername.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+      const existingStudentGoogle = students.find(s => s.username === generatedUsername);
+
+      if (!existingStudentGoogle) {
         const newStudent: Student = {
           id: Date.now().toString(),
           name: name || 'Nuevo Alumno',
-          email: formattedEmail,
+          username: generatedUsername,
           course: 'Robótica y Programación',
           status: 'Pendiente',
           password: '123456'
         };
         setStudents(prev => [...prev, newStudent]);
-        setAttemptedEmail(formattedEmail);
+        setAttemptedUsername(generatedUsername);
         setAttemptedName(name || 'Nuevo Alumno');
         setView('pending_activation');
         return { success: true };
       } else {
-        if (existingStudent.status === 'Pendiente') {
-          setAttemptedEmail(formattedEmail);
-          setAttemptedName(existingStudent.name);
+        if (existingStudentGoogle.status === 'Pendiente') {
+          setAttemptedUsername(generatedUsername);
+          setAttemptedName(existingStudentGoogle.name);
           setView('pending_activation');
           return { success: true };
         } else {
-          const u: LoggedInUser = { email: formattedEmail, name: existingStudent.name, role: 'student', id: existingStudent.id };
+          const u: LoggedInUser = { username: generatedUsername, name: existingStudentGoogle.name, role: 'student', id: existingStudentGoogle.id };
           setUser(u);
           setView('student_dashboard');
           return { success: true };
@@ -411,7 +416,7 @@ const App: React.FC = () => {
     setView('landing');
     localStorage.removeItem('playcode_user');
     localStorage.removeItem('playcode_view');
-    localStorage.removeItem('playcode_attempted_email');
+    localStorage.removeItem('playcode_attempted_username');
     localStorage.removeItem('playcode_attempted_name');
   };
 
@@ -439,7 +444,7 @@ const App: React.FC = () => {
           </div>
           <h2 className="text-2xl font-bold text-[#0d1b2e] mb-4 uppercase tracking-wider">Cuenta Pendiente</h2>
           <p className="text-slate-650 text-sm mb-6 leading-relaxed">
-            Hola <strong className="text-[#0d1b2e]">{attemptedName}</strong>, tu correo <strong className="text-[#0d1b2e]">{attemptedEmail}</strong> ha sido registrado de forma segura.
+            Hola <strong className="text-[#0d1b2e]">{attemptedName}</strong>, tu usuario <strong className="text-[#0d1b2e]">{attemptedUsername}</strong> ha sido registrado de forma segura.
           </p>
           <div className="bg-[#f0f4f8] border border-[#a3b8cc] p-4 text-xs font-semibold text-[#2a4e7c] mb-6 text-left rounded">
             Tu cuenta se encuentra pendiente de activación. Por favor, espera a que un administrador active tu acceso. Una vez aprobada, podrás volver a iniciar sesión y acceder a tus clases y enlaces de Google Meet.
@@ -464,7 +469,7 @@ const App: React.FC = () => {
           </div>
           <h2 className="text-2xl font-bold text-[#0d1b2e] mb-4">Acceso Denegado</h2>
           <p className="text-slate-600 text-sm mb-6 leading-relaxed">
-            La cuenta <strong className="text-[#0d1b2e]">{attemptedEmail}</strong> no está autorizada.
+            La cuenta <strong className="text-[#0d1b2e]">{attemptedUsername}</strong> no está autorizada.
           </p>
           <button
             onClick={() => setView('login')}
@@ -480,7 +485,7 @@ const App: React.FC = () => {
   if (view === 'dashboard' && user) {
     return (
       <AdminDashboard
-        userEmail={user.email}
+        userUsername={user.username}
         userName={user.name}
         onLogout={handleLogout}
         courses={courses}

@@ -39,7 +39,7 @@ interface Course {
 interface Student {
   id: string;
   name: string;
-  email: string;
+  username: string;
   course?: string;
   status: 'Activo' | 'Completado' | 'Pendiente';
   password?: string;
@@ -94,7 +94,7 @@ interface Platform {
 }
 
 interface AdminDashboardProps {
-  userEmail: string;
+  userUsername: string;
   userName: string;
   onLogout: () => void;
   courses: Course[];
@@ -117,7 +117,7 @@ interface AdminDashboardProps {
 }
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
-  userEmail,
+  userUsername,
   userName,
   onLogout,
   courses,
@@ -165,7 +165,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [showEditStudentModal, setShowEditStudentModal] = useState(false);
   const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
   const [editStudentName, setEditStudentName] = useState('');
-  const [editStudentEmail, setEditStudentEmail] = useState('');
+  const [editStudentUsername, setEditStudentUsername] = useState('');
   const [editStudentRole, setEditStudentRole] = useState<'admin' | 'docente' | 'alumno' | 'profesor'>('alumno');
   const [editStudentPassword, setEditStudentPassword] = useState('');
   const [editStudentPlatformIds, setEditStudentPlatformIds] = useState<string[]>([]);
@@ -371,7 +371,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       title: newPostTitle,
       content: newPostContent,
       authorName: adminForumName,
-      authorEmail: 'juanpacheco@playcode.com.ar',
+      authorUsername: 'juanpacheco',
       authorAvatar: adminForumAvatar,
       imageUrl: newPostImage || undefined,
       likes: 0,
@@ -444,14 +444,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [commentInputs, setCommentInputs] = useState<{ [postId: string]: string }>({});
 
   const handleLikePostInteractive = (postId: string) => {
-    const userEmail = 'juanpacheco@playcode.com.ar';
+    const userUsername = 'juanpacheco';
     const updated = posts.map(post => {
       if (post.id !== postId) return post;
       const postLikedBy = post.likedBy || [];
-      const hasLiked = postLikedBy.includes(userEmail);
+      const hasLiked = postLikedBy.includes(userUsername);
       const likedBy = hasLiked
-        ? postLikedBy.filter((email: string) => email !== userEmail)
-        : [...postLikedBy, userEmail];
+        ? postLikedBy.filter((username: string) => username !== userUsername)
+        : [...postLikedBy, userUsername];
       const likes = hasLiked ? Math.max(0, post.likes - 1) : post.likes + 1;
       return { ...post, likes, likedBy };
     });
@@ -459,20 +459,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   };
 
   const handleReactToPostInteractive = (postId: string, emoji: string) => {
-    const userEmail = 'juanpacheco@playcode.com.ar';
+    const userUsername = 'juanpacheco';
     const updated = posts.map(post => {
       if (post.id !== postId) return post;
 
       const postReactedBy = post.reactedBy || {};
       const postReactions = post.reactions || { '🚀': 0, '🎉': 0, '💻': 0, '🧠': 0 };
 
-      const previousReaction = postReactedBy[userEmail];
-      const reactedBy = { ...postReactedBy, [userEmail]: emoji };
+      const previousReaction = postReactedBy[userUsername];
+      const reactedBy = { ...postReactedBy, [userUsername]: emoji };
       const reactions = { ...postReactions };
 
       if (previousReaction === emoji) {
         reactions[emoji] = Math.max(0, (reactions[emoji] || 1) - 1);
-        delete reactedBy[userEmail];
+        delete reactedBy[userUsername];
       } else {
         if (previousReaction) {
           reactions[previousReaction] = Math.max(0, (reactions[previousReaction] || 1) - 1);
@@ -495,7 +495,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         id: 'comment-' + Date.now(),
         content: text,
         authorName: adminForumName,
-        authorEmail: 'juanpacheco@playcode.com.ar',
+        authorUsername: 'juanpacheco',
         authorAvatar: adminForumAvatar,
         createdAt: new Date().toISOString()
       };
@@ -523,7 +523,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   // Modal States for Adding Student
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
   const [newStudentName, setNewStudentName] = useState('');
-  const [newStudentEmail, setNewStudentEmail] = useState('');
+  const [newStudentUsername, setNewStudentUsername] = useState('');
   const [newStudentPassword, setNewStudentPassword] = useState('123456');
   const [newStudentRole, setNewStudentRole] = useState<'admin' | 'docente' | 'alumno' | 'profesor'>('alumno');
 
@@ -570,11 +570,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const handleAddStudent = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newStudentName || !newStudentEmail) return;
+    if (!newStudentName || !newStudentUsername) return;
+    const formattedUsername = newStudentUsername.toLowerCase().replace(/\s+/g, '').trim();
     const newStudent: Student = {
       id: Date.now().toString(),
       name: newStudentName,
-      email: newStudentEmail,
+      username: formattedUsername,
       status: 'Activo',
       password: newStudentPassword || '123456',
       role: newStudentRole,
@@ -584,7 +585,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setStudents([...students, newStudent]);
 
     setNewStudentName('');
-    setNewStudentEmail('');
+    setNewStudentUsername('');
     setNewStudentPassword('123456');
     setNewStudentRole('alumno');
     setNewStudentPlatformIds([]);
@@ -613,7 +614,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const handleStartEditStudent = (student: Student) => {
     setEditingStudentId(student.id);
     setEditStudentName(student.name);
-    setEditStudentEmail(student.email);
+    setEditStudentUsername(student.username);
     setEditStudentRole(student.role || 'alumno');
     setEditStudentPassword(student.password || '123456');
     setEditStudentPlatformIds(student.platformIds || (student.platformId ? [student.platformId] : []));
@@ -625,14 +626,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const handleSaveEditStudent = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingStudentId || !editStudentName.trim() || !editStudentEmail.trim()) return;
+    if (!editingStudentId || !editStudentName.trim() || !editStudentUsername.trim()) return;
+
+    const formattedUsername = editStudentUsername.toLowerCase().replace(/\s+/g, '').trim();
 
     setStudents(prev => prev.map(s => {
       if (s.id === editingStudentId) {
         return {
           ...s,
           name: editStudentName.trim(),
-          email: editStudentEmail.trim(),
+          username: formattedUsername,
           role: editStudentRole,
           password: editStudentPassword || '123456',
           platformIds: editStudentPlatformIds,
@@ -644,7 +647,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
     setEditingStudentId(null);
     setEditStudentName('');
-    setEditStudentEmail('');
+    setEditStudentUsername('');
     setEditStudentRole('alumno');
     setEditStudentPassword('');
     setEditStudentPlatformIds([]);
@@ -894,7 +897,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
             <div className="overflow-hidden">
               <span className="text-xs font-bold text-slate-200 block truncate">{userName}</span>
-              <span className="text-[9px] text-[#a3b8cc] block truncate">{userEmail}</span>
+              <span className="text-[9px] text-[#a3b8cc] block truncate">{userUsername}</span>
             </div>
           </div>
           <button
@@ -971,7 +974,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               id: `student-${s.id}`,
               type: 'student',
               title: 'NUEVO ALUMNO',
-              detail: `${s.name} se registró con el correo ${s.email}`,
+              detail: `${s.name} se registró con el usuario ${s.username}`,
               timeText: s.status === 'Pendiente' ? 'Pendiente aprobación' : 'Activo',
               timestamp: ts,
             });
@@ -1285,7 +1288,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <tr className="bg-[#0d1b2e] text-white border-b-2 border-[#1e385c]">
                     <th className="p-3 font-semibold uppercase tracking-wider">ID</th>
                     <th className="p-3 font-semibold uppercase tracking-wider">Nombre</th>
-                    <th className="p-3 font-semibold uppercase tracking-wider">Correo</th>
+                    <th className="p-3 font-semibold uppercase tracking-wider">Usuario</th>
                     <th className="p-3 font-semibold uppercase tracking-wider">Rol</th>
                     <th className="p-3 font-semibold uppercase tracking-wider">Plataforma / Aula</th>
                     <th className="p-3 font-semibold uppercase tracking-wider">Estado</th>
@@ -1300,7 +1303,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       {userName}
                       <span className="text-[8px] bg-amber-400 text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Tú</span>
                     </td>
-                    <td className="p-3 text-[#6180a6]">{userEmail}</td>
+                    <td className="p-3 text-[#6180a6]">{userUsername}</td>
                     <td className="p-3">
                       <span className="px-2.5 py-1 bg-amber-100 text-amber-700 border-2 border-amber-400 font-bold text-[10px] rounded shadow-[1px_1px_0_0_#b45309]">Admin</span>
                     </td>
@@ -1315,7 +1318,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <tr key={student.id} className="hover:bg-[#f0f4f8]/50 font-medium">
                       <td className="p-3 text-slate-400 font-bold">{student.id}</td>
                       <td className="p-3 text-[#0d1b2e] font-bold">{student.name}</td>
-                      <td className="p-3 text-[#6180a6]">{student.email}</td>
+                      <td className="p-3 text-[#6180a6]">{student.username}</td>
                       <td className="p-3">
                         <select
                           value={student.role || 'alumno'}
@@ -1807,9 +1810,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   setSelectedPostId(null);
                   return null;
                 }
-                const userEmail = 'juanpacheco@playcode.com.ar';
-                const hasLiked = (post.likedBy || []).includes(userEmail);
-                const userReaction = (post.reactedBy || {})[userEmail];
+                const userUsername = 'juanpacheco';
+                const hasLiked = (post.likedBy || []).includes(userUsername);
+                const userReaction = (post.reactedBy || {})[userUsername];
                 return (
                   <div className="space-y-4 animate-in fade-in zoom-in-95 duration-200">
                     <button
@@ -1832,7 +1835,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           </div>
                           <div>
                             <span className="text-xs font-bold text-slate-800 block leading-tight">{post.authorName}</span>
-                            <span className="text-[9px] text-slate-400 block font-medium">{post.authorEmail}</span>
+                            <span className="text-[9px] text-slate-400 block font-medium">{post.authorUsername}</span>
                           </div>
                         </div>
 
@@ -1928,7 +1931,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 <div className="space-y-1">
                                   <div className="flex items-center gap-2">
                                     <span className="text-[10px] font-bold text-slate-800">{comment.authorName}</span>
-                                    <span className="text-[8px] text-slate-455 font-medium">({comment.authorEmail})</span>
+                                    <span className="text-[8px] text-slate-455 font-medium">({comment.authorUsername})</span>
                                     <span className="text-[8px] text-slate-400 bg-slate-50 px-1 rounded font-mono">
                                       {new Date(comment.createdAt).toLocaleDateString()} {new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </span>
@@ -2605,14 +2608,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </div>
 
               <div>
-                <label className="font-bold text-[#6180a6] block mb-1">Correo Electrónico</label>
+                <label className="font-bold text-[#6180a6] block mb-1">Nombre de Usuario</label>
                 <input
-                  type="email"
+                  type="text"
                   required
-                  value={newStudentEmail}
-                  onChange={(e) => setNewStudentEmail(e.target.value)}
-                  placeholder="ej. sofia@hotmail.com"
-                  className="w-full p-2 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-slate-900"
+                  value={newStudentUsername}
+                  onChange={(e) => setNewStudentUsername(e.target.value.toLowerCase().replace(/\s+/g, ''))}
+                  placeholder="ej. sofiadiaz"
+                  className="w-full p-2 border border-slate-3 00 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-slate-900"
                 />
               </div>
 
@@ -2857,13 +2860,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </div>
 
               <div>
-                <label className="font-bold text-[#6180a6] block mb-1">Correo Electrónico</label>
+                <label className="font-bold text-[#6180a6] block mb-1">Nombre de Usuario</label>
                 <input
-                  type="email"
+                  type="text"
                   required
-                  value={editStudentEmail}
-                  onChange={(e) => setEditStudentEmail(e.target.value)}
-                  placeholder="ej. sofia@hotmail.com"
+                  value={editStudentUsername}
+                  onChange={(e) => setEditStudentUsername(e.target.value.toLowerCase().replace(/\s+/g, ''))}
+                  placeholder="ej. sofiadiaz"
                   className="w-full p-2 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-slate-900"
                 />
               </div>

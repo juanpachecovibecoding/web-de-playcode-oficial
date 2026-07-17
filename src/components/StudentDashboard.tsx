@@ -27,7 +27,7 @@ import {
 interface Student {
   id: string;
   name: string;
-  email: string;
+  username: string;
   course?: string;
   status: 'Activo' | 'Completado' | 'Pendiente';
   bio?: string;
@@ -98,7 +98,7 @@ interface ForumComment {
   id: string;
   content: string;
   authorName: string;
-  authorEmail: string;
+  authorUsername: string;
   createdAt: string;
 }
 
@@ -107,13 +107,13 @@ interface ForumPost {
   title: string;
   content: string;
   authorName: string;
-  authorEmail: string;
+  authorUsername: string;
   authorAvatar?: string;
   imageUrl?: string; // base64
   likes: number;
-  likedBy: string[]; // emails of users who liked
+  likedBy: string[]; // usernames of users who liked
   reactions: { [key: string]: number }; // emoji -> count
-  reactedBy: { [userEmail: string]: string }; // userEmail -> emoji
+  reactedBy: { [userUsername: string]: string }; // userUsername -> emoji
   createdAt: string;
   comments: ForumComment[];
 }
@@ -268,7 +268,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
       title: newPostTitle,
       content: newPostContent,
       authorName: student.name,
-      authorEmail: student.email,
+      authorUsername: student.username,
       authorAvatar: student.avatar || '🚀',
       imageUrl: newPostImage || undefined,
       likes: 0,
@@ -290,11 +290,11 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
     setPosts(prevPosts =>
       prevPosts.map(post => {
         if (post.id !== postId) return post;
-        const userEmail = student.email;
-        const hasLiked = post.likedBy.includes(userEmail);
+        const userUsername = student.username;
+        const hasLiked = post.likedBy.includes(userUsername);
         const likedBy = hasLiked
-          ? post.likedBy.filter(email => email !== userEmail)
-          : [...post.likedBy, userEmail];
+          ? post.likedBy.filter(username => username !== userUsername)
+          : [...post.likedBy, userUsername];
         const likes = hasLiked ? Math.max(0, post.likes - 1) : post.likes + 1;
         return { ...post, likes, likedBy };
       })
@@ -305,20 +305,20 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
     setPosts(prevPosts =>
       prevPosts.map(post => {
         if (post.id !== postId) return post;
-        const userEmail = student.email;
+        const userUsername = student.username;
         
         // Initialize reactedBy and reactions if they don't exist
         const postReactedBy = post.reactedBy || {};
         const postReactions = post.reactions || { '🚀': 0, '🎉': 0, '💻': 0, '🧠': 0 };
 
-        const previousReaction = postReactedBy[userEmail];
+        const previousReaction = postReactedBy[userUsername];
         
-        const reactedBy = { ...postReactedBy, [userEmail]: emoji };
+        const reactedBy = { ...postReactedBy, [userUsername]: emoji };
         const reactions = { ...postReactions };
 
         if (previousReaction === emoji) {
           reactions[emoji] = Math.max(0, (reactions[emoji] || 1) - 1);
-          delete reactedBy[userEmail];
+          delete reactedBy[userUsername];
         } else {
           if (previousReaction) {
             reactions[previousReaction] = Math.max(0, (reactions[previousReaction] || 1) - 1);
@@ -342,7 +342,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           id: 'comment-' + Date.now(),
           content: text,
           authorName: student.name,
-          authorEmail: student.email,
+          authorUsername: student.username,
           createdAt: new Date().toISOString()
         };
         return { ...post, comments: [...post.comments, newComment] };
@@ -485,7 +485,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
               )}
               <div className="text-left leading-tight max-w-[120px]">
                 <span className="text-xs font-bold text-slate-200 block truncate">{student.name}</span>
-                <span className="text-[9px] text-slate-400 block truncate">{student.email}</span>
+                <span className="text-[9px] text-slate-400 block truncate">{student.username}</span>
               </div>
             </div>
 
@@ -1231,7 +1231,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                 )}
 
                 <h4 className="text-lg font-bold">{student.name}</h4>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{student.email}</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{student.username}</span>
 
                 <div className="my-4 border-t border-slate-200/50 w-full pt-4">
                   <p className="text-xs italic text-slate-500 px-2 leading-relaxed">
@@ -1537,8 +1537,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                   setSelectedPostId(null);
                   return null;
                 }
-                const hasLiked = post.likedBy.includes(student.email);
-                const userReaction = post.reactedBy?.[student.email];
+                const hasLiked = post.likedBy.includes(student.username);
+                const userReaction = post.reactedBy?.[student.username];
                 return (
                   <div className="space-y-4 animate-in fade-in zoom-in-95 duration-200">
                     <button
@@ -1561,7 +1561,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                           </div>
                           <div>
                             <span className="text-xs font-bold text-slate-800 block leading-tight">{post.authorName}</span>
-                            <span className="text-[9px] text-slate-400 block font-medium">{post.authorEmail}</span>
+                            <span className="text-[9px] text-slate-400 block font-medium">{post.authorUsername}</span>
                           </div>
                         </div>
                         
@@ -1569,7 +1569,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                           <span className="text-[10px] text-slate-400 font-bold bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
                             {new Date(post.createdAt).toLocaleDateString()} {new Date(post.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
-                          {post.authorEmail === student.email && (
+                          {post.authorUsername === student.username && (
                             <button
                               onClick={() => {
                                 handleDeletePost(post.id);

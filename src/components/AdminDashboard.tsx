@@ -23,7 +23,8 @@ import {
   ArrowLeft,
   Building2,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  User
 } from 'lucide-react';
 
 interface Course {
@@ -195,6 +196,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [newPostContent, setNewPostContent] = useState('');
   const [newPostImage, setNewPostImage] = useState<string | null>(null);
   const [showAddPostForm, setShowAddPostForm] = useState(false);
+  const [showAdminProfileSettings, setShowAdminProfileSettings] = useState(false);
 
   // Edit Post states
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
@@ -203,6 +205,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [editPostImage, setEditPostImage] = useState<string | null>(null);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [forumSearchQuery, setForumSearchQuery] = useState('');
+
+  // Admin forum profile states
+  const [adminForumName, setAdminForumName] = useState(() => {
+    return localStorage.getItem('playcode_admin_forum_name') || 'Juan Pacheco';
+  });
+  const [adminForumAvatar, setAdminForumAvatar] = useState(() => {
+    return localStorage.getItem('playcode_admin_forum_avatar') || '🧠';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('playcode_admin_forum_name', adminForumName);
+  }, [adminForumName]);
+
+  useEffect(() => {
+    localStorage.setItem('playcode_admin_forum_avatar', adminForumAvatar);
+  }, [adminForumAvatar]);
 
   // Load posts on tab change or mount
   useEffect(() => {
@@ -385,9 +403,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       id: 'post-' + Date.now(),
       title: newPostTitle,
       content: newPostContent,
-      authorName: 'Juan Pacheco',
+      authorName: adminForumName,
       authorEmail: 'juanpacheco@playcode.com.ar',
-      authorAvatar: '🧠',
+      authorAvatar: adminForumAvatar,
       imageUrl: newPostImage || undefined,
       likes: 0,
       likedBy: [],
@@ -515,8 +533,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       const newComment = {
         id: 'comment-' + Date.now(),
         content: text,
-        authorName: 'Juan Pacheco',
+        authorName: adminForumName,
         authorEmail: 'juanpacheco@playcode.com.ar',
+        authorAvatar: adminForumAvatar,
         createdAt: new Date().toISOString()
       };
       return { ...post, comments: [...(post.comments || []), newComment] };
@@ -1433,7 +1452,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   </div>
                   <div className="flex items-center gap-3">
                     <button
-                      onClick={() => setShowAddPostForm(!showAddPostForm)}
+                      onClick={() => {
+                        setShowAdminProfileSettings(!showAdminProfileSettings);
+                        setShowAddPostForm(false);
+                      }}
+                      className="px-3 py-1.5 bg-[#e0a96d] hover:bg-[#c2925b] text-[#0d1b2e] font-bold border-2 border-[#0d1b2e] shadow-[2px_2px_0_0_#000000] active:translate-y-[2px] active:shadow-[0px_0px_0_0_#000000] transition-all cursor-pointer text-xs flex items-center gap-1.5"
+                    >
+                      {showAdminProfileSettings ? 'Cancelar Perfil' : 'Configurar Perfil'} <User className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowAddPostForm(!showAddPostForm);
+                        setShowAdminProfileSettings(false);
+                      }}
                       className="px-3 py-1.5 bg-[#2a4e7c] hover:bg-[#1e385c] text-white font-bold border-2 border-[#0d1b2e] shadow-[2px_2px_0_0_#000000] active:translate-y-[2px] active:shadow-[0px_0px_0_0_#000000] transition-all cursor-pointer text-xs flex items-center gap-1.5"
                     >
                       {showAddPostForm ? 'Cancelar' : 'Nueva Publicación'} <Plus className="w-3.5 h-3.5" />
@@ -1465,6 +1496,74 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </button>
                   )}
                 </div>
+
+                {/* Formulario de Configuración de Perfil */}
+                {showAdminProfileSettings && (
+                  <div className="bg-white border-2 border-[#0d1b2e] p-5 shadow-[4px_4px_0_0_#0d1b2e] space-y-4 animate-in fade-in slide-in-from-top-4 duration-200">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-[#0d1b2e] flex items-center gap-1.5 border-b border-slate-100 pb-2">
+                      <User className="w-4 h-4 text-amber-500" /> Configuración de tu Perfil en el Foro
+                    </h3>
+                    <p className="text-[11px] text-slate-500 font-semibold">
+                      Modifica cómo te verán los alumnos cuando publiques o respondas en el foro.
+                    </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Vista previa */}
+                      <div className="bg-slate-50 border border-slate-200 rounded p-4 flex flex-col items-center justify-center text-center gap-3">
+                        <span className="text-[9px] font-bold text-[#6180a6] block uppercase tracking-wider">Vista Previa</span>
+                        <div className="w-14 h-14 rounded-full bg-white border-2 border-[#0d1b2e] flex items-center justify-center font-bold text-2xl shadow-[2.5px_2.5px_0_0_#0d1b2e]">
+                          {adminForumAvatar}
+                        </div>
+                        <div>
+                          <span className="text-xs font-bold text-slate-800 block leading-tight">{adminForumName}</span>
+                          <span className="text-[9px] text-[#2a4e7c] font-bold bg-[#e0f2fe] px-2 py-0.5 rounded border border-[#bae6fd] uppercase font-mono mt-1 inline-block">Administrador</span>
+                        </div>
+                      </div>
+
+                      {/* Inputs */}
+                      <div className="md:col-span-2 space-y-3">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 block">Nombre en el Foro</label>
+                          <input
+                            type="text"
+                            required
+                            value={adminForumName}
+                            onChange={(e) => setAdminForumName(e.target.value)}
+                            placeholder="Ej. Profe Juan Pacheco"
+                            className="w-full px-3 py-2 border-2 border-[#0d1b2e] rounded text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#2a4e7c] text-slate-900 bg-white"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 block">Avatar (Emoji o Iniciales)</label>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              maxLength={3}
+                              required
+                              value={adminForumAvatar}
+                              onChange={(e) => setAdminForumAvatar(e.target.value)}
+                              placeholder="Ej. 🧠 o 👨‍💻"
+                              className="w-16 px-3 py-2 border-2 border-[#0d1b2e] rounded text-center text-lg font-bold focus:outline-none focus:ring-2 focus:ring-[#2a4e7c] text-slate-900 bg-white"
+                            />
+                            <div className="flex-1 flex flex-wrap gap-1 items-center bg-slate-50 border border-slate-250 p-1.5 rounded">
+                              {['🧠', '👨‍💻', '🚀', '👑', '⭐', '🤖', '👾', '📚', '🎨', '⚙️'].map(emoji => (
+                                <button
+                                  key={emoji}
+                                  type="button"
+                                  onClick={() => setAdminForumAvatar(emoji)}
+                                  className={`w-7 h-7 rounded flex items-center justify-center text-sm border hover:bg-white transition-all cursor-pointer ${adminForumAvatar === emoji ? 'border-amber-500 bg-amber-50' : 'border-transparent'}`}
+                                >
+                                  {emoji}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Formulario para nuevo Post del Admin */}
                 {showAddPostForm && (

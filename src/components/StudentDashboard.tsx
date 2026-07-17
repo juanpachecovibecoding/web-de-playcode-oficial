@@ -302,6 +302,7 @@ const avatarChoices = ['🚀', '💻', '🤖', '🎨', '🧠', '👾', '🎮', '
 
 export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   student,
+  students,
   classrooms,
   meetings,
   lessons,
@@ -328,7 +329,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   const [showChestModal, setShowChestModal] = useState(false);
 
   // Auto-award items based on Firestore student logs
-  useEffect(() => {
+  React.useEffect(() => {
     const inv = student.inventory || [];
     const badges = student.unlockedBadgeIds || [];
     let updated = false;
@@ -595,24 +596,24 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
   const leaderboardStudents = React.useMemo(() => {
     const activeStudentAulaIds = student.aulaIds || [];
-    const filtered = students.filter(s => {
+    const filtered = students.filter((s: Student) => {
       const isSameRole = s.role === 'alumno' || !s.role;
-      const sharesAula = (s.aulaIds || []).some(id => activeStudentAulaIds.includes(id));
+      const sharesAula = (s.aulaIds || []).some((id: string) => activeStudentAulaIds.includes(id));
       return isSameRole && sharesAula;
     });
 
     if (filtered.length === 0) {
       const activePlatformIds = student.platformIds || (student.platformId ? [student.platformId] : []);
-      const platformFiltered = students.filter(s => {
+      const platformFiltered = students.filter((s: Student) => {
         const isSameRole = s.role === 'alumno' || !s.role;
-        const sharesPlatform = (s.platformIds || []).some(id => activePlatformIds.includes(id)) || s.platformId === student.platformId;
+        const sharesPlatform = (s.platformIds || []).some((id: string) => activePlatformIds.includes(id)) || s.platformId === student.platformId;
         return isSameRole && sharesPlatform;
       });
       filtered.push(...platformFiltered);
     }
 
     const uniqueStudentsMap = new Map<string, Student>();
-    filtered.forEach(s => uniqueStudentsMap.set(s.id, s));
+    filtered.forEach((s: Student) => uniqueStudentsMap.set(s.id, s));
     
     if (!uniqueStudentsMap.has(student.id)) {
       uniqueStudentsMap.set(student.id, student);
@@ -620,7 +621,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
     
     const uniqueList = Array.from(uniqueStudentsMap.values());
 
-    return uniqueList.sort((a, b) => {
+    return uniqueList.sort((a: Student, b: Student) => {
       const xpA = (a.completedLessonIds?.length || 0) * 100;
       const xpB = (b.completedLessonIds?.length || 0) * 100;
       return xpB - xpA;

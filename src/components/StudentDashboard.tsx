@@ -157,6 +157,13 @@ interface ThemeStyles {
   primaryBtnText: string;
   badgeBg: string;
   badgeText: string;
+  tabBarBg: string;
+  tabBarBorder: string;
+  tabActiveBg: string;
+  tabActiveText: string;
+  tabInactiveText: string;
+  tabInactiveHover: string;
+  tabShadow: string;
 }
 
 const themePalettes: Record<'default' | 'cyberpunk' | 'playcode', ThemeStyles> = {
@@ -176,7 +183,14 @@ const themePalettes: Record<'default' | 'cyberpunk' | 'playcode', ThemeStyles> =
     primaryBtnHover: 'hover:bg-[#1e385c]',
     primaryBtnText: 'text-white border-2 border-[#0d1b2e] shadow-[2px_2px_0_0_#000000]',
     badgeBg: 'bg-[#f0f4f8] text-[#2a4e7c] border border-[#a3b8cc]',
-    badgeText: 'text-[#2a4e7c]'
+    badgeText: 'text-[#2a4e7c]',
+    tabBarBg: 'bg-[#2a4e7c]',
+    tabBarBorder: 'border-[#0d1b2e]',
+    tabActiveBg: 'bg-white',
+    tabActiveText: 'text-[#2a4e7c] font-extrabold border-b-4 border-[#2a4e7c]',
+    tabInactiveText: 'text-white',
+    tabInactiveHover: 'hover:bg-[#1e385c]',
+    tabShadow: 'shadow-[4px_4px_0_0_#0d1b2e]'
   },
   cyberpunk: {
     bg: 'bg-[#08020f]',
@@ -194,7 +208,14 @@ const themePalettes: Record<'default' | 'cyberpunk' | 'playcode', ThemeStyles> =
     primaryBtnHover: 'hover:bg-[#9400d3]',
     primaryBtnText: 'text-white border-2 border-[#7b6eff] shadow-[2px_2px_0_0_#7b6eff]',
     badgeBg: 'bg-[#8b2ae2]/30 text-[#df73e3] border border-[#ff00ff]',
-    badgeText: 'text-[#df73e3]'
+    badgeText: 'text-[#df73e3]',
+    tabBarBg: 'bg-[#1a0033]',
+    tabBarBorder: 'border-[#ff00ff]',
+    tabActiveBg: 'bg-[#ff00ff]',
+    tabActiveText: 'text-white font-extrabold border-b-4 border-[#ff00ff]',
+    tabInactiveText: 'text-[#df73e3]',
+    tabInactiveHover: 'hover:bg-[#8b2ae2]/40',
+    tabShadow: 'shadow-[4px_4px_0_0_#ff00ff]'
   },
   playcode: {
     bg: 'bg-slate-55',
@@ -212,7 +233,14 @@ const themePalettes: Record<'default' | 'cyberpunk' | 'playcode', ThemeStyles> =
     primaryBtnHover: 'hover:bg-[#ffd166]',
     primaryBtnText: 'text-[#001f4a] border-2 border-[#001f4a] shadow-[2px_2px_0_0_#001f4a]',
     badgeBg: 'bg-[#4ecdc4]/20 text-[#001f4a] border border-[#001f4a]',
-    badgeText: 'text-[#001f4a]'
+    badgeText: 'text-[#001f4a]',
+    tabBarBg: 'bg-[#001f4a]',
+    tabBarBorder: 'border-[#001f4a]',
+    tabActiveBg: 'bg-[#ffe66d]',
+    tabActiveText: 'text-[#001f4a] font-extrabold border-b-4 border-[#ffe66d]',
+    tabInactiveText: 'text-white',
+    tabInactiveHover: 'hover:bg-[#203a61]',
+    tabShadow: 'shadow-[4px_4px_0_0_#001f4a]'
   }
 };
 
@@ -521,20 +549,18 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
         </header>
 
         {/* Navigation Tabs Bar */}
-        <div className="w-full bg-[#ff5a5f] border-2 border-[#0d1b2e] shadow-[4px_4px_0_0_#000000] flex overflow-x-auto mb-8 scrollbar-thin select-none">
+        <div className={`w-full ${t.tabBarBg} border-2 ${t.tabBarBorder} ${t.tabShadow} flex overflow-x-auto mb-8 scrollbar-thin select-none`}>
           <button
             onClick={() => setActiveTab('dashboard')}
-            className={`flex-1 min-w-[155px] py-3.5 px-4 font-bold text-[10px] uppercase tracking-wider transition-colors duration-150 flex items-center justify-center gap-2 cursor-pointer border-r-2 border-[#0d1b2e] last:border-r-0 ${
+            className={`flex-1 min-w-[155px] py-3.5 px-4 font-bold text-[10px] uppercase tracking-wider transition-colors duration-150 flex items-center justify-center gap-2 cursor-pointer border-r-2 ${t.tabBarBorder} last:border-r-0 ${
               activeTab === 'dashboard'
-                ? 'bg-white text-[#ff5a5f] font-extrabold border-b-4 border-[#ff5a5f]'
-                : 'text-white hover:bg-[#ff464c]'
+                ? `${t.tabActiveBg} ${t.tabActiveText}`
+                : `${t.tabInactiveText} ${t.tabInactiveHover}`
             }`}
           >
             <LayoutDashboard className="w-4 h-4 shrink-0" />
             <span>Panel de Control</span>
           </button>
-          
-
 
           <button
             onClick={() => {
@@ -543,10 +569,10 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
               setSelectedClassroomForLessons(null);
               setSelectedLessonForPreview(null);
             }}
-            className={`flex-1 min-w-[155px] py-3.5 px-4 font-bold text-[10px] uppercase tracking-wider transition-colors duration-150 flex items-center justify-center gap-2 cursor-pointer border-r-2 border-[#0d1b2e] last:border-r-0 ${
+            className={`flex-1 min-w-[155px] py-3.5 px-4 font-bold text-[10px] uppercase tracking-wider transition-colors duration-150 flex items-center justify-center gap-2 cursor-pointer border-r-2 ${t.tabBarBorder} last:border-r-0 ${
               activeTab === 'aprendizaje'
-                ? 'bg-white text-[#ff5a5f] font-extrabold border-b-4 border-[#ff5a5f]'
-                : 'text-white hover:bg-[#ff464c]'
+                ? `${t.tabActiveBg} ${t.tabActiveText}`
+                : `${t.tabInactiveText} ${t.tabInactiveHover}`
             }`}
           >
             <BookOpen className="w-4 h-4 shrink-0" />
@@ -555,10 +581,10 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
           <button
             onClick={() => setActiveTab('certificados')}
-            className={`flex-1 min-w-[155px] py-3.5 px-4 font-bold text-[10px] uppercase tracking-wider transition-colors duration-150 flex items-center justify-center gap-2 cursor-pointer border-r-2 border-[#0d1b2e] last:border-r-0 ${
+            className={`flex-1 min-w-[155px] py-3.5 px-4 font-bold text-[10px] uppercase tracking-wider transition-colors duration-150 flex items-center justify-center gap-2 cursor-pointer border-r-2 ${t.tabBarBorder} last:border-r-0 ${
               activeTab === 'certificados'
-                ? 'bg-white text-[#ff5a5f] font-extrabold border-b-4 border-[#ff5a5f]'
-                : 'text-white hover:bg-[#ff464c]'
+                ? `${t.tabActiveBg} ${t.tabActiveText}`
+                : `${t.tabInactiveText} ${t.tabInactiveHover}`
             }`}
           >
             <Award className="w-4 h-4 shrink-0" />
@@ -567,10 +593,10 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
           <button
             onClick={() => setActiveTab('puntos')}
-            className={`flex-1 min-w-[155px] py-3.5 px-4 font-bold text-[10px] uppercase tracking-wider transition-colors duration-150 flex items-center justify-center gap-2 cursor-pointer border-r-2 border-[#0d1b2e] last:border-r-0 ${
+            className={`flex-1 min-w-[155px] py-3.5 px-4 font-bold text-[10px] uppercase tracking-wider transition-colors duration-150 flex items-center justify-center gap-2 cursor-pointer border-r-2 ${t.tabBarBorder} last:border-r-0 ${
               activeTab === 'puntos'
-                ? 'bg-white text-[#ff5a5f] font-extrabold border-b-4 border-[#ff5a5f]'
-                : 'text-white hover:bg-[#ff464c]'
+                ? `${t.tabActiveBg} ${t.tabActiveText}`
+                : `${t.tabInactiveText} ${t.tabInactiveHover}`
             }`}
           >
             <Trophy className="w-4 h-4 shrink-0" />
@@ -579,10 +605,10 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
           <button
             onClick={() => setActiveTab('foro')}
-            className={`flex-1 min-w-[155px] py-3.5 px-4 font-bold text-[10px] uppercase tracking-wider transition-colors duration-150 flex items-center justify-center gap-2 cursor-pointer border-r-2 border-[#0d1b2e] last:border-r-0 ${
+            className={`flex-1 min-w-[155px] py-3.5 px-4 font-bold text-[10px] uppercase tracking-wider transition-colors duration-150 flex items-center justify-center gap-2 cursor-pointer border-r-2 ${t.tabBarBorder} last:border-r-0 ${
               activeTab === 'foro'
-                ? 'bg-white text-[#ff5a5f] font-extrabold border-b-4 border-[#ff5a5f]'
-                : 'text-white hover:bg-[#ff464c]'
+                ? `${t.tabActiveBg} ${t.tabActiveText}`
+                : `${t.tabInactiveText} ${t.tabInactiveHover}`
             }`}
           >
             <MessageSquare className="w-4 h-4 shrink-0" />
@@ -593,8 +619,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
             onClick={() => setActiveTab('perfil')}
             className={`flex-1 min-w-[155px] py-3.5 px-4 font-bold text-[10px] uppercase tracking-wider transition-colors duration-150 flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === 'perfil'
-                ? 'bg-white text-[#ff5a5f] font-extrabold border-b-4 border-[#ff5a5f]'
-                : 'text-white hover:bg-[#ff464c]'
+                ? `${t.tabActiveBg} ${t.tabActiveText}`
+                : `${t.tabInactiveText} ${t.tabInactiveHover}`
             }`}
           >
             <User className="w-4 h-4 shrink-0" />

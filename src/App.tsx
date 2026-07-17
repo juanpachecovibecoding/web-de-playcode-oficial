@@ -341,6 +341,42 @@ const App: React.FC = () => {
     localStorage.setItem('playcode_attempted_name', attemptedName);
   }, [attemptedName]);
 
+  React.useEffect(() => {
+    if (loading || !dbLoaded) return;
+    
+    let studentsUpdated = false;
+    let postsUpdated = false;
+    
+    const nextStudents = [...students];
+    const nextPosts = forumPosts.map(post => {
+      const checkReactionsCount = post.reactions?.['✅'] || 0;
+      if (checkReactionsCount >= 10 && !post.chestAwarded) {
+        const studentIndex = nextStudents.findIndex(s => s.username === post.authorUsername);
+        if (studentIndex !== -1) {
+          const currentCount = nextStudents[studentIndex].unopenedChestsCount || 0;
+          nextStudents[studentIndex] = {
+            ...nextStudents[studentIndex],
+            unopenedChestsCount: currentCount + 1
+          };
+          studentsUpdated = true;
+        }
+        postsUpdated = true;
+        return {
+          ...post,
+          chestAwarded: true
+        };
+      }
+      return post;
+    });
+
+    if (postsUpdated) {
+      setForumPosts(nextPosts);
+    }
+    if (studentsUpdated) {
+      setStudents(nextStudents);
+    }
+  }, [forumPosts, students, loading, dbLoaded]);
+
   const handleLogin = (username: string, password?: string, name?: string): { success: boolean; error?: string } => {
     const googleEmail = username.toLowerCase().trim();
     const formattedUsername = username.toLowerCase().replace(/\s+/g, '').trim();
@@ -515,42 +551,6 @@ const App: React.FC = () => {
       />
     );
   }
-
-  React.useEffect(() => {
-    if (loading || !dbLoaded) return;
-    
-    let studentsUpdated = false;
-    let postsUpdated = false;
-    
-    const nextStudents = [...students];
-    const nextPosts = forumPosts.map(post => {
-      const checkReactionsCount = post.reactions?.['✅'] || 0;
-      if (checkReactionsCount >= 10 && !post.chestAwarded) {
-        const studentIndex = nextStudents.findIndex(s => s.username === post.authorUsername);
-        if (studentIndex !== -1) {
-          const currentCount = nextStudents[studentIndex].unopenedChestsCount || 0;
-          nextStudents[studentIndex] = {
-            ...nextStudents[studentIndex],
-            unopenedChestsCount: currentCount + 1
-          };
-          studentsUpdated = true;
-        }
-        postsUpdated = true;
-        return {
-          ...post,
-          chestAwarded: true
-        };
-      }
-      return post;
-    });
-
-    if (postsUpdated) {
-      setForumPosts(nextPosts);
-    }
-    if (studentsUpdated) {
-      setStudents(nextStudents);
-    }
-  }, [forumPosts, students, loading, dbLoaded]);
 
   if (view === 'student_dashboard' && user && user.id) {
     const studentInfo = students.find(s => s.id === user.id);

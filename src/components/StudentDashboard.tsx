@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   BookOpen,
   LogOut,
@@ -125,6 +125,8 @@ interface StudentDashboardProps {
   lessons: Lesson[];
   courses: Course[];
   platforms: Platform[];
+  posts: ForumPost[];
+  setPosts: React.Dispatch<React.SetStateAction<ForumPost[]>>;
   onLogout: () => void;
   onSaveProfile: (updated: Student) => void;
   dbStatus: 'connecting' | 'connected' | 'error';
@@ -217,6 +219,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   lessons,
   courses,
   platforms,
+  posts,
+  setPosts,
   onLogout,
   onSaveProfile,
   dbStatus,
@@ -230,43 +234,6 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   const [hideLessonsSidebar, setHideLessonsSidebar] = useState(false);
   const [palette, setPalette] = useState<'default' | 'cyberpunk' | 'playcode'>(student.theme || 'default');
 
-  // Forum states
-  const [posts, setPosts] = useState<ForumPost[]>(() => {
-    const saved = localStorage.getItem('playcode_forum_posts');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error(e);
-      }
-    }
-    // Default initial posts
-    return [
-      {
-        id: 'post-1',
-        title: '¡Bienvenidos al Foro Estudiantil de Play Code! 🚀',
-        content: '¡Hola a todos! Este es nuestro espacio para compartir dudas, proyectos y aprender juntos. ¡Cuéntanos qué estás programando hoy!',
-        authorName: 'Juan Pacheco',
-        authorEmail: 'juanpacheco@playcode.com.ar',
-        authorAvatar: '🧠',
-        likes: 3,
-        likedBy: [],
-        reactions: { '🚀': 4, '🎉': 2 },
-        reactedBy: {},
-        createdAt: new Date(Date.now() - 3600000 * 24).toISOString(), // 1 day ago
-        comments: [
-          {
-            id: 'comment-1',
-            content: '¡Me encanta este nuevo foro! Voy a subir un screenshot de mi proyecto de HTML pronto.',
-            authorName: 'Lucas Pérez',
-            authorEmail: 'lucas@playcode.com',
-            createdAt: new Date(Date.now() - 3600000 * 20).toISOString()
-          }
-        ]
-      }
-    ];
-  });
-
   const [newPostTitle, setNewPostTitle] = useState('');
   const [newPostContent, setNewPostContent] = useState('');
   const [newPostImage, setNewPostImage] = useState<string | null>(null);
@@ -274,11 +241,6 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   const [commentInputs, setCommentInputs] = useState<{ [postId: string]: string }>({});
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [forumSearchQuery, setForumSearchQuery] = useState('');
-
-  // Sync to localStorage
-  useEffect(() => {
-    localStorage.setItem('playcode_forum_posts', JSON.stringify(posts));
-  }, [posts]);
 
   // Forum handlers
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

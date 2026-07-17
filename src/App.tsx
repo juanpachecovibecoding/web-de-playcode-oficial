@@ -90,6 +90,30 @@ interface Lesson {
   htmlContent: string;
 }
 
+interface ForumComment {
+  id: string;
+  content: string;
+  authorName: string;
+  authorEmail: string;
+  createdAt: string;
+}
+
+interface ForumPost {
+  id: string;
+  title: string;
+  content: string;
+  authorName: string;
+  authorEmail: string;
+  authorAvatar?: string;
+  imageUrl?: string; // base64
+  likes: number;
+  likedBy: string[]; // emails of users who liked
+  reactions: { [key: string]: number }; // emoji -> count
+  reactedBy: { [userEmail: string]: string }; // userEmail -> emoji
+  createdAt: string;
+  comments: ForumComment[];
+}
+
 const App: React.FC = () => {
   const [view, setView] = useState<'landing' | 'login' | 'dashboard' | 'student_dashboard' | 'pending_activation' | 'unauthorized'>(() => {
     const savedView = localStorage.getItem('playcode_view');
@@ -117,6 +141,7 @@ const App: React.FC = () => {
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [platforms, setPlatforms] = useState<Platform[]>([]);
+  const [forumPosts, setForumPosts] = useState<ForumPost[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [dbStatus, setDbStatus] = useState<'connecting' | 'connected' | 'error'>('connecting');
@@ -183,6 +208,43 @@ const App: React.FC = () => {
         const loadedPlatforms = platformsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Platform));
         setPlatforms(loadedPlatforms);
 
+        // 7. Fetch Forum Posts
+        const forumSnap = await getDocs(collection(db, 'forum_posts'));
+        let loadedForumPosts: ForumPost[] = [];
+        if (forumSnap.empty) {
+          const initial = [
+            {
+              id: 'post-1',
+              title: '¡Bienvenidos al Foro Estudiantil de Play Code! 🚀',
+              content: '¡Hola a todos! Este es nuestro espacio para compartir dudas, proyectos y aprender juntos. ¡Cuéntanos qué estás programando hoy!',
+              authorName: 'Juan Pacheco',
+              authorEmail: 'juanpacheco@playcode.com.ar',
+              authorAvatar: '🧠',
+              likes: 3,
+              likedBy: [],
+              reactions: { '🚀': 4, '🎉': 2 },
+              reactedBy: {},
+              createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
+              comments: [
+                {
+                  id: 'comment-1',
+                  content: '¡Me encanta este nuevo foro! Voy a subir un screenshot de mi proyecto de HTML pronto.',
+                  authorName: 'Lucas Pérez',
+                  authorEmail: 'lucas@playcode.com',
+                  createdAt: new Date(Date.now() - 3600000 * 20).toISOString()
+                }
+              ]
+            }
+          ];
+          for (const p of initial) {
+            await setDoc(doc(db, 'forum_posts', p.id), p);
+          }
+          loadedForumPosts = initial as ForumPost[];
+        } else {
+          loadedForumPosts = forumSnap.docs.map(d => ({ id: d.id, ...d.data() } as ForumPost));
+        }
+        setForumPosts(loadedForumPosts);
+
         setDbLoaded(true);
         setDbStatus('connected');
         setDbError(null);
@@ -199,6 +261,7 @@ const App: React.FC = () => {
           setClassrooms(lc('playcode_classrooms') || []);
           setLessons(lc('playcode_lessons') || []);
           setPlatforms(lc('playcode_platforms') || []);
+          setForumPosts(lc('playcode_forum_posts') || []);
         } catch { /* localStorage also failed, arrays stay empty */ }
       } finally {
         setLoading(false);
@@ -209,6 +272,12 @@ const App: React.FC = () => {
   }, []);
 
   // Sync state changes with localStorage and Firebase (only after loading and dbLoaded are complete)
+  React.useEffect(() => {
+    if (loading || !dbLoaded) return;
+    localStorage.setItem('playcode_forum_posts', JSON.stringify(forumPosts));
+    syncCollection('forum_posts', forumPosts);
+  }, [forumPosts, loading, dbLoaded]);
+
   React.useEffect(() => {
     if (loading || !dbLoaded) return;
     localStorage.setItem('playcode_platforms', JSON.stringify(platforms));
@@ -426,6 +495,8 @@ const App: React.FC = () => {
         setLessons={setLessons}
         platforms={platforms}
         setPlatforms={setPlatforms}
+        posts={forumPosts}
+        setPosts={setForumPosts}
         dbStatus={dbStatus}
         dbError={dbError}
         firebaseProjectId={db.app.options.projectId || 'playcode-39ce5'}
@@ -444,6 +515,8 @@ const App: React.FC = () => {
           lessons={lessons}
           courses={courses}
           platforms={platforms}
+          posts={forumPosts}
+          setPosts={setForumPosts}
           onLogout={handleLogout}
           onSaveProfile={(updated) => {
             setStudents(prev => prev.map(s => s.id === updated.id ? updated : s));

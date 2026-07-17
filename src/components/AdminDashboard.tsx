@@ -109,6 +109,8 @@ interface AdminDashboardProps {
   setLessons: React.Dispatch<React.SetStateAction<Lesson[]>>;
   platforms: Platform[];
   setPlatforms: React.Dispatch<React.SetStateAction<Platform[]>>;
+  posts: any[];
+  setPosts: React.Dispatch<React.SetStateAction<any[]>>;
   dbStatus: 'connecting' | 'connected' | 'error';
   dbError: string | null;
   firebaseProjectId: string;
@@ -130,6 +132,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   setLessons,
   platforms,
   setPlatforms,
+  posts,
+  setPosts,
   dbStatus,
   dbError,
   firebaseProjectId
@@ -194,9 +198,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [editAulaSchedule, setEditAulaSchedule] = useState('');
   const [editAulaMeetingUrl, setEditAulaMeetingUrl] = useState('');
 
-  // Forum moderation state
-  const [posts, setPosts] = useState<any[]>([]);
-
   // Forum creation & editing states
   const [newPostTitle, setNewPostTitle] = useState('');
   const [newPostContent, setNewPostContent] = useState('');
@@ -227,46 +228,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   useEffect(() => {
     localStorage.setItem('playcode_admin_forum_avatar', adminForumAvatar);
   }, [adminForumAvatar]);
-
-  // Load posts on tab change or mount
-  useEffect(() => {
-    const saved = localStorage.getItem('playcode_forum_posts');
-    if (saved) {
-      try {
-        setPosts(JSON.parse(saved));
-      } catch (e) {
-        console.error(e);
-      }
-    } else {
-      // Initialize with welcome post by Juan Pacheco
-      const initialPosts = [
-        {
-          id: 'post-1',
-          title: '¡Bienvenidos al Foro Estudiantil de Play Code! 🚀',
-          content: '¡Hola a todos! Este es nuestro espacio para compartir dudas, proyectos y aprender juntos. ¡Cuéntanos qué estás programando hoy!',
-          authorName: 'Juan Pacheco',
-          authorEmail: 'juanpacheco@playcode.com.ar',
-          authorAvatar: '🧠',
-          likes: 3,
-          likedBy: [],
-          reactions: { '🚀': 4, '🎉': 2 },
-          reactedBy: {},
-          createdAt: new Date(Date.now() - 3600000 * 24).toISOString(), // 1 day ago
-          comments: [
-            {
-              id: 'comment-1',
-              content: '¡Me encanta este nuevo foro! Voy a subir un screenshot de mi proyecto de HTML pronto.',
-              authorName: 'Lucas Pérez',
-              authorEmail: 'lucas@playcode.com',
-              createdAt: new Date(Date.now() - 3600000 * 20).toISOString()
-            }
-          ]
-        }
-      ];
-      setPosts(initialPosts);
-      localStorage.setItem('playcode_forum_posts', JSON.stringify(initialPosts));
-    }
-  }, [activeTab]);
 
   // Platform CRUD handlers
   const handleCreatePlatform = (e: React.FormEvent) => {
@@ -423,7 +384,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
     const updated = [newPost, ...posts];
     setPosts(updated);
-    localStorage.setItem('playcode_forum_posts', JSON.stringify(updated));
 
     setNewPostTitle('');
     setNewPostContent('');
@@ -453,7 +413,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     });
 
     setPosts(updated);
-    localStorage.setItem('playcode_forum_posts', JSON.stringify(updated));
 
     setEditingPostId(null);
     setEditPostTitle('');
@@ -465,7 +424,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     if (window.confirm('¿Estás seguro de que deseas eliminar este post de forma permanente?')) {
       const updated = posts.filter(p => p.id !== postId);
       setPosts(updated);
-      localStorage.setItem('playcode_forum_posts', JSON.stringify(updated));
     }
   };
 
@@ -479,7 +437,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         };
       });
       setPosts(updated);
-      localStorage.setItem('playcode_forum_posts', JSON.stringify(updated));
     }
   };
 
@@ -499,7 +456,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       return { ...post, likes, likedBy };
     });
     setPosts(updated);
-    localStorage.setItem('playcode_forum_posts', JSON.stringify(updated));
   };
 
   const handleReactToPostInteractive = (postId: string, emoji: string) => {
@@ -527,7 +483,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       return { ...post, reactions, reactedBy };
     });
     setPosts(updated);
-    localStorage.setItem('playcode_forum_posts', JSON.stringify(updated));
   };
 
   const handleAddCommentInteractive = (postId: string) => {
@@ -548,7 +503,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     });
 
     setPosts(updated);
-    localStorage.setItem('playcode_forum_posts', JSON.stringify(updated));
     setCommentInputs(prev => ({ ...prev, [postId]: '' }));
   };
 
@@ -1001,107 +955,164 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         {/* Dynamic Tab Rendering */}
 
         {/* INICIO TAB */}
-        {activeTab === 'inicio' && (
-          <div className="space-y-8">
-            {/* KPI Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {activeTab === 'inicio' && (() => {
+          const activities: Array<{
+            id: string;
+            type: 'student' | 'classroom' | 'meeting' | 'lesson' | 'post';
+            title: string;
+            detail: string;
+            timeText: string;
+            timestamp: number;
+          }> = [];
 
-              <div className="bg-white border-2 border-[#0d1b2e] p-5 shadow-[4px_4px_0_0_#0d1b2e] hover:-translate-y-0.5 transition-all">
-                <span className="text-[10px] font-bold text-[#6180a6] uppercase block mb-1">Usuarios Registrados</span>
-                <span className="text-3xl font-bold text-[#0d1b2e] block">{totalStudents}</span>
-                <div className="mt-2.5 flex items-center gap-1 text-[10px] font-bold text-[#2a4e7c]">
-                  <TrendingUp className="w-3 h-3" /> +12% este mes
-                </div>
-              </div>
+          students.forEach((s) => {
+            const ts = /^\d+$/.test(s.id) ? parseInt(s.id) : Date.now() - 3600000 * 24;
+            activities.push({
+              id: `student-${s.id}`,
+              type: 'student',
+              title: 'NUEVO ALUMNO',
+              detail: `${s.name} se registró con el correo ${s.email}`,
+              timeText: s.status === 'Pendiente' ? 'Pendiente aprobación' : 'Activo',
+              timestamp: ts,
+            });
+          });
 
-              <div className="bg-white border-2 border-[#0d1b2e] p-5 shadow-[4px_4px_0_0_#0d1b2e] hover:-translate-y-0.5 transition-all">
-                <span className="text-[10px] font-bold text-[#6180a6] uppercase block mb-1">Cursos Activos</span>
-                <span className="text-3xl font-bold text-[#0d1b2e] block">{classrooms.length}</span>
-                <span className="text-[10px] font-medium text-slate-500 block mt-2.5">Cursos Registrados</span>
-              </div>
+          classrooms.forEach((c) => {
+            const ts = c.dateTime ? (Date.parse(c.dateTime) || Date.now() - 3600000 * 12) : (Date.now() - 3600000 * 12);
+            activities.push({
+              id: `classroom-${c.id}`,
+              type: 'classroom',
+              title: 'CLASE PLANIFICADA',
+              detail: `La clase "${c.name}" está programada con ${c.students ? c.students.length : 0} alumno(s)`,
+              timeText: c.dateTime ? new Date(c.dateTime).toLocaleString('es-AR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Programada',
+              timestamp: ts,
+            });
+          });
 
-              <div className="bg-white border-2 border-[#0d1b2e] p-5 shadow-[4px_4px_0_0_#0d1b2e] hover:-translate-y-0.5 transition-all">
-                <span className="text-[10px] font-bold text-[#6180a6] uppercase block mb-1">Salas de Meeting</span>
-                <span className="text-3xl font-bold text-[#0d1b2e] block">{meetings.length}</span>
-                <span className="text-[10px] font-medium text-slate-500 block mt-2.5">Google Meet disponibles</span>
-              </div>
+          meetings.forEach((m) => {
+            activities.push({
+              id: `meeting-${m.id}`,
+              type: 'meeting',
+              title: 'MEETING DISPONIBLE',
+              detail: `Sala "${m.name}" lista para clases virtuales`,
+              timeText: 'Enlace activo',
+              timestamp: Date.now() - 3600000 * 48,
+            });
+          });
 
-              <div className="bg-white border-2 border-[#0d1b2e] p-5 shadow-[4px_4px_0_0_#0d1b2e] hover:-translate-y-0.5 transition-all flex flex-col justify-between">
-                <div>
-                  <span className="text-[10px] font-bold text-[#6180a6] uppercase block mb-1">Base de Datos (Firestore)</span>
-                  <span className="text-sm font-bold text-[#0d1b2e] block truncate font-mono" title={firebaseProjectId}>
-                    {firebaseProjectId}
-                  </span>
-                </div>
-                <div className="mt-3 flex items-center gap-2">
-                  {dbStatus === 'connected' && (
-                    <>
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                      <span className="text-[10px] font-bold text-emerald-600">CONECTADO</span>
-                    </>
-                  )}
-                  {dbStatus === 'connecting' && (
-                    <>
-                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping"></span>
-                      <span className="text-[10px] font-bold text-amber-600">CONECTANDO...</span>
-                    </>
-                  )}
-                  {dbStatus === 'error' && (
-                    <>
-                      <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
-                      <span className="text-[10px] font-bold text-rose-600">ERROR DE CONEXIÓN</span>
-                    </>
-                  )}
-                </div>
-              </div>
+          lessons.forEach((l) => {
+            activities.push({
+              id: `lesson-${l.id}`,
+              type: 'lesson',
+              title: 'LECCIÓN PUBLICADA',
+              detail: `Contenido "${l.title}" disponible para el curso "${l.courseName}"`,
+              timeText: 'Publicada',
+              timestamp: Date.now() - 3600000 * 72,
+            });
+          });
 
-            </div>
+          if (posts) {
+            posts.forEach((p) => {
+              const ts = Date.parse(p.createdAt) || Date.now();
+              activities.push({
+                id: `post-${p.id}`,
+                type: 'post',
+                title: 'NUEVO POST EN FORO',
+                detail: `"${p.title}" publicado por ${p.authorName}`,
+                timeText: new Date(ts).toLocaleDateString('es-AR'),
+                timestamp: ts,
+              });
+            });
+          }
 
-            {/* Quick Actions & Recent Users */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="bg-white border-2 border-[#0d1b2e] p-6 shadow-[4px_4px_0_0_#0d1b2e] lg:col-span-2">
-                <h3 className="text-sm font-bold text-[#0d1b2e] mb-4 border-b border-[#a3b8cc] pb-2 uppercase tracking-wider">Actividad Reciente</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-white border border-[#a3b8cc]">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-[#f0f4f8] p-1.5 border border-[#0d1b2e] text-[#2a4e7c]">
-                        <Users className="w-3.5 h-3.5" />
-                      </div>
-                      <div>
-                        <p className="text-[9px] text-[#6180a6] font-bold uppercase">NUEVO ALUMNO</p>
-                        <p className="text-xs font-semibold text-[#0d1b2e]">Lucas Gómez se inscribió en "Robótica y Programación"</p>
-                      </div>
-                    </div>
-                    <span className="text-[9px] font-bold text-slate-400">Hace 15m</span>
-                  </div>
+          const sortedActivities = activities
+            .sort((a, b) => b.timestamp - a.timestamp)
+            .slice(0, 5);
 
-                  <div className="flex items-center justify-between p-3 bg-white border border-[#a3b8cc]">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-[#f0f4f8] p-1.5 border border-[#0d1b2e] text-[#2a4e7c]">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                      </div>
-                      <div>
-                        <p className="text-[9px] text-[#6180a6] font-bold uppercase">CLASE FINALIZADA</p>
-                        <p className="text-xs font-semibold text-[#0d1b2e]">Erica Diaz finalizó la clase de "Aula Maker" en sede CCA</p>
-                      </div>
-                    </div>
-                    <span className="text-[9px] font-bold text-slate-400">Hace 2h</span>
-                  </div>
+          return (
+            <div className="space-y-8">
+              {/* KPI Cards Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
 
-                  <div className="flex items-center justify-between p-3 bg-white border border-[#a3b8cc]">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-[#f0f4f8] p-1.5 border border-[#0d1b2e] text-[#2a4e7c]">
-                        <Code2 className="w-3.5 h-3.5" />
-                      </div>
-                      <div>
-                        <p className="text-[9px] text-[#6180a6] font-bold uppercase">CÓDIGO SUBIDO</p>
-                        <p className="text-xs font-semibold text-[#0d1b2e]">Mateo Fernández entregó su proyecto final de Arduino</p>
-                      </div>
-                    </div>
-                    <span className="text-[9px] font-bold text-slate-400">Ayer</span>
+                <div className="bg-white border-2 border-[#0d1b2e] p-5 shadow-[4px_4px_0_0_#0d1b2e] hover:-translate-y-0.5 transition-all">
+                  <span className="text-[10px] font-bold text-[#6180a6] uppercase block mb-1">Usuarios Registrados</span>
+                  <span className="text-3xl font-bold text-[#0d1b2e] block">{totalStudents}</span>
+                  <div className="mt-2.5 flex items-center gap-1 text-[10px] font-bold text-[#2a4e7c]">
+                    <TrendingUp className="w-3 h-3" /> +12% este mes
                   </div>
                 </div>
+
+                <div className="bg-white border-2 border-[#0d1b2e] p-5 shadow-[4px_4px_0_0_#0d1b2e] hover:-translate-y-0.5 transition-all">
+                  <span className="text-[10px] font-bold text-[#6180a6] uppercase block mb-1">Cursos Activos</span>
+                  <span className="text-3xl font-bold text-[#0d1b2e] block">{classrooms.length}</span>
+                  <span className="text-[10px] font-medium text-slate-500 block mt-2.5">Cursos Registrados</span>
+                </div>
+
+                <div className="bg-white border-2 border-[#0d1b2e] p-5 shadow-[4px_4px_0_0_#0d1b2e] hover:-translate-y-0.5 transition-all">
+                  <span className="text-[10px] font-bold text-[#6180a6] uppercase block mb-1">Salas de Meeting</span>
+                  <span className="text-3xl font-bold text-[#0d1b2e] block">{meetings.length}</span>
+                  <span className="text-[10px] font-medium text-slate-500 block mt-2.5">Google Meet disponibles</span>
+                </div>
+
+                <div className="bg-white border-2 border-[#0d1b2e] p-5 shadow-[4px_4px_0_0_#0d1b2e] hover:-translate-y-0.5 transition-all flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold text-[#6180a6] uppercase block mb-1">Base de Datos (Firestore)</span>
+                    <span className="text-sm font-bold text-[#0d1b2e] block truncate font-mono" title={firebaseProjectId}>
+                      {firebaseProjectId}
+                    </span>
+                  </div>
+                  <div className="mt-3 flex items-center gap-2">
+                    {dbStatus === 'connected' && (
+                      <>
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span className="text-[10px] font-bold text-emerald-600">CONECTADO</span>
+                      </>
+                    )}
+                    {dbStatus === 'connecting' && (
+                      <>
+                        <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping"></span>
+                        <span className="text-[10px] font-bold text-amber-600">CONECTANDO...</span>
+                      </>
+                    )}
+                    {dbStatus === 'error' && (
+                      <>
+                        <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                        <span className="text-[10px] font-bold text-rose-600">ERROR DE CONEXIÓN</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+
               </div>
+
+              {/* Quick Actions & Recent Users */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="bg-white border-2 border-[#0d1b2e] p-6 shadow-[4px_4px_0_0_#0d1b2e] lg:col-span-2">
+                  <h3 className="text-sm font-bold text-[#0d1b2e] mb-4 border-b border-[#a3b8cc] pb-2 uppercase tracking-wider">Actividad Reciente</h3>
+                  <div className="space-y-3">
+                    {sortedActivities.map((act) => (
+                      <div key={act.id} className="flex items-center justify-between p-3 bg-white border border-[#a3b8cc]">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-[#f0f4f8] p-1.5 border border-[#0d1b2e] text-[#2a4e7c]">
+                            {act.type === 'student' && <Users className="w-3.5 h-3.5" />}
+                            {act.type === 'classroom' && <CheckCircle2 className="w-3.5 h-3.5" />}
+                            {act.type === 'meeting' && <Video className="w-3.5 h-3.5" />}
+                            {act.type === 'lesson' && <BookOpen className="w-3.5 h-3.5" />}
+                            {act.type === 'post' && <MessageSquare className="w-3.5 h-3.5" />}
+                          </div>
+                          <div>
+                            <p className="text-[9px] text-[#6180a6] font-bold uppercase">{act.title}</p>
+                            <p className="text-xs font-semibold text-[#0d1b2e]">{act.detail}</p>
+                          </div>
+                        </div>
+                        <span className="text-[9px] font-bold text-slate-400">{act.timeText}</span>
+                      </div>
+                    ))}
+                    {sortedActivities.length === 0 && (
+                      <p className="text-slate-400 text-xs font-medium italic text-center py-4">No hay actividad reciente registrada en el sistema.</p>
+                    )}
+                  </div>
+                </div>
 
               {/* Monochromatic Quick Actions */}
               <div className="bg-white border-2 border-[#0d1b2e] p-6 shadow-[4px_4px_0_0_#0d1b2e]">
@@ -1124,7 +1135,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </div>
             </div>
           </div>
-        )}
+        );
+      })()}
 
         {/* CLASES TAB */}
         {activeTab === 'clases' && (

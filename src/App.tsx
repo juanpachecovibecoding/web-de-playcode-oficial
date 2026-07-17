@@ -54,6 +54,7 @@ interface PlatformAula {
   description?: string;
   schedule?: string;
   courseIds?: string[];
+  meetingUrl?: string;
 }
 
 interface Platform {
@@ -220,7 +221,8 @@ const App: React.FC = () => {
     try {
       // Write/update current items
       for (const item of items) {
-        await setDoc(doc(db, collectionName, item.id), item);
+        const cleaned = JSON.parse(JSON.stringify(item, (_, value) => value === undefined ? null : value));
+        await setDoc(doc(db, collectionName, item.id), cleaned);
       }
       // Delete items that are no longer in the list
       const snap = await getDocs(collection(db, collectionName));

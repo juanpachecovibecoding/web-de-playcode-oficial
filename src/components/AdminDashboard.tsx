@@ -80,6 +80,7 @@ interface PlatformAula {
   description?: string;
   schedule?: string;
   courseIds?: string[];
+  meetingUrl?: string;
 }
 
 interface Platform {
@@ -163,6 +164,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [newAulaModality, setNewAulaModality] = useState<'Presencial' | 'Virtual'>('Presencial');
   const [newAulaDesc, setNewAulaDesc] = useState('');
   const [newAulaSchedule, setNewAulaSchedule] = useState('');
+  const [newAulaMeetingUrl, setNewAulaMeetingUrl] = useState('');
   // Aula editing
   const [editingAula, setEditingAula] = useState<{ platformId: string; aulaId: string } | null>(null);
   const [editAulaName, setEditAulaName] = useState('');
@@ -170,6 +172,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [editAulaModality, setEditAulaModality] = useState<'Presencial' | 'Virtual'>('Presencial');
   const [editAulaDesc, setEditAulaDesc] = useState('');
   const [editAulaSchedule, setEditAulaSchedule] = useState('');
+  const [editAulaMeetingUrl, setEditAulaMeetingUrl] = useState('');
 
   // Forum moderation state
   const [posts, setPosts] = useState<any[]>([]);
@@ -276,7 +279,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       modality: newAulaModality,
       description: newAulaDesc.trim(),
       schedule: newAulaSchedule.trim(),
-      courseIds: newAulaCourseIds
+      courseIds: newAulaCourseIds,
+      meetingUrl: newAulaModality === 'Virtual' ? newAulaMeetingUrl.trim() : undefined
     };
     setPlatforms(prev => prev.map(p =>
       p.id === platformId ? { ...p, aulas: [...p.aulas, newAula] } : p
@@ -286,6 +290,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setNewAulaModality('Presencial');
     setNewAulaDesc('');
     setNewAulaSchedule('');
+    setNewAulaMeetingUrl('');
     setNewAulaCourseIds([]);
     setShowNewAulaForPlatform(null);
   };
@@ -304,6 +309,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setEditAulaDesc(aula.description || '');
     setEditAulaSchedule(aula.schedule || '');
     setEditAulaCourseIds(aula.courseIds || []);
+    setEditAulaMeetingUrl(aula.meetingUrl || '');
   };
 
   const handleSaveEditAula = (platformId: string, aulaId: string, e?: React.FormEvent) => {
@@ -315,7 +321,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           ...p,
           aulas: p.aulas.map(a =>
             a.id === aulaId
-              ? { ...a, name: editAulaName.trim(), ageRange: editAulaAge.trim(), modality: editAulaModality, description: editAulaDesc.trim(), schedule: editAulaSchedule.trim(), courseIds: editAulaCourseIds }
+              ? {
+                  ...a,
+                  name: editAulaName.trim(),
+                  ageRange: editAulaAge.trim(),
+                  modality: editAulaModality,
+                  description: editAulaDesc.trim(),
+                  schedule: editAulaSchedule.trim(),
+                  courseIds: editAulaCourseIds,
+                  meetingUrl: editAulaModality === 'Virtual' ? editAulaMeetingUrl.trim() : undefined
+                }
               : a
           )
         }
@@ -324,6 +339,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setEditAulaCourseIds([]);
     setEditAulaCourseSearch('');
     setIsEditAulaCourseDropdownOpen(false);
+    setEditAulaMeetingUrl('');
     setEditingAula(null);
   };
 
@@ -528,7 +544,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [newClassDescription, setNewClassDescription] = useState('');
   const [newClassImageUrl, setNewClassImageUrl] = useState('');
   const [selectedClassStudents, setSelectedClassStudents] = useState<string[]>([]);
-  const [selectedClassMeeting, setSelectedClassMeeting] = useState<string>('');
 
   // Modal States for Editing Class
   const [editingClass, setEditingClass] = useState<Classroom | null>(null);
@@ -536,15 +551,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [editClassDescription, setEditClassDescription] = useState('');
   const [editClassImageUrl, setEditClassImageUrl] = useState('');
   const [selectedEditClassStudents, setSelectedEditClassStudents] = useState<string[]>([]);
-  const [selectedEditClassMeeting, setSelectedEditClassMeeting] = useState<string>('');
 
   // Search filters for Modals
-  const [addMeetingSearch, setAddMeetingSearch] = useState('');
   const [addStudentSearch, setAddStudentSearch] = useState('');
-  const [editMeetingSearch, setEditMeetingSearch] = useState('');
   const [editStudentSearch, setEditStudentSearch] = useState('');
-  const [isAddMeetingDropdownOpen, setIsAddMeetingDropdownOpen] = useState(false);
-  const [isEditMeetingDropdownOpen, setIsEditMeetingDropdownOpen] = useState(false);
   const [isAddStudentDropdownOpen, setIsAddStudentDropdownOpen] = useState(false);
   const [isEditStudentDropdownOpen, setIsEditStudentDropdownOpen] = useState(false);
 
@@ -716,7 +726,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       description: newClassDescription,
       imageUrl: newClassImageUrl || undefined,
       students: selectedClassStudents,
-      meetingId: selectedClassMeeting || undefined,
       lessonIds: selectedClassLessons
     };
     setClassrooms([...classrooms, newClass]);
@@ -724,9 +733,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setNewClassDescription('');
     setNewClassImageUrl('');
     setSelectedClassStudents([]);
-    setSelectedClassMeeting('');
     setSelectedClassLessons([]);
-    setAddMeetingSearch('');
     setAddStudentSearch('');
     setAddClassLessonSearch('');
     setShowAddClassModal(false);
@@ -744,11 +751,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setEditClassDescription(cls.description);
     setEditClassImageUrl(cls.imageUrl || '');
     setSelectedEditClassStudents(cls.students);
-    setSelectedEditClassMeeting(cls.meetingId || '');
     setSelectedEditClassLessons(cls.lessonIds || []);
 
-    const selectedMeeting = meetings.find(m => m.id === cls.meetingId);
-    setEditMeetingSearch(selectedMeeting ? selectedMeeting.name : '');
     setEditStudentSearch('');
     setEditClassLessonSearch('');
   };
@@ -762,10 +766,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       description: editClassDescription,
       imageUrl: editClassImageUrl || undefined,
       students: selectedEditClassStudents,
-      meetingId: selectedEditClassMeeting || undefined,
       lessonIds: selectedEditClassLessons
     } : c));
-    setEditMeetingSearch('');
     setEditStudentSearch('');
     setEditClassLessonSearch('');
     setEditClassImageUrl('');
@@ -1044,32 +1046,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <tr className="bg-[#0d1b2e] text-white border-b-2 border-[#1e385c]">
                     <th className="p-3 font-semibold uppercase tracking-wider">Curso</th>
                     <th className="p-3 font-semibold uppercase tracking-wider">Descripción</th>
-                    <th className="p-3 font-semibold uppercase tracking-wider">Google Meet</th>
                     <th className="p-3 font-semibold uppercase tracking-wider">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#a3b8cc]/30">
                   {classrooms.map((cls) => {
-                    const associatedMeeting = meetings.find(m => m.id === cls.meetingId);
                     return (
                       <tr key={cls.id} className="hover:bg-[#f0f4f8]/50 font-medium">
                         <td className="p-3 text-[#0d1b2e] font-bold">{cls.name}</td>
                         <td className="p-3 text-slate-500 max-w-[300px] truncate" title={cls.description}>
                           {cls.description || <span className="text-slate-350 italic">Sin descripción</span>}
-                        </td>
-                        <td className="p-3">
-                          {associatedMeeting ? (
-                            <a
-                              href={associatedMeeting.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-[#2C7EEA] hover:underline font-bold flex items-center gap-1"
-                            >
-                              {associatedMeeting.name} <ExternalLink className="w-3 h-3" />
-                            </a>
-                          ) : (
-                            <span className="text-slate-400 italic">Sin sala virtual</span>
-                          )}
                         </td>
                         <td className="p-3">
                           <div className="flex items-center gap-2">
@@ -1985,12 +1971,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                   <td className="px-3 py-2.5 font-bold text-[#0d1b2e]">{aula.name}</td>
                                   <td className="px-3 py-2.5 text-slate-600">{aula.ageRange}</td>
                                   <td className="px-3 py-2.5">
-                                    <span className={`inline-block px-2 py-0.5 text-[9px] font-bold uppercase border ${aula.modality === 'Virtual'
-                                        ? 'bg-[#e8f0fe] text-[#2a4e7c] border-[#2a4e7c]'
-                                        : 'bg-[#e8f7ee] text-[#2a6b3c] border-[#2a6b3c]'
-                                      }`}>
-                                      {aula.modality}
-                                    </span>
+                                    <div className="flex flex-col gap-1 items-start">
+                                      <span className={`inline-block px-2 py-0.5 text-[9px] font-bold uppercase border ${aula.modality === 'Virtual'
+                                          ? 'bg-[#e8f0fe] text-[#2a4e7c] border-[#2a4e7c]'
+                                          : 'bg-[#e8f7ee] text-[#2a6b3c] border-[#2a6b3c]'
+                                        }`}>
+                                        {aula.modality}
+                                      </span>
+                                      {aula.modality === 'Virtual' && aula.meetingUrl && (
+                                        <a
+                                          href={aula.meetingUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-[#2C7EEA] hover:underline text-[9px] font-bold flex items-center gap-0.5 mt-0.5"
+                                        >
+                                          Google Meet <ExternalLink className="w-2.5 h-2.5" />
+                                        </a>
+                                      )}
+                                    </div>
                                   </td>
                                   <td className="px-3 py-2.5 text-slate-600 hidden sm:table-cell max-w-[150px] truncate">{aula.schedule || '—'}</td>
                                   <td className="px-3 py-2.5 text-slate-500 hidden sm:table-cell max-w-[150px] truncate">{aula.description || '—'}</td>
@@ -2077,6 +2075,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 className="w-full px-2 py-1.5 border-2 border-[#0d1b2e] text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#2a4e7c] bg-white"
                               />
                             </div>
+                            {newAulaModality === 'Virtual' && (
+                              <div className="space-y-1 col-span-full">
+                                <label className="text-[10px] font-bold text-slate-600 block font-mono">ENLACE DE GOOGLE MEET *</label>
+                                <input
+                                  type="url"
+                                  required
+                                  value={newAulaMeetingUrl}
+                                  onChange={e => setNewAulaMeetingUrl(e.target.value)}
+                                  placeholder="https://meet.google.com/abc-defg-hij"
+                                  className="w-full px-2 py-1.5 border-2 border-[#0d1b2e] text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#2a4e7c] bg-white"
+                                />
+                              </div>
+                            )}
                             <div className="space-y-1 col-span-full">
                               <label className="text-[10px] font-bold text-slate-600 block font-mono">VINCULAR CURSOS A ESTA AULA</label>
                               <div className="flex flex-wrap gap-2 p-2.5 border-2 border-[#0d1b2e] bg-white max-h-36 overflow-y-auto">
@@ -2607,72 +2618,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 />
               </div>
 
-              <div className="relative">
-                <label className="font-bold text-[#6180a6] block mb-1">Vincular Sala de Google Meet (Añadir Meeting)</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="🔍 Buscar o seleccionar sala (Meeting)..."
-                    value={addMeetingSearch}
-                    onChange={(e) => {
-                      setAddMeetingSearch(e.target.value);
-                      setIsAddMeetingDropdownOpen(true);
-                      if (!e.target.value) {
-                        setSelectedClassMeeting('');
-                      }
-                    }}
-                    onFocus={() => setIsAddMeetingDropdownOpen(true)}
-                    onBlur={() => setTimeout(() => setIsAddMeetingDropdownOpen(false), 200)}
-                    className="w-full p-2 border border-[#a3b8cc] rounded text-slate-900 focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] bg-white font-semibold text-[11px]"
-                  />
-                  {addMeetingSearch && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAddMeetingSearch('');
-                        setSelectedClassMeeting('');
-                        setIsAddMeetingDropdownOpen(false);
-                      }}
-                      className="absolute right-2 top-2 text-slate-400 hover:text-slate-600 font-bold px-1.5 cursor-pointer text-xs"
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
 
-                {isAddMeetingDropdownOpen && addMeetingSearch.trim().length > 0 && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border-2 border-[#0d1b2e] shadow-[3px_3px_0_0_#000000] max-h-40 overflow-y-auto rounded text-[11px]">
-                    {meetings
-                      .filter(m =>
-                        m.name.toLowerCase().includes(addMeetingSearch.toLowerCase()) ||
-                        m.url.toLowerCase().includes(addMeetingSearch.toLowerCase())
-                      )
-                      .map(m => (
-                        <button
-                          key={m.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedClassMeeting(m.id);
-                            setAddMeetingSearch(m.name);
-                            setIsAddMeetingDropdownOpen(false);
-                          }}
-                          className="w-full text-left px-3 py-1.5 hover:bg-[#f0f4f8] border-b last:border-0 border-slate-100 flex flex-col cursor-pointer"
-                        >
-                          <span className="font-semibold text-slate-800">{m.name}</span>
-                          <span className="text-[9px] text-slate-400 truncate">{m.url}</span>
-                        </button>
-                      ))}
-                    {meetings.filter(m =>
-                      m.name.toLowerCase().includes(addMeetingSearch.toLowerCase()) ||
-                      m.url.toLowerCase().includes(addMeetingSearch.toLowerCase())
-                    ).length === 0 && (
-                        <div className="p-2.5 text-slate-400 italic text-[10px] text-center">
-                          No se encontraron salas.
-                        </div>
-                      )}
-                  </div>
-                )}
-              </div>
 
               <div className="relative">
                 <label className="font-bold text-[#6180a6] block mb-1">Añadir Usuarios a esta Clase</label>
@@ -2914,72 +2860,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 />
               </div>
 
-              <div className="relative">
-                <label className="font-bold text-[#6180a6] block mb-1">Vincular Sala de Google Meet (Añadir Meeting)</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="🔍 Buscar o seleccionar sala (Meeting)..."
-                    value={editMeetingSearch}
-                    onChange={(e) => {
-                      setEditMeetingSearch(e.target.value);
-                      setIsEditMeetingDropdownOpen(true);
-                      if (!e.target.value) {
-                        setSelectedEditClassMeeting('');
-                      }
-                    }}
-                    onFocus={() => setIsEditMeetingDropdownOpen(true)}
-                    onBlur={() => setTimeout(() => setIsEditMeetingDropdownOpen(false), 200)}
-                    className="w-full p-2 border border-[#a3b8cc] rounded text-slate-900 focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] bg-white font-semibold text-[11px]"
-                  />
-                  {editMeetingSearch && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditMeetingSearch('');
-                        setSelectedEditClassMeeting('');
-                        setIsEditMeetingDropdownOpen(false);
-                      }}
-                      className="absolute right-2 top-2 text-slate-400 hover:text-slate-600 font-bold px-1.5 cursor-pointer text-xs"
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
 
-                {isEditMeetingDropdownOpen && editMeetingSearch.trim().length > 0 && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border-2 border-[#0d1b2e] shadow-[3px_3px_0_0_#000000] max-h-40 overflow-y-auto rounded text-[11px]">
-                    {meetings
-                      .filter(m =>
-                        m.name.toLowerCase().includes(editMeetingSearch.toLowerCase()) ||
-                        m.url.toLowerCase().includes(editMeetingSearch.toLowerCase())
-                      )
-                      .map(m => (
-                        <button
-                          key={m.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedEditClassMeeting(m.id);
-                            setEditMeetingSearch(m.name);
-                            setIsEditMeetingDropdownOpen(false);
-                          }}
-                          className="w-full text-left px-3 py-1.5 hover:bg-[#f0f4f8] border-b last:border-0 border-slate-100 flex flex-col cursor-pointer"
-                        >
-                          <span className="font-semibold text-slate-800">{m.name}</span>
-                          <span className="text-[9px] text-slate-400 truncate">{m.url}</span>
-                        </button>
-                      ))}
-                    {meetings.filter(m =>
-                      m.name.toLowerCase().includes(editMeetingSearch.toLowerCase()) ||
-                      m.url.toLowerCase().includes(editMeetingSearch.toLowerCase())
-                    ).length === 0 && (
-                        <div className="p-2.5 text-slate-400 italic text-[10px] text-center">
-                          No se encontraron salas.
-                        </div>
-                      )}
-                  </div>
-                )}
-              </div>
 
               <div className="relative">
                 <label className="font-bold text-[#6180a6] block mb-1">Asignar Usuarios a esta Clase</label>
@@ -3389,6 +3270,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   className="w-full p-2 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-slate-900 font-medium resize-none"
                 />
               </div>
+
+              {editAulaModality === 'Virtual' && (
+                <div>
+                  <label className="font-bold text-[#6180a6] block mb-1">Enlace de Google Meet *</label>
+                  <input
+                    type="url"
+                    required
+                    value={editAulaMeetingUrl}
+                    onChange={(e) => setEditAulaMeetingUrl(e.target.value)}
+                    placeholder="https://meet.google.com/abc-defg-hij"
+                    className="w-full p-2 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-slate-900 font-medium"
+                  />
+                </div>
+              )}
 
               {/* Buscador predictivo de cursos */}
               <div className="relative">

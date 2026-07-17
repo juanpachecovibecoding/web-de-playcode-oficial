@@ -58,6 +58,7 @@ interface PlatformAula {
   description?: string;
   schedule?: string;
   courseIds?: string[];
+  meetingUrl?: string;
 }
 
 interface Platform {
@@ -215,6 +216,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   onSaveProfile
 }) => {
   void courses; // courses prop kept for API compatibility; aula courses now use classrooms
+  void meetings;
   const [activeTab, setActiveTab] = useState<'aprendizaje' | 'perfil' | 'foro'>('aprendizaje');
   const [palette, setPalette] = useState<'default' | 'cyberpunk' | 'playcode'>(student.theme || 'default');
 
@@ -641,6 +643,22 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                       <p className="text-xs text-slate-500 font-medium">{selectedPlatformAula.description}</p>
                       {selectedPlatformAula.schedule && (
                         <p className="text-[11px] text-[#2a4e7c] font-bold mt-1">Horario: {selectedPlatformAula.schedule}</p>
+                      )}
+                      {selectedPlatformAula.modality === 'Virtual' && selectedPlatformAula.meetingUrl && (
+                        <div className="mt-4 p-4 bg-[#e8f0fe] border-2 border-[#2a4e7c] shadow-[4px_4px_0_0_#2a4e7c] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 max-w-xl">
+                          <div>
+                            <span className="text-[9px] font-bold text-[#2a4e7c] uppercase tracking-wider block font-mono">Clase en Vivo</span>
+                            <h4 className="text-xs font-bold text-[#0d1b2e] mt-0.5">Accede a tu clase en tiempo real por Google Meet</h4>
+                          </div>
+                          <a
+                            href={selectedPlatformAula.meetingUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#2a4e7c] hover:bg-[#1e385c] text-white font-bold border-2 border-[#0d1b2e] text-xs transition-all shadow-[2px_2px_0_0_#000000] active:translate-y-[2px] active:shadow-[0px_0px_0_0_#000000] cursor-pointer"
+                          >
+                            <Video className="w-4 h-4" /> Unirse a la Clase
+                          </a>
+                        </div>
                       )}
                     </div>
 
@@ -1075,7 +1093,6 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                   <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500">Mis Cursos</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
                     {myClassrooms.map(cls => {
-                      const associatedMeeting = meetings.find(m => m.id === cls.meetingId);
                       return (
                         <div key={cls.id} className={`${t.cardBg} ${t.cardBorder} ${t.cardShadow} flex flex-col justify-between overflow-hidden`}>
                           {cls.imageUrl ? (
@@ -1130,22 +1147,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                               <p className="text-[11px] text-slate-500 mb-3 line-clamp-3">{cls.description}</p>
                             </div>
 
-                            <div className="border-t border-slate-100 pt-3">
-                              {associatedMeeting ? (
-                                <a
-                                  href={associatedMeeting.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center justify-center gap-1.5 px-3 py-2 bg-[#2C7EEA] hover:bg-[#1A66C7] text-white text-[10px] font-bold border border-[#0d1b2e] transition-all w-full text-center"
-                                >
-                                  Unirse Meet <Video className="w-3.5 h-3.5" />
-                                </a>
-                              ) : (
-                                <div className="text-[10px] text-slate-400 italic bg-slate-50 p-2 border border-slate-200 text-center">
-                                  Sin sala virtual configurada.
-                                </div>
-                              )}
-                            </div>
+
                           </div>
                         </div>
                       );

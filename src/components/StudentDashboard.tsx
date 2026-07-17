@@ -218,6 +218,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   void courses; // courses prop kept for API compatibility; aula courses now use classrooms
   void meetings;
   const [activeTab, setActiveTab] = useState<'aprendizaje' | 'perfil' | 'foro'>('aprendizaje');
+  const [hideLessonsSidebar, setHideLessonsSidebar] = useState(false);
   const [palette, setPalette] = useState<'default' | 'cyberpunk' | 'playcode'>(student.theme || 'default');
 
   // Forum states
@@ -764,49 +765,60 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
                       return (
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                          <div className="lg:col-span-4 space-y-3">
-                            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">Lecciones del Curso</h4>
-                            <div className="space-y-2">
-                              {courseLessons.map((l, index) => {
-                                const isSelected = selectedPlatformLesson?.id === l.id;
-                                const isCompleted = student.completedLessonIds?.includes(l.id);
-                                return (
-                                  <div
-                                    key={l.id}
-                                    onClick={() => setSelectedPlatformLesson(l)}
-                                    className={`p-3 border-2 border-[#0d1b2e] cursor-pointer transition-all flex items-center justify-between ${
-                                      isSelected 
-                                        ? 'bg-[#ffe66d] shadow-[2px_2px_0_0_#000000] translate-x-0.5 -translate-y-0.5' 
-                                        : 'bg-white hover:bg-slate-50 shadow-[1px_1px_0_0_#0d1b2e]'
-                                    }`}
-                                  >
-                                    <div className="flex items-center gap-2.5 min-w-0">
-                                      <span className="text-[10px] font-mono font-bold bg-slate-100 border border-slate-300 px-1.5 py-0.5 rounded shrink-0">
-                                        L{index + 1}
-                                      </span>
-                                      <span className="text-xs font-bold text-slate-800 truncate">{l.title}</span>
+                          {(!hideLessonsSidebar || !selectedPlatformLesson) && (
+                            <div className="lg:col-span-4 space-y-3">
+                              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">Lecciones del Curso</h4>
+                              <div className="space-y-2">
+                                {courseLessons.map((l, index) => {
+                                  const isSelected = selectedPlatformLesson?.id === l.id;
+                                  const isCompleted = student.completedLessonIds?.includes(l.id);
+                                  return (
+                                    <div
+                                      key={l.id}
+                                      onClick={() => setSelectedPlatformLesson(l)}
+                                      className={`p-3 border-2 border-[#0d1b2e] cursor-pointer transition-all flex items-center justify-between ${
+                                        isSelected 
+                                          ? 'bg-[#ffe66d] shadow-[2px_2px_0_0_#000000] translate-x-0.5 -translate-y-0.5' 
+                                          : 'bg-white hover:bg-slate-50 shadow-[1px_1px_0_0_#0d1b2e]'
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-2.5 min-w-0">
+                                        <span className="text-[10px] font-mono font-bold bg-slate-100 border border-slate-300 px-1.5 py-0.5 rounded shrink-0">
+                                          L{index + 1}
+                                        </span>
+                                        <span className="text-xs font-bold text-slate-800 truncate">{l.title}</span>
+                                      </div>
+                                      <input
+                                        type="checkbox"
+                                        checked={isCompleted || false}
+                                        onChange={(e) => {
+                                          e.stopPropagation();
+                                          toggleLessonCompletion(l.id);
+                                        }}
+                                        className="w-3.5 h-3.5 border-2 border-[#0d1b2e] rounded-sm cursor-pointer accent-[#2a4e7c]"
+                                      />
                                     </div>
-                                    <input
-                                      type="checkbox"
-                                      checked={isCompleted || false}
-                                      onChange={(e) => {
-                                        e.stopPropagation();
-                                        toggleLessonCompletion(l.id);
-                                      }}
-                                      className="w-3.5 h-3.5 border-2 border-[#0d1b2e] rounded-sm cursor-pointer accent-[#2a4e7c]"
-                                    />
-                                  </div>
-                                );
-                              })}
+                                  );
+                                })}
+                              </div>
                             </div>
-                          </div>
+                          )}
 
-                          <div className="lg:col-span-8">
+                          <div className={(hideLessonsSidebar && selectedPlatformLesson) ? "lg:col-span-12" : "lg:col-span-8"}>
                             {selectedPlatformLesson ? (
                               <div className="bg-white border-2 border-[#0d1b2e] shadow-[4px_4px_0_0_#0d1b2e] p-5 space-y-4">
-                                <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-                                  <h4 className="text-base font-bold text-[#0d1b2e]">{selectedPlatformLesson.title}</h4>
-                                  <div className="flex items-center gap-2">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                                  <div className="flex items-center gap-2.5 min-w-0">
+                                    <button
+                                      onClick={() => setHideLessonsSidebar(!hideLessonsSidebar)}
+                                      className="p-1.5 bg-[#f0f4f8] hover:bg-slate-200 border-2 border-[#0d1b2e] shadow-[1px_1px_0_0_#0d1b2e] active:translate-y-[1px] active:shadow-none transition-all text-slate-700 cursor-pointer flex items-center justify-center shrink-0"
+                                      title={hideLessonsSidebar ? "Mostrar lista de lecciones" : "Ocultar lista de lecciones"}
+                                    >
+                                      <BookOpen className="w-3.5 h-3.5" />
+                                    </button>
+                                    <h4 className="text-base font-bold text-[#0d1b2e] truncate">{selectedPlatformLesson.title}</h4>
+                                  </div>
+                                  <div className="flex items-center gap-2 shrink-0">
                                     <span className="text-[9px] font-bold text-slate-400">Marcar completada:</span>
                                     <input
                                       type="checkbox"

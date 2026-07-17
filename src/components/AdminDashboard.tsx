@@ -135,6 +135,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   // Aula course linkages
   const [newAulaCourseIds, setNewAulaCourseIds] = useState<string[]>([]);
+  const [newAulaCourseSearch, setNewAulaCourseSearch] = useState('');
+  const [isNewAulaCourseDropdownOpen, setIsNewAulaCourseDropdownOpen] = useState(false);
   const [editAulaCourseIds, setEditAulaCourseIds] = useState<string[]>([]);
   const [editAulaCourseSearch, setEditAulaCourseSearch] = useState('');
   const [isEditAulaCourseDropdownOpen, setIsEditAulaCourseDropdownOpen] = useState(false);
@@ -302,6 +304,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setNewAulaSchedule('');
     setNewAulaMeetingUrl('');
     setNewAulaCourseIds([]);
+    setNewAulaCourseSearch('');
+    setIsNewAulaCourseDropdownOpen(false);
     setShowNewAulaForPlatform(null);
   };
 
@@ -2126,34 +2130,91 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 />
                               </div>
                             )}
-                            <div className="space-y-1 col-span-full">
+                            <div className="space-y-1 col-span-full relative">
                               <label className="text-[10px] font-bold text-slate-600 block font-mono">VINCULAR CURSOS A ESTA AULA</label>
-                              <div className="flex flex-wrap gap-2 p-2.5 border-2 border-[#0d1b2e] bg-white max-h-36 overflow-y-auto">
-                                {courses.map(course => {
-                                  const isChecked = newAulaCourseIds.includes(course.id);
-                                  return (
-                                    <label key={course.id} className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 border border-slate-300 hover:bg-slate-100 cursor-pointer text-[10.5px]">
-                                      <input
-                                        type="checkbox"
-                                        checked={isChecked}
-                                        onChange={(e) => {
-                                          if (e.target.checked) {
-                                            setNewAulaCourseIds([...newAulaCourseIds, course.id]);
-                                          } else {
-                                            setNewAulaCourseIds(newAulaCourseIds.filter(id => id !== course.id));
-                                          }
-                                        }}
-                                        className="w-3.5 h-3.5 accent-[#2a4e7c] cursor-pointer"
-                                      />
-                                      <span className="font-bold text-slate-700">{course.title}</span>
-                                    </label>
-                                  );
-                                })}
-                                {courses.length === 0 && (
-                                  <span className="text-[10px] text-slate-400 italic">No hay cursos registrados en el sistema.</span>
+                              <div className="relative">
+                                <input
+                                  type="text"
+                                  value={newAulaCourseSearch}
+                                  onChange={e => {
+                                    setNewAulaCourseSearch(e.target.value);
+                                    setIsNewAulaCourseDropdownOpen(true);
+                                  }}
+                                  onFocus={() => setIsNewAulaCourseDropdownOpen(true)}
+                                  placeholder="Buscar y seleccionar cursos..."
+                                  className="w-full px-2 py-1.5 border-2 border-[#0d1b2e] text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#2a4e7c] bg-white"
+                                />
+                                {newAulaCourseSearch.trim().length > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setNewAulaCourseSearch('')}
+                                    className="absolute right-2 top-2 text-slate-400 hover:text-slate-650 cursor-pointer"
+                                  >
+                                    ✕
+                                  </button>
                                 )}
                               </div>
+
+                              {isNewAulaCourseDropdownOpen && (() => {
+                                const filteredCourses = courses.filter(c =>
+                                  !newAulaCourseIds.includes(c.id) &&
+                                  c.title.toLowerCase().includes(newAulaCourseSearch.toLowerCase())
+                                );
+
+                                return (
+                                  <>
+                                    <div className="fixed inset-0 z-40" onClick={() => setIsNewAulaCourseDropdownOpen(false)} />
+                                    <div className="absolute z-50 w-full mt-1 bg-white border-2 border-[#0d1b2e] shadow-[3px_3px_0_0_#000000] max-h-40 overflow-y-auto rounded text-[11px]">
+                                      {filteredCourses.map(course => (
+                                        <button
+                                          key={course.id}
+                                          type="button"
+                                          onClick={() => {
+                                            setNewAulaCourseIds([...newAulaCourseIds, course.id]);
+                                            setNewAulaCourseSearch('');
+                                            setIsNewAulaCourseDropdownOpen(false);
+                                          }}
+                                          className="w-full text-left px-3 py-2 hover:bg-[#f0f4f8] border-b last:border-0 border-slate-100 flex flex-col cursor-pointer"
+                                        >
+                                          <span className="font-semibold text-slate-800 text-[11px]">{course.title}</span>
+                                          <span className="text-[9px] text-slate-400 font-normal">{course.ageGroup}</span>
+                                        </button>
+                                      ))}
+                                      {filteredCourses.length === 0 && (
+                                        <div className="p-2.5 text-slate-400 italic text-[10px] text-center">
+                                          No se encontraron cursos disponibles.
+                                        </div>
+                                      )}
+                                    </div>
+                                  </>
+                                );
+                              })()}
                             </div>
+
+                            {/* Selected courses badges */}
+                            {newAulaCourseIds.length > 0 && (
+                              <div className="col-span-full">
+                                <label className="font-semibold text-slate-500 block mb-1 text-[10px]">Cursos Vinculados:</label>
+                                <div className="flex flex-wrap gap-1.5 p-2 border border-slate-200 rounded bg-slate-50 max-h-24 overflow-y-auto">
+                                  {newAulaCourseIds.map(id => {
+                                    const course = courses.find(c => c.id === id);
+                                    if (!course) return null;
+                                    return (
+                                      <span key={id} className="inline-flex items-center gap-1.5 px-2 py-1 bg-[#2a4e7c] text-white font-bold text-[9px] rounded uppercase shadow-[1px_1px_0_0_#000000]">
+                                        {course.title}
+                                        <button
+                                          type="button"
+                                          onClick={() => setNewAulaCourseIds(newAulaCourseIds.filter(cid => cid !== id))}
+                                          className="text-[#ffe66d] hover:text-white font-bold ml-1 cursor-pointer"
+                                        >
+                                          ✕
+                                        </button>
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
                           </div>
                           <div className="flex gap-2 justify-end">
                             <button type="button" onClick={() => { setShowNewAulaForPlatform(null); setNewAulaSchedule(''); }} className="px-3 py-1.5 border border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer">Cancelar</button>
@@ -3589,34 +3650,38 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   )}
                 </div>
 
-                {isEditAulaCourseDropdownOpen && editAulaCourseSearch.trim().length > 0 && (() => {
-                  const filteredCourses = classrooms.filter(c =>
+                {isEditAulaCourseDropdownOpen && (() => {
+                  const filteredCourses = courses.filter(c =>
                     !editAulaCourseIds.includes(c.id) &&
-                    c.name.toLowerCase().includes(editAulaCourseSearch.toLowerCase())
+                    c.title.toLowerCase().includes(editAulaCourseSearch.toLowerCase())
                   );
 
                   return (
-                    <div className="absolute z-50 w-full mt-1 bg-white border-2 border-[#0d1b2e] shadow-[3px_3px_0_0_#000000] max-h-40 overflow-y-auto rounded text-[11px]">
-                      {filteredCourses.map(course => (
-                        <button
-                          key={course.id}
-                          type="button"
-                          onClick={() => {
-                            setEditAulaCourseIds([...editAulaCourseIds, course.id]);
-                            setEditAulaCourseSearch('');
-                            setIsEditAulaCourseDropdownOpen(false);
-                          }}
-                          className="w-full text-left px-3 py-2 hover:bg-[#f0f4f8] border-b last:border-0 border-slate-100 flex flex-col cursor-pointer"
-                        >
-                          <span className="font-semibold text-slate-800">{course.name}</span>
-                        </button>
-                      ))}
-                      {filteredCourses.length === 0 && (
-                        <div className="p-2.5 text-slate-400 italic text-[10px] text-center">
-                          No se encontraron cursos disponibles.
-                        </div>
-                      )}
-                    </div>
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setIsEditAulaCourseDropdownOpen(false)} />
+                      <div className="absolute z-50 w-full mt-1 bg-white border-2 border-[#0d1b2e] shadow-[3px_3px_0_0_#000000] max-h-40 overflow-y-auto rounded text-[11px]">
+                        {filteredCourses.map(course => (
+                          <button
+                            key={course.id}
+                            type="button"
+                            onClick={() => {
+                              setEditAulaCourseIds([...editAulaCourseIds, course.id]);
+                              setEditAulaCourseSearch('');
+                              setIsEditAulaCourseDropdownOpen(false);
+                            }}
+                            className="w-full text-left px-3 py-2 hover:bg-[#f0f4f8] border-b last:border-0 border-slate-100 flex flex-col cursor-pointer"
+                          >
+                            <span className="font-semibold text-slate-800">{course.title}</span>
+                            <span className="text-[9px] text-slate-400">{course.ageGroup}</span>
+                          </button>
+                        ))}
+                        {filteredCourses.length === 0 && (
+                          <div className="p-2.5 text-slate-400 italic text-[10px] text-center">
+                            No se encontraron cursos disponibles.
+                          </div>
+                        )}
+                      </div>
+                    </>
                   );
                 })()}
               </div>
@@ -3627,11 +3692,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <label className="font-semibold text-slate-500 block mb-1 text-[10px]">Cursos Vinculados a esta Aula:</label>
                   <div className="flex flex-wrap gap-1.5 p-2 border border-slate-200 rounded bg-slate-50 max-h-24 overflow-y-auto">
                     {editAulaCourseIds.map(id => {
-                      const course = classrooms.find(c => c.id === id);
+                      const course = courses.find(c => c.id === id);
                       if (!course) return null;
                       return (
                         <span key={id} className="inline-flex items-center gap-1.5 px-2 py-1 bg-[#2a4e7c] text-white font-bold text-[9px] rounded uppercase shadow-[1px_1px_0_0_#000000]">
-                          {course.name}
+                          {course.title}
                           <button
                             type="button"
                             onClick={() => setEditAulaCourseIds(editAulaCourseIds.filter(cid => cid !== id))}

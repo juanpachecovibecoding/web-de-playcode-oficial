@@ -24,7 +24,9 @@ import {
   Building2,
   ChevronDown,
   ChevronRight,
-  User
+  User,
+  Trophy,
+  Award
 } from 'lucide-react';
 
 interface Course {
@@ -122,6 +124,52 @@ interface AdminDashboardProps {
   firebaseProjectId: string;
 }
 
+export interface GameItem {
+  id: string;
+  name: string;
+  emoji: string;
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  description: string;
+}
+
+export const ADMIN_GAME_ITEMS: Record<string, GameItem> = {
+  'libro-sabiduria': {
+    id: 'libro-sabiduria',
+    name: 'Códice del Bit',
+    emoji: '📖',
+    rarity: 'common',
+    description: 'Un manuscrito legendario que contiene las verdades fundamentales del binario.'
+  },
+  'baston-codigo': {
+    id: 'baston-codigo',
+    name: 'Bastón del Compilador',
+    emoji: '🪄',
+    rarity: 'rare',
+    description: 'Canaliza tu lógica interna y compila tus algoritmos sin errores.'
+  },
+  'espada-verdad': {
+    id: 'espada-verdad',
+    name: 'La Palabra de Verdad',
+    emoji: '🗡️',
+    rarity: 'epic',
+    description: 'Otorgado a quienes comparten hechos reales y verídicos. Destruye las fake news.'
+  },
+  'escudo-debug': {
+    id: 'escudo-debug',
+    name: 'Escudo Anti-Bugs',
+    emoji: '🛡️',
+    rarity: 'legendary',
+    description: 'Una defensa impenetrable forjada con las mejores prácticas de Clean Code.'
+  }
+};
+
+export const ADMIN_BADGES_LIST = [
+  { name: 'Aprendiz Curioso', emoji: '📖', desc: 'Otorgado por ingresar al portal y reclamar el Códice del Bit.' },
+  { name: 'Mago del Código', emoji: '🪄', desc: 'Completar al menos 5 lecciones de programación en Play Code.' },
+  { name: 'Portador de la Verdad', emoji: '🗡️', desc: 'Recibir 10 o más reacciones ✅ por veracidad en el foro.' },
+  { name: 'Guardián Digital', emoji: '🛡️', desc: 'Completar el 100% de las clases de un curso oficial.' }
+];
+
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   userUsername,
   userName,
@@ -146,7 +194,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 }) => {
   void setCourses;
   void courses;
-  const [activeTab, setActiveTab] = useState<'inicio' | 'cursos' | 'usuarios' | 'docentes' | 'clases' | 'meetings' | 'contenido' | 'config' | 'foro' | 'plataformas'>('inicio');
+  const [activeTab, setActiveTab] = useState<'inicio' | 'cursos' | 'usuarios' | 'docentes' | 'clases' | 'meetings' | 'contenido' | 'config' | 'foro' | 'plataformas' | 'gamificacion'>('inicio');
 
   // Platforms state is received from props!
   const [expandedPlatformId, setExpandedPlatformId] = useState<string | null>('platform-1');
@@ -182,6 +230,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [isEditStudentAulaDropdownOpen, setIsEditStudentAulaDropdownOpen] = useState(false);
   const [editStudentGoogleAuthAllowed, setEditStudentGoogleAuthAllowed] = useState(false);
   const [editStudentGoogleEmail, setEditStudentGoogleEmail] = useState('');
+
+  // Admin Gamification editing states
+  const [showGamificationModal, setShowGamificationModal] = useState(false);
+  const [gamificationStudentId, setGamificationStudentId] = useState<string | null>(null);
+  const [gamificationChestsCount, setGamificationChestsCount] = useState(0);
+  const [gamificationInventory, setGamificationInventory] = useState<string[]>([]);
+  const [gamificationBadges, setGamificationBadges] = useState<string[]>([]);
+  const [gamificationSearchQuery, setGamificationSearchQuery] = useState('');
+
   // Platform creation
   const [showNewPlatformForm, setShowNewPlatformForm] = useState(false);
   const [newPlatformName, setNewPlatformName] = useState('');
@@ -771,6 +828,45 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setShowEditStudentModal(false);
   };
 
+  const handleOpenGamificationEdit = (st: Student) => {
+    setGamificationStudentId(st.id);
+    setGamificationChestsCount(st.unopenedChestsCount || 0);
+    setGamificationInventory(st.inventory || []);
+    setGamificationBadges(st.unlockedBadgeIds || []);
+    setShowGamificationModal(true);
+  };
+
+  const handleSaveGamification = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!gamificationStudentId) return;
+    setStudents(prev => prev.map(s => {
+      if (s.id === gamificationStudentId) {
+        return {
+          ...s,
+          unopenedChestsCount: gamificationChestsCount,
+          inventory: gamificationInventory,
+          unlockedBadgeIds: gamificationBadges
+        };
+      }
+      return s;
+    }));
+    setShowGamificationModal(false);
+    setGamificationStudentId(null);
+  };
+
+  const handleQuickAdjustChests = (st: Student, delta: number) => {
+    setStudents(prev => prev.map(s => {
+      if (s.id === st.id) {
+        const current = s.unopenedChestsCount || 0;
+        return {
+          ...s,
+          unopenedChestsCount: Math.max(0, current + delta)
+        };
+      }
+      return s;
+    }));
+  };
+
   const handleAddMeeting = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMeetingName || !newMeetingUrl) return;
@@ -983,6 +1079,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               }`}
           >
             <MessageSquare className="w-3.5 h-3.5" /> FOROS (MODERAR)
+          </button>
+
+          <button
+            onClick={() => setActiveTab('gamificacion')}
+            className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${activeTab === 'gamificacion'
+                ? 'bg-[#a3b8cc] text-[#0d1b2e] border-[#0d1b2e] shadow-[2px_2px_0_0_#ffffff] translate-x-0.5 -translate-y-0.5'
+                : 'border-transparent text-slate-400 hover:text-white hover:bg-[#1e385c]/50'
+              }`}
+          >
+            <Trophy className="w-3.5 h-3.5" /> GAMIFICACIÓN
           </button>
 
           <button
@@ -2653,6 +2759,306 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {/* GAMIFICACIÓN TAB */}
+        {activeTab === 'gamificacion' && (
+          <div className="space-y-6 animate-in fade-in duration-200">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200 pb-4">
+              <div>
+                <h2 className="text-xl font-bold text-[#0d1b2e]">Gamificación y Recompensas</h2>
+                <p className="text-xs text-[#6180a6] font-semibold mt-1">Supervisa y ajusta los inventarios RPG, cofres acumulados e insignias de los estudiantes.</p>
+              </div>
+            </div>
+
+            {/* Top row stats summary */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="bg-[#2a4e7c] text-white border-2 border-[#0d1b2e] shadow-[4px_4px_0_0_#0d1b2e] p-4 text-center">
+                <span className="text-[9px] font-extrabold uppercase tracking-wider block opacity-80">Total Alumnos Activos</span>
+                <span className="text-2xl font-bold block font-mono">
+                  {students.filter(s => s.role === 'alumno' || !s.role).length}
+                </span>
+              </div>
+              <div className="bg-[#e0a96d] text-[#0d1b2e] border-2 border-[#0d1b2e] shadow-[4px_4px_0_0_#0d1b2e] p-4 text-center">
+                <span className="text-[9px] font-extrabold uppercase tracking-wider block opacity-85">Cofres Pendientes de Abrir</span>
+                <span className="text-2xl font-bold block font-mono">
+                  {students.reduce((acc, curr) => acc + (curr.unopenedChestsCount || 0), 0)}
+                </span>
+              </div>
+              <div className="bg-[#2ec4b6] text-white border-2 border-[#0d1b2e] shadow-[4px_4px_0_0_#0d1b2e] p-4 text-center">
+                <span className="text-[9px] font-extrabold uppercase tracking-wider block opacity-80">Insignias Otorgadas</span>
+                <span className="text-2xl font-bold block font-mono">
+                  {students.reduce((acc, curr) => acc + (curr.unlockedBadgeIds || []).length, 0)}
+                </span>
+              </div>
+            </div>
+
+            {/* Search and Filters */}
+            <div className="flex gap-4 items-center bg-white p-4 border-2 border-[#0d1b2e] shadow-[4px_4px_0_0_#0d1b2e]">
+              <div className="relative flex-grow">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Buscar estudiante por nombre o usuario..."
+                  value={gamificationSearchQuery}
+                  onChange={(e) => setGamificationSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 border-2 border-slate-200 rounded text-xs font-semibold focus:outline-none focus:border-[#2a4e7c]"
+                />
+              </div>
+            </div>
+
+            {/* Students Gamification Grid/Table */}
+            <div className="bg-white border-2 border-[#0d1b2e] shadow-[4px_4px_0_0_#0d1b2e] overflow-hidden">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-[#f0f4f8] border-b border-[#0d1b2e] text-[9px] font-extrabold uppercase text-slate-500">
+                  <tr>
+                    <th className="px-4 py-3">Estudiante</th>
+                    <th className="px-4 py-3">Nivel / XP</th>
+                    <th className="px-4 py-3 text-center">Cofres Listos</th>
+                    <th className="px-4 py-3">Inventario RPG</th>
+                    <th className="px-4 py-3">Insignias</th>
+                    <th className="px-4 py-3 text-right">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
+                  {students
+                    .filter(s => s.role === 'alumno' || !s.role)
+                    .filter(s => {
+                      const q = gamificationSearchQuery.toLowerCase().trim();
+                      if (!q) return true;
+                      return s.name.toLowerCase().includes(q) || s.username.toLowerCase().includes(q);
+                    })
+                    .map(st => {
+                      const lessonsCount = st.completedLessonIds?.length || 0;
+                      const lvl = Math.floor(lessonsCount / 3) + 1;
+                      const xp = lessonsCount * 100;
+                      const chests = st.unopenedChestsCount || 0;
+                      const inv = st.inventory || [];
+                      const badges = st.unlockedBadgeIds || [];
+
+                      return (
+                        <tr key={st.id} className="hover:bg-slate-50/50">
+                          <td className="px-4 py-4">
+                            <div className="font-bold text-slate-900">{st.name}</div>
+                            <div className="text-[10px] text-slate-450 font-medium">@{st.username}</div>
+                          </td>
+                          <td className="px-4 py-4">
+                            <div className="font-mono text-[#2a4e7c]">Lvl {lvl}</div>
+                            <div className="text-[10px] text-slate-500 font-bold">{xp} XP</div>
+                          </td>
+                          <td className="px-4 py-4 text-center">
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                onClick={() => handleQuickAdjustChests(st, -1)}
+                                className="w-5 h-5 flex items-center justify-center bg-slate-100 hover:bg-slate-200 border border-[#0d1b2e] rounded font-bold cursor-pointer transition-colors"
+                              >
+                                -
+                              </button>
+                              <span className="font-mono text-sm w-6 text-center font-bold text-slate-800">{chests}</span>
+                              <button
+                                onClick={() => handleQuickAdjustChests(st, 1)}
+                                className="w-5 h-5 flex items-center justify-center bg-slate-100 hover:bg-slate-200 border border-[#0d1b2e] rounded font-bold cursor-pointer transition-colors"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </td>
+                          <td className="px-4 py-4">
+                            {inv.length === 0 ? (
+                              <span className="text-[10px] text-slate-400 italic font-medium">Vacío</span>
+                            ) : (
+                              <div className="flex gap-1.5">
+                                {inv.map(itemId => {
+                                  const item = ADMIN_GAME_ITEMS[itemId];
+                                  if (!item) return null;
+                                  return (
+                                    <span
+                                      key={itemId}
+                                      title={`${item.name} (${item.rarity.toUpperCase()})`}
+                                      className="text-lg cursor-help select-none bg-slate-50 border border-slate-200 rounded p-1"
+                                    >
+                                      {item.emoji}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-4 py-4">
+                            {badges.length === 0 ? (
+                              <span className="text-[10px] text-slate-400 italic font-medium">Ninguna</span>
+                            ) : (
+                              <div className="flex flex-wrap gap-1">
+                                {badges.map(badgeName => {
+                                  const badge = ADMIN_BADGES_LIST.find(b => b.name === badgeName);
+                                  return (
+                                    <span
+                                      key={badgeName}
+                                      title={badgeName}
+                                      className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-emerald-50 border border-emerald-300 text-emerald-700 text-[8px] rounded uppercase font-bold cursor-help"
+                                    >
+                                      {badge?.emoji || '🏆'} {badgeName.substring(0, 8)}...
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-4 py-4 text-right">
+                            <button
+                              onClick={() => handleOpenGamificationEdit(st)}
+                              className="px-3 py-1.5 bg-[#2ec4b6] hover:bg-[#20a396] text-white font-bold border border-[#0d1b2e] shadow-[2px_2px_0_0_#0d1b2e] active:shadow-[0px_0px_0_0_#0d1b2e] active:translate-y-0.5 active:translate-x-0.5 transition-all text-[10px] uppercase cursor-pointer"
+                            >
+                              Gestionar Recompensas
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Modal de Control de Gamificación */}
+            {showGamificationModal && gamificationStudentId && (() => {
+              const student = students.find(s => s.id === gamificationStudentId);
+              if (!student) return null;
+
+              return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                  <div className="w-full max-w-lg bg-white border-4 border-[#0d1b2e] shadow-[8px_8px_0_0_#0d1b2e] flex flex-col max-h-[90vh]">
+                    {/* Header */}
+                    <div className="p-4 border-b border-[#0d1b2e] bg-[#f0f4f8] flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <Award className="w-5 h-5 text-[#2a4e7c]" />
+                        <h3 className="font-bold text-sm uppercase text-[#0d1b2e]">Gestionar Gamificación</h3>
+                      </div>
+                      <button
+                        onClick={() => { setShowGamificationModal(false); setGamificationStudentId(null); }}
+                        className="text-slate-500 hover:text-slate-800"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <form onSubmit={handleSaveGamification} className="p-6 overflow-y-auto space-y-5 text-xs flex-grow">
+                      <div>
+                        <div className="text-slate-800 font-bold text-sm">{student.name}</div>
+                        <div className="text-[10px] text-slate-500">@{student.username}</div>
+                      </div>
+
+                      {/* Chests control */}
+                      <div className="bg-slate-50 border border-slate-200 p-4 rounded">
+                        <label className="font-bold text-slate-600 block mb-2 uppercase tracking-wide text-[10px]">Cofres Listos para Abrir</label>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="number"
+                            min="0"
+                            value={gamificationChestsCount}
+                            onChange={(e) => setGamificationChestsCount(Math.max(0, parseInt(e.target.value) || 0))}
+                            className="w-20 p-2 border-2 border-slate-200 rounded text-center font-mono font-bold focus:outline-none focus:border-[#2a4e7c]"
+                          />
+                          <span className="text-[10px] text-slate-400">Estos cofres le aparecerán al alumno listos para abrir en su Navbar/Dashboard.</span>
+                        </div>
+                      </div>
+
+                      {/* Inventory items checkboxes */}
+                      <div className="space-y-2">
+                        <label className="font-bold text-slate-600 block uppercase tracking-wide text-[10px]">Objetos del Inventario RPG</label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {Object.values(ADMIN_GAME_ITEMS).map(item => {
+                            const active = gamificationInventory.includes(item.id);
+                            return (
+                              <label
+                                key={item.id}
+                                className={`flex items-start gap-3 p-3 border-2 rounded cursor-pointer transition-all ${
+                                  active ? 'border-[#e0a96d] bg-amber-50/30' : 'border-slate-200 bg-white hover:border-slate-300'
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={active}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setGamificationInventory(prev => [...prev, item.id]);
+                                    } else {
+                                      setGamificationInventory(prev => prev.filter(id => id !== item.id));
+                                    }
+                                  }}
+                                  className="mt-0.5 rounded text-amber-500 focus:ring-amber-500"
+                                />
+                                <div>
+                                  <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                                    <span className="text-base">{item.emoji}</span> {item.name}
+                                  </div>
+                                  <div className="text-[8px] font-extrabold uppercase text-slate-400 mt-0.5">{item.rarity}</div>
+                                </div>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Badges checkboxes */}
+                      <div className="space-y-2">
+                        <label className="font-bold text-slate-600 block uppercase tracking-wide text-[10px]">Insignias Obtenidas</label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {ADMIN_BADGES_LIST.map(badge => {
+                            const active = gamificationBadges.includes(badge.name);
+                            return (
+                              <label
+                                key={badge.name}
+                                className={`flex items-start gap-3 p-3 border-2 rounded cursor-pointer transition-all ${
+                                  active ? 'border-emerald-500 bg-emerald-50/20' : 'border-slate-200 bg-white hover:border-slate-300'
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={active}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setGamificationBadges(prev => [...prev, badge.name]);
+                                    } else {
+                                      setGamificationBadges(prev => prev.filter(b => b !== badge.name));
+                                    }
+                                  }}
+                                  className="mt-0.5 rounded text-emerald-500 focus:ring-emerald-500"
+                                />
+                                <div>
+                                  <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                                    <span>{badge.emoji}</span> {badge.name}
+                                  </div>
+                                  <div className="text-[9px] text-slate-400 font-medium leading-tight mt-1">{badge.desc}</div>
+                                </div>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Footer Actions */}
+                      <div className="pt-4 border-t border-[#0d1b2e] flex justify-end gap-3 bg-white">
+                        <button
+                          type="button"
+                          onClick={() => { setShowGamificationModal(false); setGamificationStudentId(null); }}
+                          className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold border border-[#0d1b2e] shadow-[2px_2px_0_0_#0d1b2e] active:shadow-[0px_0px_0_0_#0d1b2e] active:translate-y-0.5 active:translate-x-0.5 transition-all uppercase cursor-pointer"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          type="submit"
+                          className="px-4 py-2 bg-[#2a4e7c] hover:bg-[#1e385c] text-white font-bold border border-[#0d1b2e] shadow-[2px_2px_0_0_#0d1b2e] active:shadow-[0px_0px_0_0_#0d1b2e] active:translate-y-0.5 active:translate-x-0.5 transition-all uppercase cursor-pointer"
+                        >
+                          Guardar Recompensas
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
 

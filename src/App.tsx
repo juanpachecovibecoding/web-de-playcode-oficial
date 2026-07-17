@@ -59,6 +59,7 @@ interface PlatformAula {
   schedule?: string;
   courseIds?: string[];
   meetingUrl?: string;
+  studentIds?: string[];
 }
 
 interface Platform {

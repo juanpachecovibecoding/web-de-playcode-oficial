@@ -86,6 +86,7 @@ interface PlatformAula {
   schedule?: string;
   courseIds?: string[];
   meetingUrl?: string;
+  studentIds?: string[];
 }
 
 interface Platform {
@@ -198,9 +199,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [editAulaName, setEditAulaName] = useState('');
   const [editAulaAge, setEditAulaAge] = useState('');
   const [editAulaModality, setEditAulaModality] = useState<'Presencial' | 'Virtual'>('Presencial');
-  const [editAulaDesc, setEditAulaDesc] = useState('');
+   const [editAulaDesc, setEditAulaDesc] = useState('');
   const [editAulaSchedule, setEditAulaSchedule] = useState('');
   const [editAulaMeetingUrl, setEditAulaMeetingUrl] = useState('');
+
+  // Modal States for Aula creation student selection
+  const [newAulaStudents, setNewAulaStudents] = useState<string[]>([]);
+  const [newAulaStudentSearch, setNewAulaStudentSearch] = useState('');
+  const [isNewAulaStudentDropdownOpen, setIsNewAulaStudentDropdownOpen] = useState(false);
+
+  // Modal States for Aula editing student selection
+  const [editAulaStudents, setEditAulaStudents] = useState<string[]>([]);
+  const [editAulaStudentSearch, setEditAulaStudentSearch] = useState('');
+  const [isEditAulaStudentDropdownOpen, setIsEditAulaStudentDropdownOpen] = useState(false);
 
   // Forum creation & editing states
   const [newPostTitle, setNewPostTitle] = useState('');
@@ -274,19 +285,38 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const handleCreateAula = (e: React.FormEvent, platformId: string) => {
     e.preventDefault();
     if (!newAulaName.trim() || !newAulaAge.trim()) return;
+    const aulaId = 'aula-' + Date.now();
     const newAula: PlatformAula = {
-      id: 'aula-' + Date.now(),
+      id: aulaId,
       name: newAulaName.trim(),
       ageRange: newAulaAge.trim(),
       modality: newAulaModality,
       description: newAulaDesc.trim(),
       schedule: newAulaSchedule.trim(),
       courseIds: newAulaCourseIds,
-      meetingUrl: newAulaModality === 'Virtual' ? newAulaMeetingUrl.trim() : undefined
+      meetingUrl: newAulaModality === 'Virtual' ? newAulaMeetingUrl.trim() : undefined,
+      studentIds: newAulaStudents
     };
+    
+    // Update platforms state
     setPlatforms(prev => prev.map(p =>
       p.id === platformId ? { ...p, aulas: [...p.aulas, newAula] } : p
     ));
+
+    // Update students state to assign selected students to this aula & platform
+    setStudents(prev => prev.map(s => {
+      if (newAulaStudents.includes(s.id)) {
+        const currentAulaIds = s.aulaIds || [];
+        const currentPlatformIds = s.platformIds || [];
+        return {
+          ...s,
+          aulaIds: currentAulaIds.includes(aulaId) ? currentAulaIds : [...currentAulaIds, aulaId],
+          platformIds: currentPlatformIds.includes(platformId) ? currentPlatformIds : [...currentPlatformIds, platformId]
+        };
+      }
+      return s;
+    }));
+
     setNewAulaName('');
     setNewAulaAge('');
     setNewAulaModality('Presencial');
@@ -296,6 +326,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setNewAulaCourseIds([]);
     setNewAulaCourseSearch('');
     setIsNewAulaCourseDropdownOpen(false);
+    setNewAulaStudents([]);
+    setNewAulaStudentSearch('');
+    setIsNewAulaStudentDropdownOpen(false);
     setShowNewAulaForPlatform(null);
   };
 
@@ -303,6 +336,28 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setPlatforms(prev => prev.map(p =>
       p.id === platformId ? { ...p, aulas: p.aulas.filter(a => a.id !== aulaId) } : p
     ));
+    // Also remove this aulaId from students
+    setStudents(prev => prev.map(s => {
+      const currentAulaIds = s.aulaIds || [];
+      if (currentAulaIds.includes(aulaId)) {
+        const nextAulaIds = currentAulaIds.filter(id => id !== aulaId);
+        // Check if student has other aulas in this platform. If not, remove platformId as well
+        const plat = platforms.find(p => p.id === platformId);
+        const hasOtherAulasInPlatform = plat 
+          ? plat.aulas.some(a => a.id !== aulaId && nextAulaIds.includes(a.id))
+          : false;
+        const nextPlatformIds = hasOtherAulasInPlatform
+          ? s.platformIds || []
+          : (s.platformIds || []).filter(id => id !== platformId);
+
+        return {
+          ...s,
+          aulaIds: nextAulaIds,
+          platformIds: nextPlatformIds
+        };
+      }
+      return s;
+    }));
   };
 
   const handleStartEditAula = (platformId: string, aula: PlatformAula) => {
@@ -314,6 +369,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setEditAulaSchedule(aula.schedule || '');
     setEditAulaCourseIds(aula.courseIds || []);
     setEditAulaMeetingUrl(aula.meetingUrl || '');
+    
+    // Load student IDs. If the aula doesn't have studentIds field yet (legacy data),
+    // find all students that currently have this aulaId in their aulaIds.
+    const initialStudents = aula.studentIds || students.filter(s => s.aulaIds?.includes(aula.id)).map(s => s.id);
+    setEditAulaStudents(initialStudents);
+    setEditAulaStudentSearch('');
+    setIsEditAulaStudentDropdownOpen(false);
   };
 
   const handleSaveEditAula = (platformId: string, aulaId: string, e?: React.FormEvent) => {
@@ -333,17 +395,58 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   description: editAulaDesc.trim(),
                   schedule: editAulaSchedule.trim(),
                   courseIds: editAulaCourseIds,
-                  meetingUrl: editAulaModality === 'Virtual' ? editAulaMeetingUrl.trim() : undefined
+                  meetingUrl: editAulaModality === 'Virtual' ? editAulaMeetingUrl.trim() : undefined,
+                  studentIds: editAulaStudents
                 }
               : a
           )
         }
         : p
     ));
+
+    // Update students state
+    setStudents(prev => prev.map(s => {
+      const isSelected = editAulaStudents.includes(s.id);
+      const currentAulaIds = s.aulaIds || [];
+      const currentPlatformIds = s.platformIds || [];
+
+      if (isSelected) {
+        // Add to aulaIds and platformIds if not present
+        return {
+          ...s,
+          aulaIds: currentAulaIds.includes(aulaId) ? currentAulaIds : [...currentAulaIds, aulaId],
+          platformIds: currentPlatformIds.includes(platformId) ? currentPlatformIds : [...currentPlatformIds, platformId]
+        };
+      } else {
+        // Remove from aulaIds if present
+        if (currentAulaIds.includes(aulaId)) {
+          const nextAulaIds = currentAulaIds.filter(id => id !== aulaId);
+          // Check if student has other aulas in this platform. If not, remove platformId as well
+          const plat = platforms.find(p => p.id === platformId);
+          const hasOtherAulasInPlatform = plat 
+            ? plat.aulas.some(a => a.id !== aulaId && nextAulaIds.includes(a.id))
+            : false;
+          const nextPlatformIds = hasOtherAulasInPlatform
+            ? currentPlatformIds
+            : currentPlatformIds.filter(id => id !== platformId);
+
+          return {
+            ...s,
+            aulaIds: nextAulaIds,
+            platformIds: nextPlatformIds
+          };
+        }
+      }
+      return s;
+    }));
+
     setEditAulaCourseIds([]);
     setEditAulaCourseSearch('');
     setIsEditAulaCourseDropdownOpen(false);
     setEditAulaMeetingUrl('');
+    setEditAulaStudents([]);
+    setEditAulaStudentSearch('');
+    setIsEditAulaStudentDropdownOpen(false);
     setEditingAula(null);
   };
 
@@ -543,20 +646,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [newClassName, setNewClassName] = useState('');
   const [newClassDescription, setNewClassDescription] = useState('');
   const [newClassImageUrl, setNewClassImageUrl] = useState('');
-  const [selectedClassStudents, setSelectedClassStudents] = useState<string[]>([]);
 
   // Modal States for Editing Class
   const [editingClass, setEditingClass] = useState<Classroom | null>(null);
   const [editClassName, setEditClassName] = useState('');
   const [editClassDescription, setEditClassDescription] = useState('');
   const [editClassImageUrl, setEditClassImageUrl] = useState('');
-  const [selectedEditClassStudents, setSelectedEditClassStudents] = useState<string[]>([]);
-
-  // Search filters for Modals
-  const [addStudentSearch, setAddStudentSearch] = useState('');
-  const [editStudentSearch, setEditStudentSearch] = useState('');
-  const [isAddStudentDropdownOpen, setIsAddStudentDropdownOpen] = useState(false);
-  const [isEditStudentDropdownOpen, setIsEditStudentDropdownOpen] = useState(false);
 
   // Lesson Selection States in Class Modals
   const [selectedClassLessons, setSelectedClassLessons] = useState<string[]>([]);
@@ -744,16 +839,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       name: newClassName,
       description: newClassDescription,
       imageUrl: newClassImageUrl || undefined,
-      students: selectedClassStudents,
+      students: [],
       lessonIds: selectedClassLessons
     };
     setClassrooms([...classrooms, newClass]);
     setNewClassName('');
     setNewClassDescription('');
     setNewClassImageUrl('');
-    setSelectedClassStudents([]);
     setSelectedClassLessons([]);
-    setAddStudentSearch('');
     setAddClassLessonSearch('');
     setShowAddClassModal(false);
   };
@@ -769,10 +862,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setEditClassName(cls.name);
     setEditClassDescription(cls.description);
     setEditClassImageUrl(cls.imageUrl || '');
-    setSelectedEditClassStudents(cls.students);
     setSelectedEditClassLessons(cls.lessonIds || []);
-
-    setEditStudentSearch('');
     setEditClassLessonSearch('');
   };
 
@@ -784,10 +874,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       name: editClassName,
       description: editClassDescription,
       imageUrl: editClassImageUrl || undefined,
-      students: selectedEditClassStudents,
       lessonIds: selectedEditClassLessons
     } : c));
-    setEditStudentSearch('');
     setEditClassLessonSearch('');
     setEditClassImageUrl('');
     setEditingClass(null);
@@ -2443,7 +2531,96 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 </div>
                               </div>
                             )}
+
+                            {/* Predictive search of students */}
+                            <div className="space-y-1 col-span-full relative">
+                              <label className="text-[10px] font-bold text-[#6180a6] block font-mono">ASIGNAR USUARIOS A ESTA CLASE</label>
+                              <div className="relative">
+                                <input
+                                  type="text"
+                                  value={newAulaStudentSearch}
+                                  onChange={e => {
+                                    setNewAulaStudentSearch(e.target.value);
+                                    setIsNewAulaStudentDropdownOpen(true);
+                                  }}
+                                  onFocus={() => setIsNewAulaStudentDropdownOpen(true)}
+                                  placeholder="🔍 Buscar usuario por nombre o curso..."
+                                  className="w-full px-2 py-1.5 border-2 border-[#0d1b2e] text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#2a4e7c] bg-white"
+                                />
+                                {newAulaStudentSearch.trim().length > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => { setNewAulaStudentSearch(''); setIsNewAulaStudentDropdownOpen(false); }}
+                                    className="absolute right-2 top-2 text-slate-400 hover:text-slate-650 cursor-pointer"
+                                  >
+                                    ✕
+                                  </button>
+                                )}
+                              </div>
+
+                              {isNewAulaStudentDropdownOpen && (() => {
+                                const filteredStudents = students.filter(st =>
+                                  !newAulaStudents.includes(st.id) &&
+                                  (st.name.toLowerCase().includes(newAulaStudentSearch.toLowerCase()) ||
+                                    (st.course || '').toLowerCase().includes(newAulaStudentSearch.toLowerCase()))
+                                );
+
+                                return (
+                                  <>
+                                    <div className="fixed inset-0 z-40" onClick={() => setIsNewAulaStudentDropdownOpen(false)} />
+                                    <div className="absolute z-50 w-full mt-1 bg-white border-2 border-[#0d1b2e] shadow-[3px_3px_0_0_#000000] max-h-40 overflow-y-auto rounded text-[11px]">
+                                      {filteredStudents.map(st => (
+                                        <button
+                                          key={st.id}
+                                          type="button"
+                                          onClick={() => {
+                                            setNewAulaStudents([...newAulaStudents, st.id]);
+                                            setNewAulaStudentSearch('');
+                                            setIsNewAulaStudentDropdownOpen(false);
+                                          }}
+                                          className="w-full text-left px-3 py-1.5 hover:bg-[#f0f4f8] border-b last:border-0 border-slate-100 flex flex-col cursor-pointer"
+                                        >
+                                          <span className="font-semibold text-slate-800 text-[11px]">{st.name}</span>
+                                          <span className="text-[9px] text-slate-400 font-normal">{st.course || 'Sin curso'}</span>
+                                        </button>
+                                      ))}
+                                      {filteredStudents.length === 0 && (
+                                        <div className="p-2.5 text-slate-400 italic text-[10px] text-center">
+                                          No se encontraron usuarios disponibles.
+                                        </div>
+                                      )}
+                                    </div>
+                                  </>
+                                );
+                              })()}
+                            </div>
+
+                            {/* Selected students badges */}
+                            {newAulaStudents.length > 0 && (
+                              <div className="col-span-full">
+                                <label className="font-semibold text-slate-500 block mb-1 text-[10px]">Usuarios Asignados:</label>
+                                <div className="flex flex-wrap gap-1.5 p-2 border border-slate-200 rounded bg-slate-50 max-h-24 overflow-y-auto">
+                                  {newAulaStudents.map(id => {
+                                    const st = students.find(s => s.id === id);
+                                    if (!st) return null;
+                                    return (
+                                      <span key={id} className="inline-flex items-center gap-1.5 px-2 py-1 bg-white border-2 border-[#0d1b2e] text-[#0d1b2e] font-bold text-[9px] rounded uppercase shadow-[1px_1px_0_0_#000000]">
+                                        {st.name} <span className="text-[8px] text-slate-400 font-normal">({st.course || 'Sin curso'})</span>
+                                        <button
+                                          type="button"
+                                          onClick={() => setNewAulaStudents(newAulaStudents.filter(sid => sid !== id))}
+                                          className="text-slate-400 hover:text-red-500 font-bold ml-1 cursor-pointer"
+                                        >
+                                          ✕
+                                        </button>
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
                           </div>
+
                           <div className="flex gap-2 justify-end">
                             <button type="button" onClick={() => { setShowNewAulaForPlatform(null); setNewAulaSchedule(''); }} className="px-3 py-1.5 border border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer">Cancelar</button>
                             <button type="submit" className="px-3 py-1.5 bg-[#2a4e7c] hover:bg-[#1e385c] text-white text-xs font-bold border-2 border-[#0d1b2e] shadow-[1.5px_1.5px_0_0_#000000] cursor-pointer">Agregar Aula</button>
@@ -3269,95 +3446,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
 
 
-              <div className="relative">
-                <label className="font-bold text-[#6180a6] block mb-1">Añadir Usuarios a esta Clase</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="🔍 Buscar usuario por nombre o curso..."
-                    value={addStudentSearch}
-                    onChange={(e) => {
-                      setAddStudentSearch(e.target.value);
-                      setIsAddStudentDropdownOpen(true);
-                    }}
-                    onFocus={() => setIsAddStudentDropdownOpen(true)}
-                    onBlur={() => setTimeout(() => setIsAddStudentDropdownOpen(false), 200)}
-                    className="w-full p-2 border border-[#a3b8cc] rounded text-slate-900 focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] bg-white font-semibold text-[11px]"
-                  />
-                  {addStudentSearch && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAddStudentSearch('');
-                        setIsAddStudentDropdownOpen(false);
-                      }}
-                      className="absolute right-2 top-2 text-slate-400 hover:text-slate-600 font-bold px-1.5 cursor-pointer text-xs"
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
 
-                {isAddStudentDropdownOpen && addStudentSearch.trim().length > 0 && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border-2 border-[#0d1b2e] shadow-[3px_3px_0_0_#000000] max-h-40 overflow-y-auto rounded text-[11px]">
-                    {students
-                      .filter(st =>
-                        !selectedClassStudents.includes(st.id) &&
-                        (st.name.toLowerCase().includes(addStudentSearch.toLowerCase()) ||
-                          (st.course || '').toLowerCase().includes(addStudentSearch.toLowerCase()))
-                      )
-                      .map(st => (
-                        <button
-                          key={st.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedClassStudents([...selectedClassStudents, st.id]);
-                            setAddStudentSearch('');
-                            setIsAddStudentDropdownOpen(false);
-                          }}
-                          className="w-full text-left px-3 py-1.5 hover:bg-[#f0f4f8] border-b last:border-0 border-slate-100 flex flex-col cursor-pointer"
-                        >
-                          <span className="font-semibold text-slate-800">{st.name}</span>
-                          <span className="text-[9px] text-slate-400">{st.course || 'Sin curso'}</span>
-                        </button>
-                      ))}
-                    {students.filter(st =>
-                      !selectedClassStudents.includes(st.id) &&
-                      (st.name.toLowerCase().includes(addStudentSearch.toLowerCase()) ||
-                        (st.course || '').toLowerCase().includes(addStudentSearch.toLowerCase()))
-                    ).length === 0 && (
-                        <div className="p-2.5 text-slate-400 italic text-[10px] text-center">
-                          No se encontraron usuarios disponibles.
-                        </div>
-                      )}
-                  </div>
-                )}
-
-                {/* Selected Students Badges */}
-                {selectedClassStudents.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-2 max-h-24 overflow-y-auto p-1 border border-slate-100 rounded bg-slate-50">
-                    {selectedClassStudents.map(id => {
-                      const st = students.find(s => s.id === id);
-                      if (!st) return null;
-                      return (
-                        <span
-                          key={id}
-                          className="inline-flex items-center gap-1 bg-white border-2 border-[#0d1b2e] px-2 py-0.5 rounded font-bold text-slate-800 text-[10px] shadow-[1.5px_1.5px_0_0_#000000]"
-                        >
-                          {st.name} <span className="text-[8px] text-slate-400 font-semibold">({st.course})</span>
-                          <button
-                            type="button"
-                            onClick={() => setSelectedClassStudents(selectedClassStudents.filter(sid => sid !== id))}
-                            className="text-slate-400 hover:text-red-500 font-bold ml-1 cursor-pointer"
-                          >
-                            ✕
-                          </button>
-                        </span>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
 
               <div className="relative">
                 <label className="font-bold text-[#6180a6] block mb-1">Vincular Lecciones a esta Clase</label>
@@ -3511,95 +3600,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
 
 
-              <div className="relative">
-                <label className="font-bold text-[#6180a6] block mb-1">Asignar Usuarios a esta Clase</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="🔍 Buscar usuario por nombre o curso..."
-                    value={editStudentSearch}
-                    onChange={(e) => {
-                      setEditStudentSearch(e.target.value);
-                      setIsEditStudentDropdownOpen(true);
-                    }}
-                    onFocus={() => setIsEditStudentDropdownOpen(true)}
-                    onBlur={() => setTimeout(() => setIsEditStudentDropdownOpen(false), 200)}
-                    className="w-full p-2 border border-[#a3b8cc] rounded text-slate-900 focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] bg-white font-semibold text-[11px]"
-                  />
-                  {editStudentSearch && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditStudentSearch('');
-                        setIsEditStudentDropdownOpen(false);
-                      }}
-                      className="absolute right-2 top-2 text-slate-400 hover:text-slate-600 font-bold px-1.5 cursor-pointer text-xs"
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
 
-                {isEditStudentDropdownOpen && editStudentSearch.trim().length > 0 && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border-2 border-[#0d1b2e] shadow-[3px_3px_0_0_#000000] max-h-40 overflow-y-auto rounded text-[11px]">
-                    {students
-                      .filter(st =>
-                        !selectedEditClassStudents.includes(st.id) &&
-                        (st.name.toLowerCase().includes(editStudentSearch.toLowerCase()) ||
-                          (st.course || '').toLowerCase().includes(editStudentSearch.toLowerCase()))
-                      )
-                      .map(st => (
-                        <button
-                          key={st.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedEditClassStudents([...selectedEditClassStudents, st.id]);
-                            setEditStudentSearch('');
-                            setIsEditStudentDropdownOpen(false);
-                          }}
-                          className="w-full text-left px-3 py-1.5 hover:bg-[#f0f4f8] border-b last:border-0 border-slate-100 flex flex-col cursor-pointer"
-                        >
-                          <span className="font-semibold text-slate-800">{st.name}</span>
-                          <span className="text-[9px] text-slate-400">{st.course || 'Sin curso'}</span>
-                        </button>
-                      ))}
-                    {students.filter(st =>
-                      !selectedEditClassStudents.includes(st.id) &&
-                      (st.name.toLowerCase().includes(editStudentSearch.toLowerCase()) ||
-                        (st.course || '').toLowerCase().includes(editStudentSearch.toLowerCase()))
-                    ).length === 0 && (
-                        <div className="p-2.5 text-slate-400 italic text-[10px] text-center">
-                          No se encontraron usuarios disponibles.
-                        </div>
-                      )}
-                  </div>
-                )}
-
-                {/* Selected Students Badges */}
-                {selectedEditClassStudents.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-2 max-h-24 overflow-y-auto p-1 border border-slate-100 rounded bg-slate-50">
-                    {selectedEditClassStudents.map(id => {
-                      const st = students.find(s => s.id === id);
-                      if (!st) return null;
-                      return (
-                        <span
-                          key={id}
-                          className="inline-flex items-center gap-1 bg-white border-2 border-[#0d1b2e] px-2 py-0.5 rounded font-bold text-slate-800 text-[10px] shadow-[1.5px_1.5px_0_0_#000000]"
-                        >
-                          {st.name} <span className="text-[8px] text-slate-400 font-semibold">({st.course})</span>
-                          <button
-                            type="button"
-                            onClick={() => setSelectedEditClassStudents(selectedEditClassStudents.filter(sid => sid !== id))}
-                            className="text-slate-400 hover:text-red-500 font-bold ml-1 cursor-pointer"
-                          >
-                            ✕
-                          </button>
-                        </span>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
 
               <div className="relative">
                 <label className="font-bold text-[#6180a6] block mb-1">Vincular Lecciones a esta Clase</label>
@@ -3985,6 +3986,94 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             type="button"
                             onClick={() => setEditAulaCourseIds(editAulaCourseIds.filter(cid => cid !== id))}
                             className="text-[#ffe66d] hover:text-white font-bold ml-1 cursor-pointer"
+                          >
+                            ✕
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Predictive search of students */}
+              <div className="relative col-span-full">
+                <label className="font-bold text-[#6180a6] block mb-1">Asignar Usuarios a esta Clase</label>
+                <div className="relative flex items-center">
+                  <input
+                    type="text"
+                    placeholder="🔍 Buscar usuario por nombre o curso..."
+                    value={editAulaStudentSearch}
+                    onChange={(e) => {
+                      setEditAulaStudentSearch(e.target.value);
+                      setIsEditAulaStudentDropdownOpen(true);
+                    }}
+                    onFocus={() => setIsEditAulaStudentDropdownOpen(true)}
+                    className="w-full p-2 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-slate-900 font-medium text-xs"
+                  />
+                  {editAulaStudentSearch && (
+                    <button
+                      type="button"
+                      onClick={() => { setEditAulaStudentSearch(''); setIsEditAulaStudentDropdownOpen(false); }}
+                      className="absolute right-2 text-slate-400 hover:text-slate-650 cursor-pointer"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                {isEditAulaStudentDropdownOpen && (() => {
+                  const filteredStudents = students.filter(st =>
+                    !editAulaStudents.includes(st.id) &&
+                    (st.name.toLowerCase().includes(editAulaStudentSearch.toLowerCase()) ||
+                      (st.course || '').toLowerCase().includes(editAulaStudentSearch.toLowerCase()))
+                  );
+
+                  return (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setIsEditAulaStudentDropdownOpen(false)} />
+                      <div className="absolute z-50 w-full mt-1 bg-white border-2 border-[#0d1b2e] shadow-[3px_3px_0_0_#000000] max-h-40 overflow-y-auto rounded text-[11px]">
+                        {filteredStudents.map(st => (
+                          <button
+                            key={st.id}
+                            type="button"
+                            onClick={() => {
+                              setEditAulaStudents([...editAulaStudents, st.id]);
+                              setEditAulaStudentSearch('');
+                              setIsEditAulaStudentDropdownOpen(false);
+                            }}
+                            className="w-full text-left px-3 py-2 hover:bg-[#f0f4f8] border-b last:border-0 border-slate-100 flex flex-col cursor-pointer"
+                          >
+                            <span className="font-semibold text-slate-800">{st.name}</span>
+                            <span className="text-[9px] text-slate-400 font-normal">{st.course || 'Sin curso'}</span>
+                          </button>
+                        ))}
+                        {filteredStudents.length === 0 && (
+                          <div className="p-2.5 text-slate-400 italic text-[10px] text-center">
+                            No se encontraron usuarios disponibles.
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+
+              {/* Badges de estudiantes asignados */}
+              {editAulaStudents.length > 0 && (
+                <div className="col-span-full">
+                  <label className="font-semibold text-slate-500 block mb-1 text-[10px]">Usuarios Asignados:</label>
+                  <div className="flex flex-wrap gap-1.5 p-2 border border-slate-200 rounded bg-slate-50 max-h-24 overflow-y-auto">
+                    {editAulaStudents.map(id => {
+                      const st = students.find(s => s.id === id);
+                      if (!st) return null;
+                      return (
+                        <span key={id} className="inline-flex items-center gap-1.5 px-2 py-1 bg-white border-2 border-[#0d1b2e] text-[#0d1b2e] font-bold text-[9px] rounded uppercase shadow-[1px_1px_0_0_#000000]">
+                          {st.name} <span className="text-[8px] text-slate-400 font-normal">({st.course || 'Sin curso'})</span>
+                          <button
+                            type="button"
+                            onClick={() => setEditAulaStudents(editAulaStudents.filter(sid => sid !== id))}
+                            className="text-slate-400 hover:text-red-500 font-bold ml-1 cursor-pointer"
                           >
                             ✕
                           </button>

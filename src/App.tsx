@@ -217,6 +217,9 @@ const App: React.FC = () => {
   });
 
   const [loading, setLoading] = useState(true);
+  const [dbStatus, setDbStatus] = useState<'connecting' | 'connected' | 'error'>('connecting');
+  const [dbError, setDbError] = useState<string | null>(null);
+  const [dbLoaded, setDbLoaded] = useState(false);
 
   // Helper to sync arrays to Firestore (adds, updates, and deletes)
   const syncCollection = async (collectionName: string, items: any[]) => {
@@ -234,14 +237,19 @@ const App: React.FC = () => {
           await deleteDoc(doc(db, collectionName, d.id));
         }
       }
-    } catch (err) {
+      setDbStatus('connected');
+      setDbError(null);
+    } catch (err: any) {
       console.error(`Error syncing ${collectionName} to Firebase:`, err);
+      setDbStatus('error');
+      setDbError(err.message || String(err));
     }
   };
 
   // Load data from Firebase on mount
   React.useEffect(() => {
     const fetchData = async () => {
+      setDbStatus('connecting');
       try {
         // 1. Fetch Courses
         const coursesSnap = await getDocs(collection(db, 'courses'));
@@ -387,7 +395,7 @@ const App: React.FC = () => {
               aulas: [
                 { id: 'aula-1', name: 'Aula Maker', ageRange: '6 a 8 años', modality: 'Presencial', description: 'Introducción a la tecnología y la creatividad digital.', schedule: 'Lunes y Miércoles 18:00', courseIds: ['1'] },
                 { id: 'aula-2', name: 'Robótica y Programación', ageRange: '9 a 14 años', modality: 'Presencial', description: 'Programación con robots y proyectos STEAM.', schedule: 'Martes y Jueves 17:30', courseIds: ['2'] },
-                { id: 'aula-3', name: 'PlayCoders', ageRange: '9 a 13 años', modality: 'Virtual', description: 'Programación y desarrollo web en modal online.', schedule: 'Sábados 10:00', courseIds: ['3'] }
+                { id: 'aula-3', name: 'PlayCoders', ageRange: '9 a 13 años', modality: 'Virtual', description: 'Programación y desarrollo web en modalidad online.', schedule: 'Sábados 10:00', courseIds: ['3'] }
               ]
             }
           ];
@@ -400,8 +408,13 @@ const App: React.FC = () => {
         }
         setPlatforms(loadedPlatforms);
 
-      } catch (err) {
+        setDbLoaded(true);
+        setDbStatus('connected');
+        setDbError(null);
+      } catch (err: any) {
         console.error("Error loading data from Firebase:", err);
+        setDbStatus('error');
+        setDbError(err.message || String(err));
       } finally {
         setLoading(false);
       }
@@ -410,42 +423,42 @@ const App: React.FC = () => {
     fetchData();
   }, []);
 
-  // Sync state changes with localStorage and Firebase (only after loading is complete)
+  // Sync state changes with localStorage and Firebase (only after loading and dbLoaded are complete)
   React.useEffect(() => {
-    if (loading) return;
+    if (loading || !dbLoaded) return;
     localStorage.setItem('playcode_platforms', JSON.stringify(platforms));
     syncCollection('platforms', platforms);
-  }, [platforms, loading]);
+  }, [platforms, loading, dbLoaded]);
 
   React.useEffect(() => {
-    if (loading) return;
+    if (loading || !dbLoaded) return;
     localStorage.setItem('playcode_lessons', JSON.stringify(lessons));
     syncCollection('lessons', lessons);
-  }, [lessons, loading]);
+  }, [lessons, loading, dbLoaded]);
 
   React.useEffect(() => {
-    if (loading) return;
+    if (loading || !dbLoaded) return;
     localStorage.setItem('playcode_courses', JSON.stringify(courses));
     syncCollection('courses', courses);
-  }, [courses, loading]);
+  }, [courses, loading, dbLoaded]);
 
   React.useEffect(() => {
-    if (loading) return;
+    if (loading || !dbLoaded) return;
     localStorage.setItem('playcode_students', JSON.stringify(students));
     syncCollection('students', students);
-  }, [students, loading]);
+  }, [students, loading, dbLoaded]);
 
   React.useEffect(() => {
-    if (loading) return;
+    if (loading || !dbLoaded) return;
     localStorage.setItem('playcode_meetings', JSON.stringify(meetings));
     syncCollection('meetings', meetings);
-  }, [meetings, loading]);
+  }, [meetings, loading, dbLoaded]);
 
   React.useEffect(() => {
-    if (loading) return;
+    if (loading || !dbLoaded) return;
     localStorage.setItem('playcode_classrooms', JSON.stringify(classrooms));
     syncCollection('classrooms', classrooms);
-  }, [classrooms, loading]);
+  }, [classrooms, loading, dbLoaded]);
 
   React.useEffect(() => {
     if (user) {
@@ -628,6 +641,9 @@ const App: React.FC = () => {
         setLessons={setLessons}
         platforms={platforms}
         setPlatforms={setPlatforms}
+        dbStatus={dbStatus}
+        dbError={dbError}
+        firebaseProjectId={db.app.options.projectId || 'playcode-39ce5'}
       />
     );
   }
@@ -647,6 +663,9 @@ const App: React.FC = () => {
           onSaveProfile={(updated) => {
             setStudents(prev => prev.map(s => s.id === updated.id ? updated : s));
           }}
+          dbStatus={dbStatus}
+          dbError={dbError}
+          firebaseProjectId={db.app.options.projectId || 'playcode-39ce5'}
         />
       );
     }

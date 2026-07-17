@@ -109,6 +109,9 @@ interface AdminDashboardProps {
   setLessons: React.Dispatch<React.SetStateAction<Lesson[]>>;
   platforms: Platform[];
   setPlatforms: React.Dispatch<React.SetStateAction<Platform[]>>;
+  dbStatus: 'connecting' | 'connected' | 'error';
+  dbError: string | null;
+  firebaseProjectId: string;
 }
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
@@ -126,7 +129,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   lessons,
   setLessons,
   platforms,
-  setPlatforms
+  setPlatforms,
+  dbStatus,
+  dbError,
+  firebaseProjectId
 }) => {
   void setCourses;
   void courses;
@@ -959,6 +965,39 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
         </header>
 
+        {dbStatus === 'error' && (
+          <div className="bg-rose-50 border-2 border-rose-600 p-5 shadow-[4px_4px_0_0_#e11d48] mb-8">
+            <div className="flex gap-3">
+              <div className="text-rose-600 font-bold text-xl shrink-0">⚠️</div>
+              <div className="space-y-1.5 text-xs text-rose-950">
+                <h4 className="font-bold text-sm uppercase tracking-wider text-rose-900">
+                  Error de Conexión con Firestore
+                </h4>
+                <p>
+                  Los cambios que realices actualmente solo se guardarán localmente en este navegador. No se sincronizarán con la base de datos central en la nube ni se verán en otros dispositivos.
+                </p>
+                <div className="bg-white/70 border border-rose-200 p-2.5 rounded font-mono text-[10px] text-rose-800 break-all select-all">
+                  <strong>Detalle técnico del error:</strong> {dbError || 'Unknown connection error.'}
+                </div>
+                <div className="pt-2">
+                  <h5 className="font-bold text-rose-900">Posibles causas y soluciones:</h5>
+                  <ul className="list-disc pl-4 space-y-1 mt-1">
+                    <li>
+                      <strong>Bloqueador de anuncios (Adblocker) activo:</strong> Brave, uBlock Origin o extensiones similares pueden estar bloqueando las solicitudes a <code>firestore.googleapis.com</code>. Prueba desactivando el adblocker en esta pestaña.
+                    </li>
+                    <li>
+                      <strong>Falta de configuración en Vercel:</strong> Si este despliegue está en Vercel y no configuraste las variables de entorno, la plataforma intenta usar las credenciales de respaldo. Asegúrate de configurar las variables <code>VITE_FIREBASE_API_KEY</code>, etc., en tu panel de control de Vercel para una sincronización óptima.
+                    </li>
+                    <li>
+                      <strong>Reglas de seguridad expiradas:</strong> Las reglas de Firebase Firestore podrían haber expirado o estar configuradas en modo cerrado. Verifica las reglas de Firestore en la consola de Firebase.
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Dynamic Tab Rendering */}
 
         {/* INICIO TAB */}
@@ -987,12 +1026,32 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <span className="text-[10px] font-medium text-slate-500 block mt-2.5">Google Meet disponibles</span>
               </div>
 
-              <div className="bg-white border-2 border-[#0d1b2e] p-5 shadow-[4px_4px_0_0_#0d1b2e] hover:-translate-y-0.5 transition-all">
-                <span className="text-[10px] font-bold text-[#6180a6] uppercase block mb-1">Plataforma Cloud</span>
-                <span className="text-lg font-bold text-[#0d1b2e] block truncate">edu.playcode.com.ar</span>
-                <div className="mt-2 flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-[#2a4e7c] animate-ping"></span>
-                  <span className="text-[9px] font-bold text-[#2a4e7c]">ONLINE</span>
+              <div className="bg-white border-2 border-[#0d1b2e] p-5 shadow-[4px_4px_0_0_#0d1b2e] hover:-translate-y-0.5 transition-all flex flex-col justify-between">
+                <div>
+                  <span className="text-[10px] font-bold text-[#6180a6] uppercase block mb-1">Base de Datos (Firestore)</span>
+                  <span className="text-sm font-bold text-[#0d1b2e] block truncate font-mono" title={firebaseProjectId}>
+                    {firebaseProjectId}
+                  </span>
+                </div>
+                <div className="mt-3 flex items-center gap-2">
+                  {dbStatus === 'connected' && (
+                    <>
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <span className="text-[10px] font-bold text-emerald-600">CONECTADO</span>
+                    </>
+                  )}
+                  {dbStatus === 'connecting' && (
+                    <>
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping"></span>
+                      <span className="text-[10px] font-bold text-amber-600">CONECTANDO...</span>
+                    </>
+                  )}
+                  {dbStatus === 'error' && (
+                    <>
+                      <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                      <span className="text-[10px] font-bold text-rose-600">ERROR DE CONEXIÓN</span>
+                    </>
+                  )}
                 </div>
               </div>
 

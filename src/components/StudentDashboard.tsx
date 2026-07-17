@@ -127,6 +127,9 @@ interface StudentDashboardProps {
   platforms: Platform[];
   onLogout: () => void;
   onSaveProfile: (updated: Student) => void;
+  dbStatus: 'connecting' | 'connected' | 'error';
+  dbError: string | null;
+  firebaseProjectId: string;
 }
 
 interface ThemeStyles {
@@ -215,9 +218,13 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   courses,
   platforms,
   onLogout,
-  onSaveProfile
+  onSaveProfile,
+  dbStatus,
+  dbError,
+  firebaseProjectId
 }) => {
   void courses; // courses prop kept for API compatibility; aula courses now use classrooms
+  void firebaseProjectId;
   void meetings;
   const [activeTab, setActiveTab] = useState<'aprendizaje' | 'perfil' | 'foro'>('aprendizaje');
   const [hideLessonsSidebar, setHideLessonsSidebar] = useState(false);
@@ -479,6 +486,28 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
           {/* Right side: User Profile Info & Logout */}
           <div className="flex items-center gap-3">
+            {/* Database Sync Status Badge */}
+            <div className="flex items-center gap-1.5 px-2 py-1 bg-white/5 border border-white/10 rounded font-mono text-[9px]">
+              {dbStatus === 'connected' && (
+                <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span className="text-emerald-400 font-bold uppercase hidden md:inline">Sincronizado</span>
+                </>
+              )}
+              {dbStatus === 'connecting' && (
+                <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
+                  <span className="text-amber-400 font-bold uppercase hidden md:inline">Conectando</span>
+                </>
+              )}
+              {dbStatus === 'error' && (
+                <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                  <span className="text-rose-400 font-bold uppercase hover:underline" title={dbError || 'Error de conexión'}>Modo Local</span>
+                </>
+              )}
+            </div>
+
             <div className="hidden lg:flex items-center gap-2">
               {customPhotoUrl ? (
                 <img

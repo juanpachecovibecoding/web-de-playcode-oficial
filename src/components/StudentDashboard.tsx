@@ -737,15 +737,27 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                   <div className="space-y-6">
                     <div className="flex flex-wrap gap-2 items-center justify-between border-b border-slate-200 pb-4">
                       <div>
-                        <button 
-                          onClick={() => {
-                            setSelectedPlatformCourse(null);
-                            setSelectedPlatformLesson(null);
-                          }}
-                          className="flex items-center gap-1.5 px-3 py-1 bg-slate-100 hover:bg-slate-200 border-2 border-[#0d1b2e] font-bold text-[10px] rounded cursor-pointer transition-all shadow-[1.5px_1.5px_0_0_#000000] active:translate-y-[1.5px] active:shadow-[0px_0px_0_0_#000000]"
-                        >
-                          <ArrowLeft className="w-3.5 h-3.5" /> Volver al Aula
-                        </button>
+                        <div className="flex flex-wrap items-center gap-3">
+                          <button 
+                            onClick={() => {
+                              setSelectedPlatformCourse(null);
+                              setSelectedPlatformLesson(null);
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border-2 border-[#0d1b2e] font-bold text-[10px] rounded cursor-pointer transition-all shadow-[1.5px_1.5px_0_0_#000000] active:translate-y-[1.5px] active:shadow-[0px_0px_0_0_#000000]"
+                          >
+                            <ArrowLeft className="w-3.5 h-3.5" /> Volver al Aula
+                          </button>
+
+                          {selectedPlatformLesson && (
+                            <button
+                              onClick={() => setHideLessonsSidebar(!hideLessonsSidebar)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2a4e7c] hover:bg-[#1e385c] text-white border-2 border-[#0d1b2e] font-bold text-[10px] rounded cursor-pointer transition-all shadow-[1.5px_1.5px_0_0_#000000] active:translate-y-[1.5px] active:shadow-[0px_0px_0_0_#000000]"
+                            >
+                              <BookOpen className="w-3.5 h-3.5" />
+                              {hideLessonsSidebar ? "Mostrar lista de lecciones" : "Ocultar lista de lecciones"}
+                            </button>
+                          )}
+                        </div>
                         <h3 className="text-xl font-bold mt-4 text-[#0d1b2e]">{selectedPlatformCourse.name}</h3>
                         <p className="text-xs text-slate-500 font-medium">Contenido didáctico del curso en {selectedPlatformAula.name}</p>
                       </div>

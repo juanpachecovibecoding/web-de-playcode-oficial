@@ -128,6 +128,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   setPlatforms
 }) => {
   void setCourses;
+  void courses;
   const [activeTab, setActiveTab] = useState<'inicio' | 'cursos' | 'usuarios' | 'docentes' | 'clases' | 'meetings' | 'contenido' | 'config' | 'foro' | 'plataformas'>('inicio');
 
   // Platforms state is received from props!
@@ -2156,9 +2157,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               </div>
 
                               {isNewAulaCourseDropdownOpen && (() => {
-                                const filteredCourses = courses.filter(c =>
+                                const filteredCourses = classrooms.filter(c =>
                                   !newAulaCourseIds.includes(c.id) &&
-                                  c.title.toLowerCase().includes(newAulaCourseSearch.toLowerCase())
+                                  c.name.toLowerCase().includes(newAulaCourseSearch.toLowerCase())
                                 );
 
                                 return (
@@ -2176,8 +2177,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                           }}
                                           className="w-full text-left px-3 py-2 hover:bg-[#f0f4f8] border-b last:border-0 border-slate-100 flex flex-col cursor-pointer"
                                         >
-                                          <span className="font-semibold text-slate-800 text-[11px]">{course.title}</span>
-                                          <span className="text-[9px] text-slate-400 font-normal">{course.ageGroup}</span>
+                                          <span className="font-semibold text-slate-800 text-[11px]">{course.name}</span>
+                                          {course.description && (
+                                            <span className="text-[9px] text-slate-400 font-normal truncate max-w-[280px]">{course.description}</span>
+                                          )}
                                         </button>
                                       ))}
                                       {filteredCourses.length === 0 && (
@@ -2197,11 +2200,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 <label className="font-semibold text-slate-500 block mb-1 text-[10px]">Cursos Vinculados:</label>
                                 <div className="flex flex-wrap gap-1.5 p-2 border border-slate-200 rounded bg-slate-50 max-h-24 overflow-y-auto">
                                   {newAulaCourseIds.map(id => {
-                                    const course = courses.find(c => c.id === id);
+                                    const course = classrooms.find(c => c.id === id);
                                     if (!course) return null;
                                     return (
                                       <span key={id} className="inline-flex items-center gap-1.5 px-2 py-1 bg-[#2a4e7c] text-white font-bold text-[9px] rounded uppercase shadow-[1px_1px_0_0_#000000]">
-                                        {course.title}
+                                        {course.name}
                                         <button
                                           type="button"
                                           onClick={() => setNewAulaCourseIds(newAulaCourseIds.filter(cid => cid !== id))}
@@ -3651,9 +3654,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
 
                 {isEditAulaCourseDropdownOpen && (() => {
-                  const filteredCourses = courses.filter(c =>
+                  const filteredCourses = classrooms.filter(c =>
                     !editAulaCourseIds.includes(c.id) &&
-                    c.title.toLowerCase().includes(editAulaCourseSearch.toLowerCase())
+                    c.name.toLowerCase().includes(editAulaCourseSearch.toLowerCase())
                   );
 
                   return (
@@ -3671,8 +3674,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             }}
                             className="w-full text-left px-3 py-2 hover:bg-[#f0f4f8] border-b last:border-0 border-slate-100 flex flex-col cursor-pointer"
                           >
-                            <span className="font-semibold text-slate-800">{course.title}</span>
-                            <span className="text-[9px] text-slate-400">{course.ageGroup}</span>
+                            <span className="font-semibold text-slate-800">{course.name}</span>
+                            {course.description && (
+                              <span className="text-[9px] text-slate-400 font-normal truncate max-w-[280px]">{course.description}</span>
+                            )}
                           </button>
                         ))}
                         {filteredCourses.length === 0 && (
@@ -3692,11 +3697,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <label className="font-semibold text-slate-500 block mb-1 text-[10px]">Cursos Vinculados a esta Aula:</label>
                   <div className="flex flex-wrap gap-1.5 p-2 border border-slate-200 rounded bg-slate-50 max-h-24 overflow-y-auto">
                     {editAulaCourseIds.map(id => {
-                      const course = courses.find(c => c.id === id);
+                      const course = classrooms.find(c => c.id === id);
                       if (!course) return null;
                       return (
                         <span key={id} className="inline-flex items-center gap-1.5 px-2 py-1 bg-[#2a4e7c] text-white font-bold text-[9px] rounded uppercase shadow-[1px_1px_0_0_#000000]">
-                          {course.title}
+                          {course.name}
                           <button
                             type="button"
                             onClick={() => setEditAulaCourseIds(editAulaCourseIds.filter(cid => cid !== id))}

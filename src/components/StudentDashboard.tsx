@@ -21,7 +21,10 @@ import {
   Trash2,
   Search,
   X,
-  Clock
+  Clock,
+  LayoutDashboard,
+  Award,
+  Trophy
 } from 'lucide-react';
 
 interface Student {
@@ -233,7 +236,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   void courses; // courses prop kept for API compatibility; aula courses now use classrooms
   void firebaseProjectId;
   void meetings;
-  const [activeTab, setActiveTab] = useState<'aprendizaje' | 'perfil' | 'foro'>('aprendizaje');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'aprendizaje' | 'certificados' | 'puntos' | 'foro' | 'perfil'>('dashboard');
+  const [selectedCertificateCourse, setSelectedCertificateCourse] = useState<Classroom | null>(null);
   const [hideLessonsSidebar, setHideLessonsSidebar] = useState(false);
   const [palette, setPalette] = useState<'default' | 'cyberpunk' | 'playcode'>(student.theme || 'default');
 
@@ -505,66 +509,663 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
       {/* Main Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-6 md:p-10">
-        {/* Header with Greeting and Navigation Tabs */}
-        <header className={`flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b-2 ${t.headerBorder} mb-8`}>
+        {/* Header with Greeting */}
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold tracking-tight mb-1">¡Hola, {student.name}!</h1>
-            
-            {/* Tabs right here in the greeting card */}
-            <div className="flex flex-wrap items-center gap-3 mt-4">
-              <button
-                onClick={() => {
-                  setActiveTab('aprendizaje');
-                  setSelectedCourseName(null);
-                  setSelectedClassroomForLessons(null);
-                  setSelectedLessonForPreview(null);
-                }}
-                className={`flex items-center gap-2 px-4 py-2 font-bold text-xs border-2 border-[#0d1b2e] transition-all cursor-pointer shadow-[3px_3px_0_0_#000000] active:translate-y-[2px] active:shadow-[1px_1px_0_0_#000000] ${
-                  activeTab === 'aprendizaje'
-                    ? `${t.activeTabBg} ${t.activeTabText}`
-                    : 'bg-white text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                <BookOpen className="w-3.5 h-3.5" /> <span>MI APRENDIZAJE</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('perfil')}
-                className={`flex items-center gap-2 px-4 py-2 font-bold text-xs border-2 border-[#0d1b2e] transition-all cursor-pointer shadow-[3px_3px_0_0_#000000] active:translate-y-[2px] active:shadow-[1px_1px_0_0_#000000] ${
-                  activeTab === 'perfil'
-                    ? `${t.activeTabBg} ${t.activeTabText}`
-                    : 'bg-white text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                <User className="w-3.5 h-3.5" /> <span>MI PERFIL & DISEÑO</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('foro')}
-                className={`flex items-center gap-2 px-4 py-2 font-bold text-xs border-2 border-[#0d1b2e] transition-all cursor-pointer shadow-[3px_3px_0_0_#000000] active:translate-y-[2px] active:shadow-[1px_1px_0_0_#000000] ${
-                  activeTab === 'foro'
-                    ? `${t.activeTabBg} ${t.activeTabText}`
-                    : 'bg-white text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                <MessageSquare className="w-3.5 h-3.5" /> <span>FORO ESTUDIANTIL</span>
-              </button>
-            </div>
+            <p className="text-slate-500 font-medium text-xs">Bienvenido a tu panel personal de Play Code.</p>
           </div>
-
-          <div className="flex flex-col items-start md:items-end gap-2 shrink-0">
-            <div className="bg-[#2a4e7c] text-white border-2 border-[#0d1b2e] px-3.5 py-1.5 font-mono text-[10px] uppercase font-bold shadow-[2px_2px_0_0_#0d1b2e]">
-              ALUMNO ACTIVO
-            </div>
-            <p className={`${t.subtextColor} font-medium text-xs`}>
-              {activeTab === 'aprendizaje' 
-                ? 'Bienvenido a tu panel personal de Play Code.' 
-                : activeTab === 'perfil' 
-                  ? 'Personaliza tu biografía, avatar y colores de fondo.' 
-                  : 'Interactúa con tus compañeros, sube imágenes y comenta.'}
-            </p>
+          <div className="shrink-0 bg-[#2a4e7c] text-white border-2 border-[#0d1b2e] px-3.5 py-1.5 font-mono text-[10px] uppercase font-bold shadow-[2px_2px_0_0_#0d1b2e]">
+            ALUMNO ACTIVO
           </div>
         </header>
+
+        {/* Navigation Tabs Bar */}
+        <div className="w-full bg-[#ff5a5f] border-2 border-[#0d1b2e] shadow-[4px_4px_0_0_#000000] flex overflow-x-auto mb-8 scrollbar-thin select-none">
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className={`flex-1 min-w-[155px] py-3.5 px-4 font-bold text-[10px] uppercase tracking-wider transition-colors duration-150 flex items-center justify-center gap-2 cursor-pointer border-r-2 border-[#0d1b2e] last:border-r-0 ${
+              activeTab === 'dashboard'
+                ? 'bg-white text-[#ff5a5f] font-extrabold border-b-4 border-[#ff5a5f]'
+                : 'text-white hover:bg-[#ff464c]'
+            }`}
+          >
+            <LayoutDashboard className="w-4 h-4 shrink-0" />
+            <span>Panel de Control</span>
+          </button>
+          
+
+
+          <button
+            onClick={() => {
+              setActiveTab('aprendizaje');
+              setSelectedCourseName(null);
+              setSelectedClassroomForLessons(null);
+              setSelectedLessonForPreview(null);
+            }}
+            className={`flex-1 min-w-[155px] py-3.5 px-4 font-bold text-[10px] uppercase tracking-wider transition-colors duration-150 flex items-center justify-center gap-2 cursor-pointer border-r-2 border-[#0d1b2e] last:border-r-0 ${
+              activeTab === 'aprendizaje'
+                ? 'bg-white text-[#ff5a5f] font-extrabold border-b-4 border-[#ff5a5f]'
+                : 'text-white hover:bg-[#ff464c]'
+            }`}
+          >
+            <BookOpen className="w-4 h-4 shrink-0" />
+            <span>Mis Cursos</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('certificados')}
+            className={`flex-1 min-w-[155px] py-3.5 px-4 font-bold text-[10px] uppercase tracking-wider transition-colors duration-150 flex items-center justify-center gap-2 cursor-pointer border-r-2 border-[#0d1b2e] last:border-r-0 ${
+              activeTab === 'certificados'
+                ? 'bg-white text-[#ff5a5f] font-extrabold border-b-4 border-[#ff5a5f]'
+                : 'text-white hover:bg-[#ff464c]'
+            }`}
+          >
+            <Award className="w-4 h-4 shrink-0" />
+            <span>Certificados</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('puntos')}
+            className={`flex-1 min-w-[155px] py-3.5 px-4 font-bold text-[10px] uppercase tracking-wider transition-colors duration-150 flex items-center justify-center gap-2 cursor-pointer border-r-2 border-[#0d1b2e] last:border-r-0 ${
+              activeTab === 'puntos'
+                ? 'bg-white text-[#ff5a5f] font-extrabold border-b-4 border-[#ff5a5f]'
+                : 'text-white hover:bg-[#ff464c]'
+            }`}
+          >
+            <Trophy className="w-4 h-4 shrink-0" />
+            <span>Mis Puntos</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('foro')}
+            className={`flex-1 min-w-[155px] py-3.5 px-4 font-bold text-[10px] uppercase tracking-wider transition-colors duration-150 flex items-center justify-center gap-2 cursor-pointer border-r-2 border-[#0d1b2e] last:border-r-0 ${
+              activeTab === 'foro'
+                ? 'bg-white text-[#ff5a5f] font-extrabold border-b-4 border-[#ff5a5f]'
+                : 'text-white hover:bg-[#ff464c]'
+            }`}
+          >
+            <MessageSquare className="w-4 h-4 shrink-0" />
+            <span>Foro Estudiantil</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('perfil')}
+            className={`flex-1 min-w-[155px] py-3.5 px-4 font-bold text-[10px] uppercase tracking-wider transition-colors duration-150 flex items-center justify-center gap-2 cursor-pointer ${
+              activeTab === 'perfil'
+                ? 'bg-white text-[#ff5a5f] font-extrabold border-b-4 border-[#ff5a5f]'
+                : 'text-white hover:bg-[#ff464c]'
+            }`}
+          >
+            <User className="w-4 h-4 shrink-0" />
+            <span>Mi Perfil & Diseño</span>
+          </button>
+        </div>
+
+        {/* TAB 0A: PANEL DE CONTROL */}
+        {activeTab === 'dashboard' && (
+          <div className="space-y-6 animate-in fade-in duration-200">
+            {/* Grid for Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              
+              {/* Card 1: Student Welcome Profile */}
+              <div className={`${t.cardBg} ${t.cardBorder} p-6 ${t.cardShadow} flex flex-col justify-between`}>
+                <div>
+                  <div className="flex items-center gap-4 mb-4">
+                    {customPhotoUrl ? (
+                      <img
+                        src={customPhotoUrl}
+                        alt={student.name}
+                        className="w-16 h-16 rounded-full border-2 border-[#0d1b2e] object-cover"
+                        onError={() => setCustomPhotoUrl('')}
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-full bg-slate-100 border-2 border-[#0d1b2e] text-4xl flex items-center justify-center">
+                        {selectedAvatar}
+                      </div>
+                    )}
+                    <div>
+                      <h3 className="font-bold text-base leading-tight">{student.name}</h3>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mt-0.5">{student.username}</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-500 italic mt-2">
+                    "{bio || 'Sin biografía establecida.'}"
+                  </p>
+                </div>
+                <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center text-[10px] font-bold text-[#2a4e7c]">
+                  <span>ESTADO: ACTIVO</span>
+                  <button onClick={() => setActiveTab('perfil')} className="hover:underline cursor-pointer">
+                    Editar Perfil &rarr;
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 2: Classroom & Platform Status */}
+              <div className={`${t.cardBg} ${t.cardBorder} p-6 ${t.cardShadow} flex flex-col justify-between`}>
+                <div>
+                  <span className="text-[9px] font-mono font-bold px-2 py-0.5 bg-[#2a4e7c] text-white rounded">
+                    MI ESPACIO
+                  </span>
+                  <h4 className="text-base font-bold mt-2">Aulas y Plataformas</h4>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Accede a las aulas virtuales asignadas para tus clases.
+                  </p>
+                  
+                  {(() => {
+                    const currentPlatformIds = student.platformIds || (student.platformId ? [student.platformId] : []);
+                    const assignedPlatforms = platforms.filter(p => currentPlatformIds.includes(p.id));
+                    if (assignedPlatforms.length > 0) {
+                      return (
+                        <div className="mt-3 space-y-2">
+                          {assignedPlatforms.map(p => (
+                            <div key={p.id} className="text-xs font-semibold bg-slate-50 border border-slate-200 px-3 py-2 rounded flex justify-between items-center">
+                              <span className="truncate">{p.name}</span>
+                              <span className="text-[9px] text-emerald-600 font-bold">Activo</span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    }
+                    return (
+                      <div className="mt-4 p-3 bg-slate-50 border border-dashed border-slate-300 rounded text-center text-xs text-slate-400">
+                        No estás registrado en ninguna plataforma actualmente.
+                      </div>
+                    );
+                  })()}
+                </div>
+                
+                <div className="mt-4 pt-4 border-t border-slate-100">
+                  <button
+                    onClick={() => {
+                      setActiveTab('aprendizaje');
+                      setInsidePlatform(false);
+                    }}
+                    className="w-full text-center py-2 bg-[#2a4e7c] text-white font-bold text-xs border-2 border-[#0d1b2e] shadow-[2px_2px_0_0_#000000] hover:bg-[#1e385c] cursor-pointer"
+                  >
+                    Ir a Mis Cursos
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 3: Gamification level & Points */}
+              {(() => {
+                const totalXP = completedLessonIds.length * 100;
+                const level = Math.floor(completedLessonIds.length / 3) + 1;
+                const nextLevelXP = 300;
+                const progressToNextLevel = (totalXP % nextLevelXP) / nextLevelXP * 100;
+
+                return (
+                  <div className={`${t.cardBg} ${t.cardBorder} p-6 ${t.cardShadow} flex flex-col justify-between`}>
+                    <div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-[9px] font-mono font-bold px-2 py-0.5 bg-amber-100 text-amber-700 border border-amber-400">
+                          NIVEL {level}
+                        </span>
+                        <Trophy className="w-5 h-5 text-amber-500" />
+                      </div>
+                      <h4 className="text-base font-bold mt-2">Puntos y Nivel</h4>
+                      <p className="text-xs text-slate-500 mt-1">
+                        ¡Completa lecciones para ganar XP y subir de nivel!
+                      </p>
+
+                      <div className="mt-4 space-y-3">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="font-bold text-slate-600">XP Totales:</span>
+                          <span className="font-mono font-bold text-amber-600">{totalXP} XP</span>
+                        </div>
+                        
+                        <div>
+                          <div className="flex justify-between items-center text-[9px] font-bold text-slate-400 mb-1">
+                            <span>PROGRESO AL SIGUIENTE NIVEL</span>
+                            <span>{Math.round(progressToNextLevel)}%</span>
+                          </div>
+                          <div className="w-full bg-slate-200 border border-[#0d1b2e] h-2">
+                            <div 
+                              className="bg-amber-500 h-full transition-all duration-300"
+                              style={{ width: `${progressToNextLevel}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4 pt-4 border-t border-slate-100">
+                      <button
+                        onClick={() => setActiveTab('puntos')}
+                        className="w-full text-center py-2 bg-amber-500 hover:bg-amber-600 text-[#001f4a] font-bold text-xs border-2 border-[#0d1b2e] shadow-[2px_2px_0_0_#000000] cursor-pointer"
+                      >
+                        Ver Tabla de Puntos
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Bottom Row: Resume learning and community */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              {/* Learning Progress Summary */}
+              <div className={`${t.cardBg} ${t.cardBorder} p-6 ${t.cardShadow} space-y-4`}>
+                <h3 className="font-bold text-base border-b border-slate-100 pb-2">Mi Progreso de Aprendizaje</h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between items-center text-xs font-bold text-slate-600 mb-1">
+                      <span>Progreso de Cursos</span>
+                      <span>{progressPercent}%</span>
+                    </div>
+                    <div className="w-full bg-slate-200 border border-[#0d1b2e] h-3.5">
+                      <div 
+                        className="bg-[#2a4e7c] h-full transition-all duration-300"
+                        style={{ width: `${progressPercent}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 text-center">
+                    <div className="bg-slate-50 border border-slate-200 p-3 rounded">
+                      <span className="text-xl font-bold font-mono text-[#2a4e7c] block">{completedCourseLessons.length}</span>
+                      <span className="text-[10px] text-slate-500 font-bold uppercase">Completadas</span>
+                    </div>
+                    <div className="bg-slate-50 border border-slate-200 p-3 rounded">
+                      <span className="text-xl font-bold font-mono text-slate-700 block">{courseLessons.length}</span>
+                      <span className="text-[10px] text-slate-500 font-bold uppercase">Lecciones Asignadas</span>
+                    </div>
+                  </div>
+                  
+                  {courseLessons.length > 0 && completedCourseLessons.length < courseLessons.length && (
+                    <div className="p-3.5 bg-amber-50 border-2 border-[#0d1b2e] flex justify-between items-center">
+                      <div>
+                        <span className="text-[9px] font-bold text-amber-700 uppercase block">Próxima Lección recomendada:</span>
+                        <span className="text-xs font-bold text-slate-800 line-clamp-1">
+                          {courseLessons.find(l => !completedLessonIds.includes(l.id))?.title || 'Continuar aprendiendo'}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setActiveTab('aprendizaje');
+                          setInsidePlatform(false);
+                        }}
+                        className="px-3 py-1 bg-amber-400 hover:bg-amber-500 text-slate-900 border border-[#0d1b2e] font-bold text-[10px] cursor-pointer"
+                      >
+                        Continuar &rarr;
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Community Feed Preview */}
+              <div className={`${t.cardBg} ${t.cardBorder} p-6 ${t.cardShadow} space-y-4`}>
+                <h3 className="font-bold text-base border-b border-slate-100 pb-2">Actividad del Foro Estudiantil</h3>
+                
+                <div className="space-y-3">
+                  {posts.slice(0, 2).map(p => (
+                    <div 
+                      key={p.id} 
+                      onClick={() => {
+                        setSelectedPostId(p.id);
+                        setActiveTab('foro');
+                      }}
+                      className="p-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded cursor-pointer flex justify-between items-center transition-colors"
+                    >
+                      <div className="min-w-0 pr-2">
+                        <span className="text-[10px] font-bold text-[#2a4e7c] block truncate">{p.title}</span>
+                        <span className="text-[9px] text-slate-400 block mt-0.5">Por {p.authorName} • {new Date(p.createdAt).toLocaleDateString()}</span>
+                      </div>
+                      <div className="text-[10px] font-bold text-slate-500 shrink-0">
+                        ❤️ {p.likes}
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {posts.length === 0 && (
+                    <p className="text-xs text-slate-400 italic text-center py-4">
+                      No hay publicaciones recientes en el foro.
+                    </p>
+                  )}
+                  
+                  <button
+                    onClick={() => setActiveTab('foro')}
+                    className="w-full text-center py-2 bg-slate-100 hover:bg-slate-200 border-2 border-[#0d1b2e] text-slate-800 font-bold text-xs cursor-pointer"
+                  >
+                    Ver Todo el Foro
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+
+
+        {/* TAB 0C: CERTIFICADOS */}
+        {activeTab === 'certificados' && (
+          <div className="space-y-6 animate-in fade-in duration-200">
+            <div className="pb-4 border-b border-slate-200">
+              <h2 className="text-xl font-bold">Mis Certificados Oficiales</h2>
+              <p className="text-xs text-slate-500 mt-1">
+                Al completar el 100% de las lecciones de cualquier curso, podrás descargar tu diploma acreditativo de Play Code.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {(() => {
+                const activeCoursesToCert = myClassrooms.length > 0 
+                  ? myClassrooms 
+                  : (student.course ? [{ id: 'legacy', name: student.course, description: 'Programa curricular Play Code', students: [student.id] }] : []);
+                
+                if (activeCoursesToCert.length === 0) {
+                  return (
+                    <div className="col-span-2 p-8 text-center bg-slate-50 border-2 border-dashed border-slate-300 text-slate-400 italic text-xs">
+                      No estás registrado en ningún curso para generar certificados.
+                    </div>
+                  );
+                }
+
+                return activeCoursesToCert.map(course => {
+                  const cLessons = course.id === 'legacy'
+                    ? lessons.filter(l => l.courseName === course.name)
+                    : (course.lessonIds ? lessons.filter(l => course.lessonIds!.includes(l.id)) : []);
+                  const completed = cLessons.filter(l => completedLessonIds.includes(l.id));
+                  const progress = cLessons.length > 0 ? Math.round((completed.length / cLessons.length) * 100) : 0;
+                  const isCompleted = progress === 100 && cLessons.length > 0;
+
+                  return (
+                    <div 
+                      key={course.id} 
+                      className={`p-6 border-2 border-[#0d1b2e] shadow-[4px_4px_0_0_#000000] flex flex-col justify-between ${
+                        isCompleted ? 'bg-gradient-to-br from-amber-50 to-white' : 'bg-white opacity-80'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex justify-between items-start mb-3">
+                          <span className={`text-[9px] font-bold px-2 py-0.5 border ${
+                            isCompleted ? 'bg-amber-100 text-amber-700 border-amber-400' : 'bg-slate-100 text-slate-600 border-slate-300'
+                          }`}>
+                            {isCompleted ? 'DESBLOQUEADO' : 'EN CURSO'}
+                          </span>
+                          <Award className={`w-6 h-6 ${isCompleted ? 'text-amber-500' : 'text-slate-300'}`} />
+                        </div>
+                        <h3 className="text-base font-bold">{course.name}</h3>
+                        <p className="text-xs text-slate-500 mt-1">{course.description || 'Programa oficial de Play Code'}</p>
+
+                        <div className="mt-4">
+                          <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 mb-1">
+                            <span>PROGRESO</span>
+                            <span>{progress}%</span>
+                          </div>
+                          <div className="w-full bg-slate-200 border border-[#0d1b2e] h-2">
+                            <div 
+                              className={`h-full transition-all duration-300 ${isCompleted ? 'bg-amber-500' : 'bg-[#2a4e7c]'}`}
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-6 pt-4 border-t border-slate-100">
+                        {isCompleted ? (
+                          <button
+                            onClick={() => setSelectedCertificateCourse(course as Classroom)}
+                            className="w-full text-center py-2 bg-amber-500 hover:bg-amber-600 text-[#001f4a] font-bold border-2 border-[#0d1b2e] text-xs shadow-[2px_2px_0_0_#000000] cursor-pointer"
+                          >
+                            Ver y Descargar Certificado
+                          </button>
+                        ) : (
+                          <button
+                            disabled
+                            className="w-full text-center py-2 bg-slate-100 text-slate-400 border border-slate-200 text-xs cursor-not-allowed"
+                          >
+                            Completa el 100% de las clases para desbloquear
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+
+            {/* Modal de Certificado */}
+            {selectedCertificateCourse && (
+              <div className="fixed inset-0 z-50 bg-[#0d1b2e]/60 flex items-center justify-center p-4 overflow-y-auto">
+                <div className="bg-white border-4 border-[#0d1b2e] shadow-[8px_8px_0_0_#000000] max-w-2xl w-full p-8 relative flex flex-col items-center text-center space-y-6">
+                  <button
+                    onClick={() => setSelectedCertificateCourse(null)}
+                    className="absolute right-4 top-4 text-slate-400 hover:text-slate-700 font-bold text-lg cursor-pointer"
+                  >
+                    ✕
+                  </button>
+
+                  <div className="border-4 border-double border-amber-400 p-8 w-full space-y-6">
+                    <span className="text-xs font-mono font-bold tracking-widest text-[#2a4e7c] block uppercase">PLAY CODE ACADEMY</span>
+                    
+                    <div className="w-16 h-16 bg-amber-100 border-2 border-amber-500 rounded-full mx-auto flex items-center justify-center">
+                      <Award className="w-9 h-9 text-amber-600" />
+                    </div>
+
+                    <h2 className="font-serif text-3xl text-[#0d1b2e]">CERTIFICADO DE ACOMPLETAMIENTO</h2>
+                    
+                    <p className="text-xs text-slate-500 italic">Este certificado oficial se otorga con honor a:</p>
+                    
+                    <p className="text-xl font-bold font-serif text-[#0d1b2e] border-b-2 border-slate-300 pb-2 max-w-md mx-auto">
+                      {student.name}
+                    </p>
+
+                    <p className="text-xs text-slate-600 max-w-lg mx-auto leading-relaxed">
+                      Por haber completado con éxito y de manera sobresaliente el plan de estudios completo para el curso
+                      <strong className="text-[#0d1b2e] block text-sm mt-1">{selectedCertificateCourse.name}</strong>
+                      demostrando competencias y habilidades digitales en programación, desarrollo de software y tecnologías STEAM.
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-8 pt-8 text-[10px] font-bold text-slate-500 border-t border-slate-100 max-w-md mx-auto">
+                      <div>
+                        <span className="block border-b border-slate-300 pb-1 font-serif text-slate-800 text-xs italic">Juan Pacheco</span>
+                        <span className="block uppercase tracking-wider mt-1 text-[8px]">Director General</span>
+                      </div>
+                      <div>
+                        <span className="block border-b border-slate-300 pb-1 font-mono text-slate-800 text-xs">{new Date().toLocaleDateString()}</span>
+                        <span className="block uppercase tracking-wider mt-1 text-[8px]">Fecha de Aprobación</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => window.print()}
+                    className="px-6 py-2 bg-[#2a4e7c] hover:bg-[#1e385c] text-white border-2 border-[#0d1b2e] font-bold text-xs shadow-[3px_3px_0_0_#000000] cursor-pointer"
+                  >
+                    🖨️ Imprimir / Guardar PDF
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 0D: MIS PUNTOS */}
+        {activeTab === 'puntos' && (
+          <div className="space-y-6 animate-in fade-in duration-200">
+            <div className="pb-4 border-b border-slate-200">
+              <h2 className="text-xl font-bold">Mis Logros y Clasificación</h2>
+              <p className="text-xs text-slate-500 mt-1">
+                Gana puntos XP completando lecciones y participando activamente en la comunidad. ¡Desbloquea insignias especiales!
+              </p>
+            </div>
+
+            {/* Top row stats */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="bg-[#2a4e7c] text-white border-2 border-[#0d1b2e] shadow-[4px_4px_0_0_#000000] p-5 text-center space-y-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider block opacity-85">Nivel de Programador</span>
+                <span className="text-3xl font-bold block font-mono">Lvl {Math.floor(completedLessonIds.length / 3) + 1}</span>
+                <span className="text-[9px] block opacity-75">Siguiente nivel en {3 - (completedLessonIds.length % 3)} lecciones</span>
+              </div>
+              <div className="bg-amber-400 text-[#0d1b2e] border-2 border-[#0d1b2e] shadow-[4px_4px_0_0_#000000] p-5 text-center space-y-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider block opacity-85">Puntos Totales (XP)</span>
+                <span className="text-3xl font-bold block font-mono">{completedLessonIds.length * 100} XP</span>
+                <span className="text-[9px] block opacity-75">100 XP por cada lección completada</span>
+              </div>
+              <div className="bg-[#2ec4b6] text-white border-2 border-[#0d1b2e] shadow-[4px_4px_0_0_#000000] p-5 text-center space-y-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider block opacity-85">Insignias Desbloqueadas</span>
+                <span className="text-3xl font-bold block font-mono">
+                  {(() => {
+                    let count = 1;
+                    if (completedLessonIds.length > 0) count++;
+                    if (posts.some(p => p.authorUsername === student.username)) count++;
+                    if (progressPercent === 100) count++;
+                    if (completedLessonIds.length * 100 >= 500) count++;
+                    return count;
+                  })()} / 5
+                </span>
+                <span className="text-[9px] block opacity-75">¡Sigue programando para obtenerlas todas!</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-4">
+              
+              {/* Badges List */}
+              <div className="lg:col-span-7 space-y-4">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Mis Insignias</h3>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Badge 1: Welcome */}
+                  <div className="p-4 bg-white border-2 border-[#0d1b2e] rounded flex items-center gap-3">
+                    <span className="text-3xl">🚀</span>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-800">Bienvenido a Bordo</h4>
+                      <p className="text-[9px] text-slate-400 mt-0.5">Ingresar al portal de Play Code por primera vez.</p>
+                      <span className="text-[8px] font-bold text-emerald-600 block mt-1">✓ DESBLOQUEADO</span>
+                    </div>
+                  </div>
+
+                  {/* Badge 2: First Lesson */}
+                  {(() => {
+                    const unlocked = completedLessonIds.length > 0;
+                    return (
+                      <div className={`p-4 border-2 border-[#0d1b2e] rounded flex items-center gap-3 ${unlocked ? 'bg-white' : 'bg-slate-50 opacity-60'}`}>
+                        <span className="text-3xl">📖</span>
+                        <div>
+                          <h4 className="text-xs font-bold text-slate-800">Estudiante Dedicado</h4>
+                          <p className="text-[9px] text-slate-400 mt-0.5">Completar la primera lección oficial de tu curso.</p>
+                          {unlocked ? (
+                            <span className="text-[8px] font-bold text-emerald-600 block mt-1">✓ DESBLOQUEADO</span>
+                          ) : (
+                            <span className="text-[8px] font-bold text-slate-400 block mt-1">BLOQUEADO</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Badge 3: Forum Post */}
+                  {(() => {
+                    const unlocked = posts.some(p => p.authorUsername === student.username);
+                    return (
+                      <div className={`p-4 border-2 border-[#0d1b2e] rounded flex items-center gap-3 ${unlocked ? 'bg-white' : 'bg-slate-50 opacity-60'}`}>
+                        <span className="text-3xl">💬</span>
+                        <div>
+                          <h4 className="text-xs font-bold text-slate-800">Líder de Opinión</h4>
+                          <p className="text-[9px] text-slate-400 mt-0.5">Publicar un tema de conversación en el foro.</p>
+                          {unlocked ? (
+                            <span className="text-[8px] font-bold text-emerald-600 block mt-1">✓ DESBLOQUEADO</span>
+                          ) : (
+                            <span className="text-[8px] font-bold text-slate-400 block mt-1">BLOQUEADO</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Badge 4: Course Completed */}
+                  {(() => {
+                    const unlocked = progressPercent === 100 && courseLessons.length > 0;
+                    return (
+                      <div className={`p-4 border-2 border-[#0d1b2e] rounded flex items-center gap-3 ${unlocked ? 'bg-white' : 'bg-slate-50 opacity-60'}`}>
+                        <span className="text-3xl">🌟</span>
+                        <div>
+                          <h4 className="text-xs font-bold text-slate-800">Perfeccionista</h4>
+                          <p className="text-[9px] text-slate-400 mt-0.5">Completar el 100% de las clases de un curso.</p>
+                          {unlocked ? (
+                            <span className="text-[8px] font-bold text-emerald-600 block mt-1">✓ DESBLOQUEADO</span>
+                          ) : (
+                            <span className="text-[8px] font-bold text-slate-400 block mt-1">BLOQUEADO</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Badge 5: 500 XP */}
+                  {(() => {
+                    const unlocked = (completedLessonIds.length * 100) >= 500;
+                    return (
+                      <div className={`p-4 border-2 border-[#0d1b2e] rounded flex items-center gap-3 ${unlocked ? 'bg-white' : 'bg-slate-50 opacity-60'}`}>
+                        <span className="text-3xl">🏆</span>
+                        <div>
+                          <h4 className="text-xs font-bold text-slate-800">Súper Estudiante</h4>
+                          <p className="text-[9px] text-slate-400 mt-0.5">Alcanzar los 500 puntos de experiencia totales.</p>
+                          {unlocked ? (
+                            <span className="text-[8px] font-bold text-emerald-600 block mt-1">✓ DESBLOQUEADO</span>
+                          ) : (
+                            <span className="text-[8px] font-bold text-slate-400 block mt-1">BLOQUEADO</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* Leaderboard */}
+              <div className="lg:col-span-5 space-y-4">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Clasificación General del Aula</h3>
+                
+                <div className="bg-white border-2 border-[#0d1b2e] shadow-[4px_4px_0_0_#000000] overflow-hidden">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-[#f0f4f8] border-b border-[#0d1b2e] text-[10px] font-bold uppercase text-slate-500">
+                      <tr>
+                        <th className="px-4 py-2">Pos</th>
+                        <th className="px-4 py-2">Estudiante</th>
+                        <th className="px-4 py-2 text-right">XP</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 font-semibold">
+                      <tr className="bg-amber-50">
+                        <td className="px-4 py-3">🥇 1</td>
+                        <td className="px-4 py-3">Lucas Gómez</td>
+                        <td className="px-4 py-3 text-right text-amber-700">1200 XP</td>
+                      </tr>
+                      <tr>
+                        <td className="px-4 py-3">🥈 2</td>
+                        <td className="px-4 py-3">Mateo Fernández</td>
+                        <td className="px-4 py-3 text-right">800 XP</td>
+                      </tr>
+                      <tr className="bg-blue-50 border-y-2 border-blue-200">
+                        <td className="px-4 py-3">🥉 3</td>
+                        <td className="px-4 py-3 text-blue-900">{student.name} (Tú)</td>
+                        <td className="px-4 py-3 text-right text-blue-850 font-bold">{completedLessonIds.length * 100} XP</td>
+                      </tr>
+                      <tr>
+                        <td className="px-4 py-3">4</td>
+                        <td className="px-4 py-3">Martina Rossi</td>
+                        <td className="px-4 py-3 text-right">300 XP</td>
+                      </tr>
+                      <tr>
+                        <td className="px-4 py-3">5</td>
+                        <td className="px-4 py-3">Sofía Díaz</td>
+                        <td className="px-4 py-3 text-right">100 XP</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        )}
 
         {activeTab === 'aprendizaje' && (
           <div>

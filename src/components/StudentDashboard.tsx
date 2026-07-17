@@ -41,6 +41,8 @@ interface Student {
   aulaId?: string;
   platformIds?: string[];
   aulaIds?: string[];
+  googleAuthAllowed?: boolean;
+  googleEmail?: string;
 }
 
 interface Course {

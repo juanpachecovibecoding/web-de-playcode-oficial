@@ -46,6 +46,8 @@ interface Student {
   aulaId?: string;
   platformIds?: string[];
   aulaIds?: string[];
+  googleAuthAllowed?: boolean;
+  googleEmail?: string;
 }
 
 interface PlatformAula {
@@ -335,27 +337,30 @@ const App: React.FC = () => {
   }, [attemptedName]);
 
   const handleLogin = (username: string, password?: string, name?: string): { success: boolean; error?: string } => {
-    // Force username to be lowercase and without spaces
+    const googleEmail = username.toLowerCase().trim();
     const formattedUsername = username.toLowerCase().replace(/\s+/g, '').trim();
 
     // 1. Superadmin verification
-    if (formattedUsername === 'juanpacheco') {
-      if (password !== undefined) {
+    // Google Auth Superadmin Login: matches email "juanpacheco@playcode.com.ar"
+    // Manual Superadmin Login: username is "juanpacheco" or "juanpacheco@playcode.com.ar" and password is correct
+    const isSuperAdminGoogle = password === undefined && googleEmail === 'juanpacheco@playcode.com.ar';
+    const isSuperAdminManual = password !== undefined && (formattedUsername === 'juanpacheco' || formattedUsername === 'juanpacheco@playcode.com.ar');
+
+    if (isSuperAdminGoogle || isSuperAdminManual) {
+      if (isSuperAdminManual) {
         if (password !== 'admin123') {
           return { success: false, error: 'Contraseña de administrador incorrecta.' };
         }
       }
-      const u: LoggedInUser = { username: formattedUsername, name: name || 'Juan Pacheco', role: 'superadmin' };
+      const u: LoggedInUser = { username: 'juanpacheco', name: name || 'Juan Pacheco', role: 'superadmin' };
       setUser(u);
       setView('dashboard');
       return { success: true };
     }
 
-    // 2. Student verification
-    const existingStudent = students.find(s => s.username === formattedUsername);
-
     if (password !== undefined) {
-      // Trying username & password login
+      // 2. Student verification: Manual login (username + password)
+      const existingStudent = students.find(s => s.username === formattedUsername);
       if (!existingStudent) {
         return { success: false, error: 'No se encontró ninguna cuenta asociada a este usuario.' };
       }
@@ -376,38 +381,35 @@ const App: React.FC = () => {
       setView('student_dashboard');
       return { success: true };
     } else {
-      // Google Login (password is undefined)
-      // Extract username from email or name
-      const generatedUsername = formattedUsername.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
-      const existingStudentGoogle = students.find(s => s.username === generatedUsername);
+      // 3. Student verification: Google SSO login (password is undefined)
+      // Find student with Google SSO allowed matching the Google email
+      const existingStudentGoogle = students.find(
+        s => s.googleAuthAllowed && s.googleEmail?.toLowerCase().trim() === googleEmail
+      );
 
       if (!existingStudentGoogle) {
-        const newStudent: Student = {
-          id: Date.now().toString(),
-          name: name || 'Nuevo Alumno',
-          username: generatedUsername,
-          course: 'Robótica y Programación',
-          status: 'Pendiente',
-          password: '123456'
+        return {
+          success: false,
+          error: 'Este correo de Google no está autorizado para Google SSO. Inicia sesión con usuario y contraseña o contacta al administrador.'
         };
-        setStudents(prev => [...prev, newStudent]);
-        setAttemptedUsername(generatedUsername);
-        setAttemptedName(name || 'Nuevo Alumno');
+      }
+
+      if (existingStudentGoogle.status === 'Pendiente') {
+        setAttemptedUsername(existingStudentGoogle.username);
+        setAttemptedName(existingStudentGoogle.name);
         setView('pending_activation');
         return { success: true };
-      } else {
-        if (existingStudentGoogle.status === 'Pendiente') {
-          setAttemptedUsername(generatedUsername);
-          setAttemptedName(existingStudentGoogle.name);
-          setView('pending_activation');
-          return { success: true };
-        } else {
-          const u: LoggedInUser = { username: generatedUsername, name: existingStudentGoogle.name, role: 'student', id: existingStudentGoogle.id };
-          setUser(u);
-          setView('student_dashboard');
-          return { success: true };
-        }
       }
+
+      const u: LoggedInUser = {
+        username: existingStudentGoogle.username,
+        name: existingStudentGoogle.name,
+        role: 'student',
+        id: existingStudentGoogle.id
+      };
+      setUser(u);
+      setView('student_dashboard');
+      return { success: true };
     }
   };
 

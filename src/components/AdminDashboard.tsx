@@ -49,6 +49,8 @@ interface Student {
   aulaId?: string;
   platformIds?: string[];
   aulaIds?: string[];
+  googleAuthAllowed?: boolean;
+  googleEmail?: string;
 }
 
 interface Meeting {
@@ -174,6 +176,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [editStudentAulaSearch, setEditStudentAulaSearch] = useState('');
   const [isEditStudentPlatformDropdownOpen, setIsEditStudentPlatformDropdownOpen] = useState(false);
   const [isEditStudentAulaDropdownOpen, setIsEditStudentAulaDropdownOpen] = useState(false);
+  const [editStudentGoogleAuthAllowed, setEditStudentGoogleAuthAllowed] = useState(false);
+  const [editStudentGoogleEmail, setEditStudentGoogleEmail] = useState('');
   // Platform creation
   const [showNewPlatformForm, setShowNewPlatformForm] = useState(false);
   const [newPlatformName, setNewPlatformName] = useState('');
@@ -526,6 +530,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [newStudentUsername, setNewStudentUsername] = useState('');
   const [newStudentPassword, setNewStudentPassword] = useState('123456');
   const [newStudentRole, setNewStudentRole] = useState<'admin' | 'docente' | 'alumno' | 'profesor'>('alumno');
+  const [newStudentGoogleAuthAllowed, setNewStudentGoogleAuthAllowed] = useState(false);
+  const [newStudentGoogleEmail, setNewStudentGoogleEmail] = useState('');
 
   // Modal States for Adding Meeting
   const [showAddMeetingModal, setShowAddMeetingModal] = useState(false);
@@ -580,7 +586,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       password: newStudentPassword || '123456',
       role: newStudentRole,
       platformIds: newStudentPlatformIds,
-      aulaIds: newStudentAulaIds
+      aulaIds: newStudentAulaIds,
+      googleAuthAllowed: newStudentGoogleAuthAllowed,
+      googleEmail: newStudentGoogleEmail.toLowerCase().replace(/\s+/g, '').trim()
     };
     setStudents([...students, newStudent]);
 
@@ -592,6 +600,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setNewStudentAulaIds([]);
     setNewStudentPlatformSearch('');
     setNewStudentAulaSearch('');
+    setNewStudentGoogleAuthAllowed(false);
+    setNewStudentGoogleEmail('');
     setShowAddStudentModal(false);
   };
 
@@ -621,6 +631,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setEditStudentAulaIds(student.aulaIds || (student.aulaId ? [student.aulaId] : []));
     setEditStudentPlatformSearch('');
     setEditStudentAulaSearch('');
+    setEditStudentGoogleAuthAllowed(student.googleAuthAllowed || false);
+    setEditStudentGoogleEmail(student.googleEmail || '');
     setShowEditStudentModal(true);
   };
 
@@ -639,7 +651,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           role: editStudentRole,
           password: editStudentPassword || '123456',
           platformIds: editStudentPlatformIds,
-          aulaIds: editStudentAulaIds
+          aulaIds: editStudentAulaIds,
+          googleAuthAllowed: editStudentGoogleAuthAllowed,
+          googleEmail: editStudentGoogleEmail.toLowerCase().replace(/\s+/g, '').trim()
         };
       }
       return s;
@@ -654,6 +668,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setEditStudentAulaIds([]);
     setEditStudentPlatformSearch('');
     setEditStudentAulaSearch('');
+    setEditStudentGoogleAuthAllowed(false);
+    setEditStudentGoogleEmail('');
     setShowEditStudentModal(false);
   };
 
@@ -1303,7 +1319,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       {userName}
                       <span className="text-[8px] bg-amber-400 text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Tú</span>
                     </td>
-                    <td className="p-3 text-[#6180a6]">{userUsername}</td>
+                    <td className="p-3 text-[#6180a6]">
+                      <div>{userUsername}</div>
+                      <div className="text-[9px] text-[#16a34a] font-bold mt-0.5 flex items-center gap-1" title="juanpacheco@playcode.com.ar">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#16a34a] animate-pulse"></span>
+                        Google SSO (juanpacheco@playcode.com.ar)
+                      </div>
+                    </td>
                     <td className="p-3">
                       <span className="px-2.5 py-1 bg-amber-100 text-amber-700 border-2 border-amber-400 font-bold text-[10px] rounded shadow-[1px_1px_0_0_#b45309]">Admin</span>
                     </td>
@@ -1313,12 +1335,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </td>
                     <td className="p-3 text-slate-300 text-[10px] italic">Protegido</td>
                   </tr>
-
+ 
                   {students.map((student) => (
                     <tr key={student.id} className="hover:bg-[#f0f4f8]/50 font-medium">
                       <td className="p-3 text-slate-400 font-bold">{student.id}</td>
                       <td className="p-3 text-[#0d1b2e] font-bold">{student.name}</td>
-                      <td className="p-3 text-[#6180a6]">{student.username}</td>
+                      <td className="p-3 text-[#6180a6]">
+                        <div>{student.username}</div>
+                        {student.googleAuthAllowed && (
+                          <div className="text-[9px] text-[#16a34a] font-bold mt-0.5 flex items-center gap-1" title={student.googleEmail}>
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#16a34a] animate-pulse"></span>
+                            Google SSO ({student.googleEmail})
+                          </div>
+                        )}
+                      </td>
                       <td className="p-3">
                         <select
                           value={student.role || 'alumno'}
@@ -2821,6 +2851,33 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 />
               </div>
 
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="new-student-sso"
+                  checked={newStudentGoogleAuthAllowed}
+                  onChange={(e) => setNewStudentGoogleAuthAllowed(e.target.checked)}
+                  className="w-4 h-4 border border-slate-300 rounded accent-[#2a4e7c] cursor-pointer"
+                />
+                <label htmlFor="new-student-sso" className="font-bold text-slate-650 cursor-pointer text-xs">
+                  Autorizar inicio de sesión con Google (SSO)
+                </label>
+              </div>
+
+              {newStudentGoogleAuthAllowed && (
+                <div className="animate-in fade-in slide-in-from-top-1 duration-150">
+                  <label className="font-bold text-[#6180a6] block mb-1">Correo de Google Autorizado</label>
+                  <input
+                    type="email"
+                    required={newStudentGoogleAuthAllowed}
+                    value={newStudentGoogleEmail}
+                    onChange={(e) => setNewStudentGoogleEmail(e.target.value.toLowerCase().replace(/\s+/g, ''))}
+                    placeholder="ej. sofia.diaz@gmail.com"
+                    className="w-full p-2 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-slate-900"
+                  />
+                </div>
+              )}
+
               <div className="flex gap-2 justify-end pt-3">
                 <button
                   type="button"
@@ -3072,6 +3129,33 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   className="w-full p-2 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-slate-900"
                 />
               </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="edit-student-sso"
+                  checked={editStudentGoogleAuthAllowed}
+                  onChange={(e) => setEditStudentGoogleAuthAllowed(e.target.checked)}
+                  className="w-4 h-4 border border-slate-300 rounded accent-[#2a4e7c] cursor-pointer"
+                />
+                <label htmlFor="edit-student-sso" className="font-bold text-slate-650 cursor-pointer text-xs">
+                  Autorizar inicio de sesión con Google (SSO)
+                </label>
+              </div>
+
+              {editStudentGoogleAuthAllowed && (
+                <div className="animate-in fade-in slide-in-from-top-1 duration-150">
+                  <label className="font-bold text-[#6180a6] block mb-1">Correo de Google Autorizado</label>
+                  <input
+                    type="email"
+                    required={editStudentGoogleAuthAllowed}
+                    value={editStudentGoogleEmail}
+                    onChange={(e) => setEditStudentGoogleEmail(e.target.value.toLowerCase().replace(/\s+/g, ''))}
+                    placeholder="ej. sofia.diaz@gmail.com"
+                    className="w-full p-2 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-slate-900"
+                  />
+                </div>
+              )}
 
               <div className="flex gap-2 justify-end pt-3">
                 <button

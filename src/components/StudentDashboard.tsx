@@ -150,7 +150,7 @@ export const GAME_ITEMS: Record<string, GameItem> = {
   },
   'baston-codigo': {
     id: 'baston-codigo',
-    name: 'Bastón del Compilador',
+    name: 'Llaves del Reino',
     type: 'Bastón de Mago',
     emoji: '🪄',
     rarity: 'rare',
@@ -168,7 +168,7 @@ export const GAME_ITEMS: Record<string, GameItem> = {
   },
   'escudo-debug': {
     id: 'escudo-debug',
-    name: 'Escudo Anti-Bugs',
+    name: 'Escudo de la Fe-Elijo creer',
     type: 'Escudo Protector',
     emoji: '🛡️',
     rarity: 'legendary',
@@ -351,7 +351,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
       updated = true;
     }
     
-    // 3. Escudo Anti-Bugs: 100% course lessons completed
+    // 3. Escudo de la Fe-Elijo creer: 100% course lessons completed
     const studentClassrooms = classrooms.filter(c => student.aulaIds?.includes(c.id));
     const allLessonIds = Array.from(new Set(studentClassrooms.flatMap(c => c.lessonIds || [])));
     const completedCount = allLessonIds.filter(id => student.completedLessonIds?.includes(id)).length;

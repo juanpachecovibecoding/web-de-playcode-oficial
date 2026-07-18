@@ -136,10 +136,10 @@ export const ADMIN_GAME_ITEMS: Record<string, GameItem> = {
   },
   'baston-codigo': {
     id: 'baston-codigo',
-    name: 'Bastón del Compilador',
+    name: 'Llaves del Reino',
     emoji: '🪄',
     rarity: 'rare',
-    description: 'Canaliza tu lógica interna y compila tus algoritmos sin errores.'
+    description: 'Las llaves que abren el conocimiento del reino del código.'
   },
   'espada-verdad': {
     id: 'espada-verdad',
@@ -150,10 +150,10 @@ export const ADMIN_GAME_ITEMS: Record<string, GameItem> = {
   },
   'escudo-debug': {
     id: 'escudo-debug',
-    name: 'Escudo Anti-Bugs',
+    name: 'Escudo de la Fe - Elijo creer',
     emoji: '🛡️',
     rarity: 'legendary',
-    description: 'Una defensa impenetrable forjada con las mejores prácticas de Clean Code.'
+    description: 'Una defensa impenetrable que protege tu código ante la duda. Elijo creer.'
   }
 };
 

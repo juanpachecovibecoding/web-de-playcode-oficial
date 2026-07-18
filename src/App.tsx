@@ -535,8 +535,6 @@ const App: React.FC = () => {
         setCourses={setCourses}
         students={students}
         setStudents={setStudents}
-        meetings={meetings}
-        setMeetings={setMeetings}
         classrooms={classrooms}
         setClassrooms={setClassrooms}
         lessons={lessons}

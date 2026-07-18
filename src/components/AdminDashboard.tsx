@@ -58,11 +58,7 @@ interface Student {
   unlockedBadgeIds?: string[];
 }
 
-interface Meeting {
-  id: string;
-  name: string;
-  url: string;
-}
+
 
 interface Classroom {
   id: string;
@@ -109,8 +105,6 @@ interface AdminDashboardProps {
   setCourses: React.Dispatch<React.SetStateAction<Course[]>>;
   students: Student[];
   setStudents: React.Dispatch<React.SetStateAction<Student[]>>;
-  meetings: Meeting[];
-  setMeetings: React.Dispatch<React.SetStateAction<Meeting[]>>;
   classrooms: Classroom[];
   setClassrooms: React.Dispatch<React.SetStateAction<Classroom[]>>;
   lessons: Lesson[];
@@ -178,8 +172,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   setCourses,
   students,
   setStudents,
-  meetings,
-  setMeetings,
   classrooms,
   setClassrooms,
   lessons,
@@ -194,7 +186,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 }) => {
   void setCourses;
   void courses;
-  const [activeTab, setActiveTab] = useState<'inicio' | 'cursos' | 'usuarios' | 'docentes' | 'clases' | 'meetings' | 'contenido' | 'config' | 'foro' | 'plataformas' | 'gamificacion'>('inicio');
+  const [activeTab, setActiveTab] = useState<'inicio' | 'cursos' | 'usuarios' | 'docentes' | 'clases' | 'contenido' | 'config' | 'foro' | 'plataformas' | 'gamificacion'>('inicio');
 
   // Platforms state is received from props!
   const [expandedPlatformId, setExpandedPlatformId] = useState<string | null>('platform-1');
@@ -696,10 +688,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [newStudentGoogleAuthAllowed, setNewStudentGoogleAuthAllowed] = useState(false);
   const [newStudentGoogleEmail, setNewStudentGoogleEmail] = useState('');
 
-  // Modal States for Adding Meeting
-  const [showAddMeetingModal, setShowAddMeetingModal] = useState(false);
-  const [newMeetingName, setNewMeetingName] = useState('');
-  const [newMeetingUrl, setNewMeetingUrl] = useState('');
+
 
   // Modal States for Adding Class
   const [showAddClassModal, setShowAddClassModal] = useState(false);
@@ -867,27 +856,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }));
   };
 
-  const handleAddMeeting = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMeetingName || !newMeetingUrl) return;
-    const newMeeting: Meeting = {
-      id: 'm' + Date.now().toString(),
-      name: newMeetingName,
-      url: newMeetingUrl
-    };
-    setMeetings([...meetings, newMeeting]);
-    setNewMeetingName('');
-    setNewMeetingUrl('');
-    setShowAddMeetingModal(false);
-  };
 
-  const handleDeleteMeeting = (id: string) => {
-    if (confirm('¿Estás seguro de eliminar este Meeting?')) {
-      setMeetings(meetings.filter(m => m.id !== id));
-      // Clean up reference in classes
-      setClassrooms(classrooms.map(c => c.meetingId === id ? { ...c, meetingId: undefined } : c));
-    }
-  };
 
   const handleAddLesson = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1021,15 +990,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <BookOpen className="w-3.5 h-3.5" /> CURSOS
           </button>
 
-          <button
-            onClick={() => setActiveTab('meetings')}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${activeTab === 'meetings'
-                ? 'bg-[#a3b8cc] text-[#0d1b2e] border-[#0d1b2e] shadow-[2px_2px_0_0_#ffffff] translate-x-0.5 -translate-y-0.5'
-                : 'border-transparent text-slate-400 hover:text-white hover:bg-[#1e385c]/50'
-              }`}
-          >
-            <Video className="w-3.5 h-3.5" /> MEETINGS
-          </button>
+
 
           <button
             onClick={() => setActiveTab('contenido')}
@@ -1205,16 +1166,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             });
           });
 
-          meetings.forEach((m) => {
-            activities.push({
-              id: `meeting-${m.id}`,
-              type: 'meeting',
-              title: 'MEETING DISPONIBLE',
-              detail: `Sala "${m.name}" lista para clases virtuales`,
-              timeText: 'Enlace activo',
-              timestamp: Date.now() - 3600000 * 48,
-            });
-          });
+
 
           lessons.forEach((l) => {
             activities.push({
@@ -1248,7 +1200,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           return (
             <div className="space-y-8">
               {/* KPI Cards Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
                 <div className="bg-white border-2 border-[#0d1b2e] p-5 shadow-[4px_4px_0_0_#0d1b2e] hover:-translate-y-0.5 transition-all">
                   <span className="text-[10px] font-bold text-[#6180a6] uppercase block mb-1">Usuarios Registrados</span>
@@ -1262,12 +1214,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <span className="text-[10px] font-bold text-[#6180a6] uppercase block mb-1">Cursos Activos</span>
                   <span className="text-3xl font-bold text-[#0d1b2e] block">{classrooms.length}</span>
                   <span className="text-[10px] font-medium text-slate-500 block mt-2.5">Cursos Registrados</span>
-                </div>
-
-                <div className="bg-white border-2 border-[#0d1b2e] p-5 shadow-[4px_4px_0_0_#0d1b2e] hover:-translate-y-0.5 transition-all">
-                  <span className="text-[10px] font-bold text-[#6180a6] uppercase block mb-1">Salas de Meeting</span>
-                  <span className="text-3xl font-bold text-[#0d1b2e] block">{meetings.length}</span>
-                  <span className="text-[10px] font-medium text-slate-500 block mt-2.5">Google Meet disponibles</span>
                 </div>
 
                 <div className="bg-white border-2 border-[#0d1b2e] p-5 shadow-[4px_4px_0_0_#0d1b2e] hover:-translate-y-0.5 transition-all flex flex-col justify-between">
@@ -1340,13 +1286,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   >
                     <Plus className="w-3.5 h-3.5" /> PLANIFICAR CLASE
                   </button>
-
-                  <button
-                    onClick={() => setShowAddMeetingModal(true)}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#a3b8cc] hover:bg-[#6180a6] text-[#0d1b2e] hover:text-white font-bold border-2 border-[#0d1b2e] shadow-[2px_2px_0_0_#0d1b2e] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[2px] active:translate-x-[2px] transition-all cursor-pointer text-xs"
-                  >
-                    <Video className="w-3.5 h-3.5" /> AGREGAR GOOGLE MEET
-                  </button>
                 </div>
               </div>
             </div>
@@ -1418,67 +1357,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
         )}
 
-        {/* MEETINGS TAB */}
-        {activeTab === 'meetings' && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center border-b border-slate-200 pb-4">
-              <h2 className="text-xl font-bold text-[#0d1b2e]">Salas de Google Meet</h2>
-              <button
-                onClick={() => setShowAddMeetingModal(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2a4e7c] hover:bg-[#1e385c] text-white font-bold border-2 border-[#0d1b2e] shadow-[2px_2px_0_0_#000000] active:translate-y-[2px] active:shadow-[0px_0px_0_0_#000000] transition-all text-xs cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" /> Nueva Meeting
-              </button>
-            </div>
 
-            <div className="bg-white border-2 border-[#0d1b2e] shadow-[4px_4px_0_0_#0d1b2e] overflow-x-auto">
-              <table className="w-full min-w-[600px] border-collapse text-left text-xs">
-                <thead>
-                  <tr className="bg-[#0d1b2e] text-white border-b-2 border-[#1e385c]">
-                    <th className="p-3 font-semibold uppercase tracking-wider">ID</th>
-                    <th className="p-3 font-semibold uppercase tracking-wider">Nombre del Enlace</th>
-                    <th className="p-3 font-semibold uppercase tracking-wider">URL de Google Meet</th>
-                    <th className="p-3 font-semibold uppercase tracking-wider">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#a3b8cc]/30">
-                  {meetings.map((meeting) => (
-                    <tr key={meeting.id} className="hover:bg-[#f0f4f8]/50 font-medium">
-                      <td className="p-3 text-slate-400 font-bold">{meeting.id}</td>
-                      <td className="p-3 text-[#0d1b2e] font-bold">{meeting.name}</td>
-                      <td className="p-3">
-                        <a
-                          href={meeting.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[#2a4e7c] hover:underline font-bold flex items-center gap-1.5"
-                        >
-                          {meeting.url} <ExternalLink className="w-3 h-3" />
-                        </a>
-                      </td>
-                      <td className="p-3">
-                        <button
-                          onClick={() => handleDeleteMeeting(meeting.id)}
-                          className="text-slate-400 hover:text-red-600 p-1 cursor-pointer transition-colors"
-                          title="Eliminar Meeting"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {meetings.length === 0 && (
-                    <tr>
-                      <td colSpan={4} className="p-6 text-center text-slate-400 italic">
-                        No hay salas creadas. Crea una para ofrecerla al agendar clases.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
 
 
 
@@ -3763,55 +3642,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
       )}
 
-      {/* ADD MEETING MODAL */}
-      {showAddMeetingModal && (
-        <div className="fixed inset-0 bg-[#0d1b2e]/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white border-4 border-[#0d1b2e] shadow-[6px_6px_0_0_#000000] w-full max-w-sm p-5 animate-in fade-in zoom-in duration-150">
-            <h3 className="text-sm font-bold text-[#0d1b2e] mb-4 uppercase tracking-wider">Nueva Sala Virtual</h3>
-            <form onSubmit={handleAddMeeting} className="space-y-3.5 text-xs">
-              <div>
-                <label className="font-bold text-[#6180a6] block mb-1">Nombre Identificador</label>
-                <input
-                  type="text"
-                  required
-                  value={newMeetingName}
-                  onChange={(e) => setNewMeetingName(e.target.value)}
-                  placeholder="ej. Clase de Robótica Viernes"
-                  className="w-full p-2 border border-[#a3b8cc] rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-slate-900"
-                />
-              </div>
 
-              <div>
-                <label className="font-bold text-[#6180a6] block mb-1">Enlace de Google Meet (URL)</label>
-                <input
-                  type="url"
-                  required
-                  value={newMeetingUrl}
-                  onChange={(e) => setNewMeetingUrl(e.target.value)}
-                  placeholder="ej. https://meet.google.com/abc-defg-hij"
-                  className="w-full p-2 border border-[#a3b8cc] rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-slate-900"
-                />
-              </div>
-
-              <div className="flex gap-2 justify-end pt-3">
-                <button
-                  type="button"
-                  onClick={() => setShowAddMeetingModal(false)}
-                  className="px-3 py-1.5 border border-[#a3b8cc] rounded font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-3 py-1.5 bg-[#2a4e7c] hover:bg-[#1e385c] text-white font-bold border-2 border-[#0d1b2e] shadow-[1.5px_1.5px_0_0_#000000] active:translate-y-[1.5px] active:shadow-[0px_0px_0_0_#000000] transition-all cursor-pointer"
-                >
-                  Crear Meeting
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* ADD CLASSROOM (CLASE) MODAL */}
       {showAddClassModal && (

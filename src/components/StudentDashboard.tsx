@@ -141,7 +141,7 @@ interface GameItem {
 export const GAME_ITEMS: Record<string, GameItem> = {
   'libro-sabiduria': {
     id: 'libro-sabiduria',
-    name: 'Códice del Bit',
+    name: 'Códice del Logos',
     type: 'Libro de Sabiduría',
     emoji: '📖',
     rarity: 'common',
@@ -1308,7 +1308,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {[
-                    { name: 'Aprendiz Curioso', emoji: '📖', desc: 'Otorgado por ingresar al portal y reclamar el Códice del Bit.' },
+                    { name: 'Aprendiz Curioso', emoji: '📖', desc: 'Otorgado por ingresar al portal y reclamar el Códice del Logos.' },
                     { name: 'Mago del Código', emoji: '🪄', desc: 'Completar al menos 5 lecciones de programación en Play Code.' },
                     { name: 'Portador de la Verdad', emoji: '🗡️', desc: 'Recibir 10 o más reacciones ✅ por veracidad en el foro.' },
                     { name: 'Guardián Digital', emoji: '🛡️', desc: 'Completar el 100% de las clases de un curso oficial.' }

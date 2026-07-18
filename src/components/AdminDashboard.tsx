@@ -1010,6 +1010,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               }`}
           >
             <Users className="w-3.5 h-3.5" /> USUARIOS
+            {students.filter(s => s.status === 'Pendiente').length > 0 && (
+              <span className="ml-auto min-w-[18px] h-[18px] bg-amber-400 text-[#0d1b2e] text-[9px] font-extrabold rounded-full flex items-center justify-center px-1 animate-pulse">
+                {students.filter(s => s.status === 'Pendiente').length}
+              </span>
+            )}
           </button>
 
           <button
@@ -1365,7 +1370,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         {activeTab === 'usuarios' && (
           <div className="space-y-6">
             <div className="flex justify-between items-center border-b border-slate-200 pb-4">
-              <h2 className="text-xl font-bold text-[#0d1b2e]">Usuarios Registrados</h2>
+              <div className="flex items-center gap-3">
+                <h2 className="text-xl font-bold text-[#0d1b2e]">Usuarios Registrados</h2>
+                {students.filter(s => s.status === 'Pendiente').length > 0 && (
+                  <span className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-100 text-amber-800 border-2 border-amber-400 text-[10px] font-extrabold rounded shadow-[1px_1px_0_0_#b45309] animate-pulse">
+                    ⏳ {students.filter(s => s.status === 'Pendiente').length} pendiente{students.filter(s => s.status === 'Pendiente').length > 1 ? 's' : ''} de activación
+                  </span>
+                )}
+              </div>
               <button
                 onClick={() => setShowAddStudentModal(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2a4e7c] hover:bg-[#1e385c] text-white font-bold border-2 border-[#0d1b2e] shadow-[2px_2px_0_0_#000000] active:translate-y-[2px] active:shadow-[0px_0px_0_0_#000000] transition-all text-xs cursor-pointer"
@@ -1412,8 +1424,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <td className="p-3 text-slate-300 text-[10px] italic">Protegido</td>
                   </tr>
  
-                  {students.map((student) => (
-                    <tr key={student.id} className="hover:bg-[#f0f4f8]/50 font-medium">
+                  {[...students]
+                    .sort((a, b) => {
+                      // Pendiente primero
+                      if (a.status === 'Pendiente' && b.status !== 'Pendiente') return -1;
+                      if (a.status !== 'Pendiente' && b.status === 'Pendiente') return 1;
+                      return 0;
+                    })
+                    .map((student) => (
+                    <tr key={student.id} className={`font-medium transition-colors ${student.status === 'Pendiente' ? 'bg-amber-50 border-l-4 border-l-amber-400' : 'hover:bg-[#f0f4f8]/50'}`}>
                       <td className="p-3 text-slate-400 font-bold">{student.id}</td>
                       <td className="p-3 text-[#0d1b2e] font-bold">{student.name}</td>
                       <td className="p-3 text-[#6180a6]">

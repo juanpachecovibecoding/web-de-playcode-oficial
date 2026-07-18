@@ -9,6 +9,7 @@ import { Footer } from './components/Footer';
 import { Login } from './components/Login';
 import { AdminDashboard } from './components/AdminDashboard';
 import { StudentDashboard } from './components/StudentDashboard';
+import { GoogleRegistrationForm } from './components/GoogleRegistrationForm';
 import { ShieldAlert, ArrowLeft, Clock } from 'lucide-react';
 import { db } from './firebase';
 import { collection, doc, setDoc, getDocs, deleteDoc } from 'firebase/firestore';
@@ -121,11 +122,21 @@ interface ForumPost {
   chestAwarded?: boolean;
 }
 
+interface PendingGoogleData {
+  email: string;
+  displayName: string;
+  photoURL?: string;
+}
+
 const App: React.FC = () => {
-  const [view, setView] = useState<'landing' | 'login' | 'dashboard' | 'student_dashboard' | 'pending_activation' | 'unauthorized'>(() => {
+  const [view, setView] = useState<'landing' | 'login' | 'dashboard' | 'student_dashboard' | 'pending_activation' | 'unauthorized' | 'google_registration'>(() => {
     const savedView = localStorage.getItem('playcode_view');
+    // Don't restore google_registration view on page reload
+    if (savedView === 'google_registration') return 'landing';
     return (savedView as any) || 'landing';
   });
+
+  const [pendingGoogleData, setPendingGoogleData] = useState<PendingGoogleData | null>(null);
   
   const [user, setUser] = useState<LoggedInUser | null>(() => {
     const savedUser = localStorage.getItem('playcode_user');
@@ -377,13 +388,16 @@ const App: React.FC = () => {
     }
   }, [forumPosts, students, loading, dbLoaded]);
 
-  const handleLogin = (username: string, password?: string, name?: string): { success: boolean; error?: string } => {
+  const handleLogin = (
+    username: string,
+    password?: string,
+    name?: string,
+    googleData?: { email: string; displayName: string; photoURL?: string }
+  ): { success: boolean; error?: string } => {
     const googleEmail = username.toLowerCase().trim();
     const formattedUsername = username.toLowerCase().replace(/\s+/g, '').trim();
 
     // 1. Superadmin verification
-    // Google Auth Superadmin Login: matches email "juanpacheco@playcode.com.ar"
-    // Manual Superadmin Login: username is "juanpacheco" or "juanpacheco@playcode.com.ar" and password is correct
     const isSuperAdminGoogle = password === undefined && googleEmail === 'juanpacheco@playcode.com.ar';
     const isSuperAdminManual = password !== undefined && (formattedUsername === 'juanpacheco' || formattedUsername === 'juanpacheco@playcode.com.ar');
 
@@ -422,17 +436,20 @@ const App: React.FC = () => {
       setView('student_dashboard');
       return { success: true };
     } else {
-      // 3. Student verification: Google SSO login (password is undefined)
-      // Find student with Google SSO allowed matching the Google email
+      // 3. Google SSO login
       const existingStudentGoogle = students.find(
         s => s.googleAuthAllowed && s.googleEmail?.toLowerCase().trim() === googleEmail
       );
 
       if (!existingStudentGoogle) {
-        return {
-          success: false,
-          error: 'Este correo de Google no está autorizado para Google SSO. Inicia sesión con usuario y contraseña o contacta al administrador.'
-        };
+        // NEW: Unknown Google email → redirect to registration form
+        setPendingGoogleData({
+          email: googleData?.email || googleEmail,
+          displayName: googleData?.displayName || name || googleEmail.split('@')[0],
+          photoURL: googleData?.photoURL,
+        });
+        setView('google_registration');
+        return { success: true };
       }
 
       if (existingStudentGoogle.status === 'Pendiente') {
@@ -452,6 +469,38 @@ const App: React.FC = () => {
       setView('student_dashboard');
       return { success: true };
     }
+  };
+
+  const handleGoogleRegistration = async (username: string, platformId: string): Promise<void> => {
+    if (!pendingGoogleData) throw new Error('No hay datos de Google pendientes.');
+
+    const newId = `student-google-${Date.now()}`;
+    const newStudent: Student = {
+      id: newId,
+      name: pendingGoogleData.displayName,
+      username: username.toLowerCase().trim(),
+      status: 'Pendiente',
+      googleAuthAllowed: true,
+      googleEmail: pendingGoogleData.email.toLowerCase().trim(),
+      photoUrl: pendingGoogleData.photoURL || '',
+      platformIds: [platformId],
+      role: 'alumno',
+      inventory: [],
+      unlockedBadgeIds: [],
+      unopenedChestsCount: 0,
+    };
+
+    // Persist to Firestore directly
+    await setDoc(doc(db, 'students', newId), newStudent);
+
+    // Update local state
+    setStudents(prev => [...prev, newStudent]);
+
+    // Show pending activation screen
+    setAttemptedUsername(newStudent.username);
+    setAttemptedName(newStudent.name);
+    setPendingGoogleData(null);
+    setView('pending_activation');
   };
 
   const handleLogout = () => {
@@ -476,6 +525,23 @@ const App: React.FC = () => {
 
   if (view === 'login') {
     return <Login onLogin={handleLogin} onBack={() => setView('landing')} />;
+  }
+
+  if (view === 'google_registration' && pendingGoogleData) {
+    return (
+      <GoogleRegistrationForm
+        googleEmail={pendingGoogleData.email}
+        googleDisplayName={pendingGoogleData.displayName}
+        googlePhotoURL={pendingGoogleData.photoURL}
+        platforms={platforms}
+        existingUsernames={students.map(s => s.username)}
+        onSubmit={handleGoogleRegistration}
+        onBack={() => {
+          setPendingGoogleData(null);
+          setView('login');
+        }}
+      />
+    );
   }
 
   if (view === 'pending_activation') {

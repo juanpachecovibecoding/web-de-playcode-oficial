@@ -3,8 +3,14 @@ import { Code2, ArrowLeft } from 'lucide-react';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
 
+interface GoogleUserData {
+  email: string;
+  displayName: string;
+  photoURL?: string;
+}
+
 interface LoginProps {
-  onLogin: (username: string, password?: string, name?: string) => { success: boolean; error?: string };
+  onLogin: (username: string, password?: string, name?: string, googleData?: GoogleUserData) => { success: boolean; error?: string };
   onBack: () => void;
 }
 
@@ -21,7 +27,12 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
       if (user && user.email) {
-        const res = onLogin(user.email, undefined, user.displayName || user.email.split('@')[0]);
+        const googleData = {
+          email: user.email,
+          displayName: user.displayName || user.email.split('@')[0],
+          photoURL: user.photoURL || undefined,
+        };
+        const res = onLogin(user.email, undefined, user.displayName || user.email.split('@')[0], googleData);
         if (!res.success) {
           setError(res.error || 'Acceso denegado.');
         }

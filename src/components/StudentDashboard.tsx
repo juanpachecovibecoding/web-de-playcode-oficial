@@ -762,22 +762,24 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
             <span>Panel de Control</span>
           </button>
 
-          <button
-            onClick={() => {
-              setActiveTab('aprendizaje');
-              setSelectedCourseName(null);
-              setSelectedClassroomForLessons(null);
-              setSelectedLessonForPreview(null);
-            }}
-            className={`flex-1 min-w-[155px] py-3.5 px-4 font-bold text-[10px] uppercase tracking-wider transition-colors duration-150 flex items-center justify-center gap-2 cursor-pointer border-r-2 ${t.tabBarBorder} last:border-r-0 ${
-              activeTab === 'aprendizaje'
-                ? `${t.tabActiveBg} ${t.tabActiveText}`
-                : `${t.tabInactiveText} ${t.tabInactiveHover}`
-            }`}
-          >
-            <BookOpen className="w-4 h-4 shrink-0" />
-            <span>Mis Cursos</span>
-          </button>
+          {student.id !== 'guest-student' && (
+            <button
+              onClick={() => {
+                setActiveTab('aprendizaje');
+                setSelectedCourseName(null);
+                setSelectedClassroomForLessons(null);
+                setSelectedLessonForPreview(null);
+              }}
+              className={`flex-1 min-w-[155px] py-3.5 px-4 font-bold text-[10px] uppercase tracking-wider transition-colors duration-150 flex items-center justify-center gap-2 cursor-pointer border-r-2 ${t.tabBarBorder} last:border-r-0 ${
+                activeTab === 'aprendizaje'
+                  ? `${t.tabActiveBg} ${t.tabActiveText}`
+                  : `${t.tabInactiveText} ${t.tabInactiveHover}`
+              }`}
+            >
+              <BookOpen className="w-4 h-4 shrink-0" />
+              <span>Mis Cursos</span>
+            </button>
+          )}
 
           <button
             onClick={() => setActiveTab('recursos')}
@@ -897,7 +899,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                 </div>
               </div>
 
-              {/* Card 2: Classroom & Platform Status */}
+              {/* Card 2: Classroom & Platform Status (hidden for guest) */}
+              {student.id !== 'guest-student' && (
               <div className={`${t.cardBg} ${t.cardBorder} p-6 ${t.cardShadow} flex flex-col justify-between`}>
                 <div>
                   <span className="text-[9px] font-mono font-bold px-2 py-0.5 bg-[#2a4e7c] text-white rounded">
@@ -943,6 +946,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                   </button>
                 </div>
               </div>
+              )}
 
               {/* Card 3: Gamification level & Points */}
               {(() => {
@@ -1002,7 +1006,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
             {/* Bottom Row: Resume learning and community */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
-              {/* Learning Progress Summary */}
+              {/* Learning Progress Summary (hidden for guest) */}
+              {student.id !== 'guest-student' && (
               <div className={`${t.cardBg} ${t.cardBorder} p-6 ${t.cardShadow} space-y-4`}>
                 <h3 className="font-bold text-base border-b border-slate-100 pb-2">Mi Progreso de Aprendizaje</h3>
                 
@@ -1052,6 +1057,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                   )}
                 </div>
               </div>
+              )}
 
               {/* Community Feed Preview */}
               <div className={`${t.cardBg} ${t.cardBorder} p-6 ${t.cardShadow} space-y-4`}>

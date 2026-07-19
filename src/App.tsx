@@ -79,6 +79,14 @@ interface Meeting {
   url: string;
 }
 
+export interface Resource {
+  id: string;
+  name: string;
+  description: string;
+  courseId: string;
+  url: string;
+}
+
 interface Classroom {
   id: string;
   name: string;
@@ -160,6 +168,7 @@ const App: React.FC = () => {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [platforms, setPlatforms] = useState<Platform[]>([]);
   const [forumPosts, setForumPosts] = useState<ForumPost[]>([]);
+  const [resources, setResources] = useState<Resource[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [dbStatus, setDbStatus] = useState<'connecting' | 'connected' | 'error'>('connecting');
@@ -267,6 +276,11 @@ const App: React.FC = () => {
         }
         setForumPosts(loadedForumPosts);
 
+        // 8. Fetch Resources
+        const resourcesSnap = await getDocs(collection(db, 'resources'));
+        const loadedResources = resourcesSnap.docs.map(d => ({ id: d.id, ...d.data() } as Resource));
+        setResources(loadedResources);
+
         setDbLoaded(true);
         setDbStatus('connected');
         setDbError(null);
@@ -284,6 +298,7 @@ const App: React.FC = () => {
           setLessons(lc('playcode_lessons') || []);
           setPlatforms(lc('playcode_platforms') || []);
           setForumPosts(lc('playcode_forum_posts') || []);
+          setResources(lc('playcode_resources') || []);
         } catch { /* localStorage also failed, arrays stay empty */ }
       } finally {
         setLoading(false);
@@ -335,6 +350,12 @@ const App: React.FC = () => {
     localStorage.setItem('playcode_classrooms', JSON.stringify(classrooms));
     syncCollection('classrooms', classrooms);
   }, [classrooms, loading, dbLoaded]);
+
+  React.useEffect(() => {
+    if (loading || !dbLoaded) return;
+    localStorage.setItem('playcode_resources', JSON.stringify(resources));
+    syncCollection('resources', resources);
+  }, [resources, loading, dbLoaded]);
 
   React.useEffect(() => {
     if (user) {
@@ -662,6 +683,8 @@ const App: React.FC = () => {
         setPlatforms={setPlatforms}
         posts={forumPosts}
         setPosts={setForumPosts}
+        resources={resources}
+        setResources={setResources}
         dbStatus={dbStatus}
         dbError={dbError}
         firebaseProjectId={db.app.options.projectId || 'playcode-39ce5'}
@@ -686,6 +709,7 @@ const App: React.FC = () => {
           platforms={platforms}
           posts={forumPosts}
           setPosts={setForumPosts}
+          resources={resources}
           onLogout={handleLogout}
           onSaveProfile={(updated) => {
             if (updated.id === 'guest-student') {

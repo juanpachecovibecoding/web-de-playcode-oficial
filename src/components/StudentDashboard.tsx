@@ -19,6 +19,7 @@ import {
   Send,
   Plus,
   Trash2,
+  ExternalLink,
   Search,
   X,
   Clock,
@@ -177,6 +178,14 @@ export const GAME_ITEMS: Record<string, GameItem> = {
   }
 };
 
+interface Resource {
+  id: string;
+  name: string;
+  description: string;
+  courseId: string;
+  url: string;
+}
+
 interface StudentDashboardProps {
   student: Student;
   students: Student[];
@@ -187,6 +196,7 @@ interface StudentDashboardProps {
   platforms: Platform[];
   posts: ForumPost[];
   setPosts: React.Dispatch<React.SetStateAction<ForumPost[]>>;
+  resources: Resource[];
   onLogout: () => void;
   onSaveProfile: (updated: Student) => void;
   dbStatus: 'connecting' | 'connected' | 'error';
@@ -310,6 +320,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   platforms,
   posts,
   setPosts,
+  resources,
   onLogout,
   onSaveProfile,
   dbStatus,
@@ -1386,7 +1397,59 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
         {activeTab === 'aprendizaje' && (
           <div>
-            {insidePlatform ? (
+            {student.id === 'guest-student' ? (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-xl font-bold text-[#0d1b2e] font-pixel uppercase tracking-wide">
+                    Recursos del Administrador
+                  </h3>
+                  <p className="text-xs text-slate-500 font-semibold mt-1">
+                    Aquí tienes acceso a todos los recursos agregados por el administrador de la plataforma.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {resources.length === 0 ? (
+                    <div className="col-span-3 bg-white border-4 border-[#0d1b2e] p-8 text-center text-xs text-slate-500 rounded font-semibold shadow-[6px_6px_0_0_#0d1b2e]">
+                      No hay recursos disponibles en este momento.
+                    </div>
+                  ) : (
+                    resources.map((res) => {
+                      const relatedCourse = courses.find(c => c.id === res.courseId || c.title === res.courseId);
+                      return (
+                        <div 
+                          key={res.id} 
+                          className={`${t.cardBg} ${t.cardBorder} p-6 ${t.cardShadow} hover:translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#000000] transition-all flex flex-col justify-between`}
+                        >
+                          <div>
+                            <div className="flex justify-between items-center mb-3">
+                              <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-amber-100 text-amber-800 border border-amber-300 rounded uppercase">
+                                {relatedCourse ? relatedCourse.title : 'General'}
+                              </span>
+                              <BookOpen className="w-4 h-4 text-amber-500" />
+                            </div>
+                            <h4 className="text-base font-bold text-[#0d1b2e] line-clamp-2">{res.name}</h4>
+                            <p className="text-xs text-slate-600 mt-2 leading-relaxed">
+                              {res.description}
+                            </p>
+                          </div>
+                          
+                          <div className="mt-6 pt-4 border-t border-slate-100">
+                            <a
+                              href={res.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full py-2 bg-[#2a4e7c] hover:bg-[#1e385c] text-white font-bold border-2 border-[#0d1b2e] shadow-[2.5px_2.5px_0_0_#000000] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all text-xs uppercase flex items-center justify-center gap-1.5 cursor-pointer no-underline"
+                            >
+                              Acceder al Recurso <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            ) : insidePlatform ? (
               <div className="space-y-6">
                 {/* Platform Navigation */}
                 {!selectedPlatformAula ? (

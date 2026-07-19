@@ -103,6 +103,7 @@ export interface Resource {
   description: string;
   courseId: string;
   url: string;
+  imageUrl?: string;
 }
 
 interface AdminDashboardProps {
@@ -205,12 +206,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [newResourceDesc, setNewResourceDesc] = useState('');
   const [newResourceCourseId, setNewResourceCourseId] = useState('');
   const [newResourceUrl, setNewResourceUrl] = useState('');
+  const [newResourceImageUrl, setNewResourceImageUrl] = useState('');
   const [isCreatingResource, setIsCreatingResource] = useState(false);
+
+  // Resources editing state
+  const [editingResource, setEditingResource] = useState<Resource | null>(null);
+  const [editResourceName, setEditResourceName] = useState('');
+  const [editResourceDesc, setEditResourceDesc] = useState('');
+  const [editResourceCourseId, setEditResourceCourseId] = useState('');
+  const [editResourceUrl, setEditResourceUrl] = useState('');
+  const [editResourceImageUrl, setEditResourceImageUrl] = useState('');
 
   const handleCreateResource = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newResourceName.trim() || !newResourceDesc.trim() || !newResourceCourseId || !newResourceUrl.trim()) {
-      alert('Por favor complete todos los campos');
+      alert('Por favor complete todos los campos obligatorios');
       return;
     }
     const newResource: Resource = {
@@ -218,14 +228,45 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       name: newResourceName.trim(),
       description: newResourceDesc.trim(),
       courseId: newResourceCourseId,
-      url: newResourceUrl.trim()
+      url: newResourceUrl.trim(),
+      imageUrl: newResourceImageUrl.trim() || undefined
     };
     setResources(prev => [...prev, newResource]);
     setNewResourceName('');
     setNewResourceDesc('');
     setNewResourceCourseId('');
     setNewResourceUrl('');
+    setNewResourceImageUrl('');
     setIsCreatingResource(false);
+  };
+
+  const handleStartEditResource = (res: Resource) => {
+    setEditingResource(res);
+    setEditResourceName(res.name);
+    setEditResourceDesc(res.description);
+    setEditResourceCourseId(res.courseId);
+    setEditResourceUrl(res.url);
+    setEditResourceImageUrl(res.imageUrl || '');
+  };
+
+  const handleUpdateResource = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingResource) return;
+    if (!editResourceName.trim() || !editResourceDesc.trim() || !editResourceCourseId || !editResourceUrl.trim()) {
+      alert('Por favor complete todos los campos obligatorios');
+      return;
+    }
+
+    setResources(prev => prev.map(r => r.id === editingResource.id ? {
+      ...r,
+      name: editResourceName.trim(),
+      description: editResourceDesc.trim(),
+      courseId: editResourceCourseId,
+      url: editResourceUrl.trim(),
+      imageUrl: editResourceImageUrl.trim() || undefined
+    } : r));
+
+    setEditingResource(null);
   };
 
   const handleDeleteResource = (id: string) => {
@@ -3081,7 +3122,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 {res.url} <ExternalLink className="w-3 h-3" />
                               </a>
                             </td>
-                            <td className="p-4 text-center">
+                            <td className="p-4 text-center flex justify-center items-center gap-2">
+                              <button
+                                onClick={() => handleStartEditResource(res)}
+                                className="p-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 border border-yellow-300 rounded transition-all cursor-pointer"
+                                title="Editar recurso"
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </button>
                               <button
                                 onClick={() => handleDeleteResource(res.id)}
                                 className="p-2 bg-red-100 hover:bg-red-200 text-red-700 border border-red-300 rounded transition-all cursor-pointer"
@@ -3115,7 +3163,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   
                   <form onSubmit={handleCreateResource} className="p-5 space-y-4 text-xs">
                     <div>
-                      <label className="font-bold text-slate-500 block mb-1">Nombre del Recurso</label>
+                      <label className="font-bold text-slate-500 block mb-1">Nombre del Recurso *</label>
                       <input
                         type="text"
                         required
@@ -3127,19 +3175,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </div>
 
                     <div>
-                      <label className="font-bold text-slate-500 block mb-1">Descripción</label>
+                      <label className="font-bold text-slate-500 block mb-1">Descripción *</label>
                       <textarea
                         required
                         rows={3}
                         value={newResourceDesc}
                         onChange={(e) => setNewResourceDesc(e.target.value)}
-                        placeholder="Describe brevemente de qué se trata este recurso o herramienta..."
+                        placeholder="Describe brevemente de qué se trata este recurso..."
                         className="w-full p-2.5 border-2 border-[#0d1b2e] rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-[#0d1b2e] font-semibold resize-none"
                       />
                     </div>
 
                     <div>
-                      <label className="font-bold text-slate-500 block mb-1">Asociar al Curso</label>
+                      <label className="font-bold text-slate-500 block mb-1">Asociar al Curso *</label>
                       <select
                         required
                         value={newResourceCourseId}
@@ -3156,13 +3204,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </div>
 
                     <div>
-                      <label className="font-bold text-slate-500 block mb-1">Enlace / URL</label>
+                      <label className="font-bold text-slate-500 block mb-1">Enlace / URL *</label>
                       <input
                         type="url"
                         required
                         value={newResourceUrl}
                         onChange={(e) => setNewResourceUrl(e.target.value)}
                         placeholder="https://..."
+                        className="w-full p-2.5 border-2 border-[#0d1b2e] rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-[#0d1b2e] font-semibold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-slate-500 block mb-1">URL de la Imagen (opcional)</label>
+                      <input
+                        type="url"
+                        value={newResourceImageUrl}
+                        onChange={(e) => setNewResourceImageUrl(e.target.value)}
+                        placeholder="https://.../imagen.png"
                         className="w-full p-2.5 border-2 border-[#0d1b2e] rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-[#0d1b2e] font-semibold"
                       />
                     </div>
@@ -3180,6 +3239,105 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         className="px-4 py-2 bg-[#2ec4b6] hover:bg-[#20a396] text-white font-bold border border-[#0d1b2e] shadow-[2px_2px_0_0_#0d1b2e] active:shadow-[0px_0px_0_0_#0d1b2e] active:translate-y-0.5 active:translate-x-0.5 transition-all uppercase cursor-pointer"
                       >
                         Guardar Recurso
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* Edit Resource Modal */}
+            {editingResource && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                <div className="w-full max-w-md bg-white border-4 border-[#0d1b2e] shadow-[10px_10px_0_0_#0d1b2e] flex flex-col">
+                  <div className="p-5 border-b-2 border-[#0d1b2e] flex items-center justify-between bg-slate-50">
+                    <h3 className="font-bold text-[#0d1b2e] text-sm uppercase tracking-wider">Editar Recurso</h3>
+                    <button 
+                      onClick={() => setEditingResource(null)} 
+                      className="text-slate-500 hover:text-[#0d1b2e] font-bold text-lg leading-none cursor-pointer"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  
+                  <form onSubmit={handleUpdateResource} className="p-5 space-y-4 text-xs">
+                    <div>
+                      <label className="font-bold text-slate-500 block mb-1">Nombre del Recurso *</label>
+                      <input
+                        type="text"
+                        required
+                        value={editResourceName}
+                        onChange={(e) => setEditResourceName(e.target.value)}
+                        placeholder="Ej. Servidor de Minecraft de Play Code"
+                        className="w-full p-2.5 border-2 border-[#0d1b2e] rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-[#0d1b2e] font-semibold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-slate-500 block mb-1">Descripción *</label>
+                      <textarea
+                        required
+                        rows={3}
+                        value={editResourceDesc}
+                        onChange={(e) => setEditResourceDesc(e.target.value)}
+                        placeholder="Describe brevemente de qué se trata este recurso..."
+                        className="w-full p-2.5 border-2 border-[#0d1b2e] rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-[#0d1b2e] font-semibold resize-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-slate-500 block mb-1">Asociar al Curso *</label>
+                      <select
+                        required
+                        value={editResourceCourseId}
+                        onChange={(e) => setEditResourceCourseId(e.target.value)}
+                        className="w-full p-2.5 border-2 border-[#0d1b2e] bg-white rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-[#0d1b2e] font-bold"
+                      >
+                        <option value="">-- Seleccionar Curso --</option>
+                        {courses.map(c => (
+                          <option key={c.id} value={c.id}>
+                            {c.title} ({c.ageGroup})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-slate-500 block mb-1">Enlace / URL *</label>
+                      <input
+                        type="url"
+                        required
+                        value={editResourceUrl}
+                        onChange={(e) => setEditResourceUrl(e.target.value)}
+                        placeholder="https://..."
+                        className="w-full p-2.5 border-2 border-[#0d1b2e] rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-[#0d1b2e] font-semibold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-slate-500 block mb-1">URL de la Imagen (opcional)</label>
+                      <input
+                        type="url"
+                        value={editResourceImageUrl}
+                        onChange={(e) => setEditResourceImageUrl(e.target.value)}
+                        placeholder="https://.../imagen.png"
+                        className="w-full p-2.5 border-2 border-[#0d1b2e] rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-[#0d1b2e] font-semibold"
+                      />
+                    </div>
+
+                    <div className="pt-4 border-t border-[#0d1b2e]/10 flex justify-end gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setEditingResource(null)}
+                        className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold border border-[#0d1b2e] shadow-[2px_2px_0_0_#0d1b2e] active:shadow-[0px_0px_0_0_#0d1b2e] active:translate-y-0.5 active:translate-x-0.5 transition-all uppercase cursor-pointer"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-[#2ec4b6] hover:bg-[#20a396] text-white font-bold border border-[#0d1b2e] shadow-[2px_2px_0_0_#0d1b2e] active:shadow-[0px_0px_0_0_#0d1b2e] active:translate-y-0.5 active:translate-x-0.5 transition-all uppercase cursor-pointer"
+                      >
+                        Guardar Cambios
                       </button>
                     </div>
                   </form>

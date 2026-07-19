@@ -85,6 +85,7 @@ export interface Resource {
   description: string;
   courseId: string;
   url: string;
+  imageUrl?: string;
 }
 
 interface Classroom {

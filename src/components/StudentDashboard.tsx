@@ -184,6 +184,7 @@ interface Resource {
   description: string;
   courseId: string;
   url: string;
+  imageUrl?: string;
 }
 
 interface StudentDashboardProps {
@@ -1418,10 +1419,20 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                       return (
                         <div 
                           key={res.id} 
-                          className={`${t.cardBg} ${t.cardBorder} p-6 ${t.cardShadow} hover:translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#000000] transition-all flex flex-col justify-between`}
+                          className={`${t.cardBg} ${t.cardBorder} p-5 ${t.cardShadow} hover:translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#000000] transition-all flex flex-col justify-between`}
                         >
                           <div>
-                            <div className="flex justify-between items-center mb-3">
+                            {res.imageUrl && (
+                              <img 
+                                src={res.imageUrl} 
+                                alt={res.name}
+                                className="w-full h-32 object-cover border-2 border-[#0d1b2e] rounded mb-3"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                }}
+                              />
+                            )}
+                            <div className="flex justify-between items-center mb-2">
                               <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-amber-100 text-amber-800 border border-amber-300 rounded uppercase">
                                 {relatedCourse ? relatedCourse.title : 'General'}
                               </span>

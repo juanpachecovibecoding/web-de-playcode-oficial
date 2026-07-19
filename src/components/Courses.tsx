@@ -31,11 +31,6 @@ export const Courses: React.FC = () => {
             <div className="flex-1">
               <h3 className="text-2xl font-bold text-slate-900 mb-2">Aula Maker</h3>
               <p className="text-slate-600 font-medium mb-6">Para chicos de 6 a 8 años</p>
-              
-              <div className="flex items-end gap-1 mb-6">
-                <span className="font-pixel text-3xl text-slate-900">$52.600</span>
-                <span className="text-slate-600 mb-1 font-bold">/mes</span>
-              </div>
 
               <ul className="space-y-3 mb-8">
                 <li className="flex items-start gap-2 text-slate-700 text-sm font-medium">
@@ -70,11 +65,6 @@ export const Courses: React.FC = () => {
             <div className="flex-1">
               <h3 className="text-2xl font-bold text-slate-900 mb-2">Robótica y Programación</h3>
               <p className="text-slate-600 font-medium mb-6">Para chicos de 9 a 13 años</p>
-              
-              <div className="flex items-end gap-1 mb-6">
-                <span className="font-pixel text-3xl text-slate-900">$52.600</span>
-                <span className="text-slate-600 mb-1 font-bold">/mes</span>
-              </div>
 
               <ul className="space-y-3 mb-8">
                 <li className="flex items-start gap-2 text-slate-700 text-sm font-medium">
@@ -109,11 +99,6 @@ export const Courses: React.FC = () => {
             <div className="flex-1">
               <h3 className="text-2xl font-bold text-white mb-2">PlayCoders</h3>
               <p className="text-slate-400 font-medium mb-6">Para chicos de 9 a 13 años</p>
-              
-              <div className="flex items-end gap-1 mb-6">
-                <span className="font-pixel text-3xl text-[#ffe66d]">$49.600</span>
-                <span className="text-slate-400 mb-1 font-bold">/mes</span>
-              </div>
 
               <ul className="space-y-3 mb-8">
                 <li className="flex items-start gap-2 text-slate-300 text-sm font-medium">

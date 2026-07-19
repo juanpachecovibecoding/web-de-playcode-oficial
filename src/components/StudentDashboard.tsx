@@ -152,7 +152,7 @@ export const GAME_ITEMS: Record<string, GameItem> = {
     id: 'baston-codigo',
     name: 'Llaves del Reino',
     type: 'Bastón de Mago',
-    emoji: '🪄',
+    emoji: '🔑',
     rarity: 'rare',
     description: 'Otorgado a los magos que completan al menos 5 lecciones de programación.',
     badgeName: 'Mago del Código'

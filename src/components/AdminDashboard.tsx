@@ -137,7 +137,7 @@ export const ADMIN_GAME_ITEMS: Record<string, GameItem> = {
   'baston-codigo': {
     id: 'baston-codigo',
     name: 'Llaves del Reino',
-    emoji: '🪄',
+    emoji: '🔑',
     rarity: 'rare',
     description: 'Las llaves que abren el conocimiento del reino del código.'
   },

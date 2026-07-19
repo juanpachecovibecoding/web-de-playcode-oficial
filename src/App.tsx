@@ -520,9 +520,8 @@ const App: React.FC = () => {
       const guestAulaIds = classrooms
         .filter(c => {
           if (!firstPlatformId) return false;
-          // Matches if classroom platformId matches, or if it is inside the platform's aulas list
-          return c.platformId === firstPlatformId || 
-            (platforms[0].aulas && platforms[0].aulas.some(a => a.id === c.id));
+          // Matches if the classroom is inside the first platform's aulas list
+          return platforms[0].aulas && platforms[0].aulas.some((a: any) => a.id === c.id);
         })
         .map(c => c.id);
 

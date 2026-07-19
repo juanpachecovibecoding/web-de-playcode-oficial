@@ -503,6 +503,17 @@ const App: React.FC = () => {
     setView('pending_activation');
   };
 
+  const handleGuestLogin = () => {
+    const guestUser: LoggedInUser = {
+      username: 'invitado',
+      name: 'Invitado',
+      role: 'student',
+      id: 'guest-student'
+    };
+    setUser(guestUser);
+    setView('student_dashboard');
+  };
+
   const handleLogout = () => {
     setUser(null);
     setView('landing');
@@ -524,7 +535,7 @@ const App: React.FC = () => {
   }
 
   if (view === 'login') {
-    return <Login onLogin={handleLogin} onBack={() => setView('landing')} />;
+    return <Login onLogin={handleLogin} onBack={() => setView('landing')} onGuestLogin={handleGuestLogin} />;
   }
 
   if (view === 'google_registration' && pendingGoogleData) {
@@ -617,7 +628,23 @@ const App: React.FC = () => {
   }
 
   if (view === 'student_dashboard' && user && user.id) {
-    const studentInfo = students.find(s => s.id === user.id);
+    const guestStudent: Student = {
+      id: 'guest-student',
+      name: 'Invitado',
+      username: 'invitado',
+      status: 'Activo',
+      googleAuthAllowed: false,
+      googleEmail: '',
+      photoUrl: '',
+      platformIds: platforms.map(p => p.id),
+      role: 'alumno',
+      inventory: ['libro-sabiduria', 'baston-codigo'],
+      unlockedBadgeIds: ['Aprendiz Curioso', 'Maestro del Código'],
+      unopenedChestsCount: 1,
+      completedLessonIds: [],
+      aulaIds: classrooms.map(c => c.id)
+    };
+    const studentInfo = students.find(s => s.id === user.id) || (user.id === 'guest-student' ? guestStudent : undefined);
     if (studentInfo) {
       return (
         <StudentDashboard

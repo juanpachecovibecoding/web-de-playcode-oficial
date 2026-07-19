@@ -12,9 +12,10 @@ interface GoogleUserData {
 interface LoginProps {
   onLogin: (username: string, password?: string, name?: string, googleData?: GoogleUserData) => { success: boolean; error?: string };
   onBack: () => void;
+  onGuestLogin: () => void;
 }
 
-export const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
+export const Login: React.FC<LoginProps> = ({ onLogin, onBack, onGuestLogin }) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [usernameInput, setUsernameInput] = useState('');
@@ -121,6 +122,16 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
               />
             </svg>
             {loading ? 'Conectando...' : 'Conectar con Google'}
+          </button>
+
+          {/* Guest Sign-in */}
+          <button
+            type="button"
+            onClick={onGuestLogin}
+            disabled={loading}
+            className="w-full py-3.5 px-4 bg-[#2ec4b6] hover:bg-[#20a396] text-white font-bold border-3 border-slate-900 shadow-[4px_4px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[4px] active:translate-x-[4px] transition-all flex items-center justify-center gap-3 cursor-pointer text-sm disabled:opacity-50"
+          >
+            👤 Ingresar como Invitado
           </button>
 
           {/* Divider */}

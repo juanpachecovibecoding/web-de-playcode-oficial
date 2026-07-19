@@ -137,7 +137,7 @@ export const ADMIN_GAME_ITEMS: Record<string, GameItem> = {
   'baston-codigo': {
     id: 'baston-codigo',
     name: 'Llaves del Reino',
-    emoji: '🔑',
+    emoji: '🗝️',
     rarity: 'rare',
     description: 'Las llaves que abren el conocimiento del reino del código.'
   },
@@ -159,7 +159,7 @@ export const ADMIN_GAME_ITEMS: Record<string, GameItem> = {
 
 export const ADMIN_BADGES_LIST = [
   { name: 'Aprendiz Curioso', emoji: '📖', desc: 'Otorgado por ingresar al portal y reclamar el Códice del Logos.' },
-  { name: 'Mago del Código', emoji: '🪄', desc: 'Completar al menos 5 lecciones de programación en Play Code.' },
+  { name: 'Maestro del Código', emoji: '🗝️', desc: 'Completar al menos 5 lecciones de programación en Play Code.' },
   { name: 'Portador de la Verdad', emoji: '🗡️', desc: 'Recibir 10 o más reacciones ✅ por veracidad en el foro.' },
   { name: 'Guardián Digital', emoji: '🛡️', desc: 'Completar el 100% de las clases de un curso oficial.' }
 ];

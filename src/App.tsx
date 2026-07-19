@@ -165,6 +165,10 @@ const App: React.FC = () => {
   const [dbStatus, setDbStatus] = useState<'connecting' | 'connected' | 'error'>('connecting');
   const [dbError, setDbError] = useState<string | null>(null);
   const [dbLoaded, setDbLoaded] = useState(false);
+  const [guestStudentState, setGuestStudentState] = useState<Student | null>(() => {
+    const saved = localStorage.getItem('playcode_guest_student');
+    return saved ? JSON.parse(saved) : null;
+  });
 
   // Helper to sync arrays to Firestore (adds, updates, and deletes)
   const syncCollection = async (collectionName: string, items: any[]) => {
@@ -504,13 +508,38 @@ const App: React.FC = () => {
   };
 
   const handleGuestLogin = () => {
+    let currentGuest = guestStudentState;
+    if (!currentGuest) {
+      const randomNum = Math.floor(1000 + Math.random() * 9000);
+      const guestUsername = `invitado_${randomNum}`;
+      currentGuest = {
+        id: 'guest-student',
+        name: `Invitado #${randomNum}`,
+        username: guestUsername,
+        status: 'Activo',
+        googleAuthAllowed: false,
+        googleEmail: '',
+        photoUrl: '',
+        platformIds: platforms.map(p => p.id),
+        role: 'alumno',
+        inventory: ['libro-sabiduria', 'baston-codigo'],
+        unlockedBadgeIds: ['Aprendiz Curioso', 'Maestro del Código'],
+        unopenedChestsCount: 1,
+        completedLessonIds: [],
+        aulaIds: classrooms.map(c => c.id)
+      };
+      setGuestStudentState(currentGuest);
+      localStorage.setItem('playcode_guest_student', JSON.stringify(currentGuest));
+    }
+
     const guestUser: LoggedInUser = {
-      username: 'invitado',
-      name: 'Invitado',
+      username: currentGuest.username,
+      name: currentGuest.name,
       role: 'student',
       id: 'guest-student'
     };
     setUser(guestUser);
+    localStorage.setItem('playcode_user', JSON.stringify(guestUser));
     setView('student_dashboard');
   };
 
@@ -628,23 +657,10 @@ const App: React.FC = () => {
   }
 
   if (view === 'student_dashboard' && user && user.id) {
-    const guestStudent: Student = {
-      id: 'guest-student',
-      name: 'Invitado',
-      username: 'invitado',
-      status: 'Activo',
-      googleAuthAllowed: false,
-      googleEmail: '',
-      photoUrl: '',
-      platformIds: platforms.map(p => p.id),
-      role: 'alumno',
-      inventory: ['libro-sabiduria', 'baston-codigo'],
-      unlockedBadgeIds: ['Aprendiz Curioso', 'Maestro del Código'],
-      unopenedChestsCount: 1,
-      completedLessonIds: [],
-      aulaIds: classrooms.map(c => c.id)
-    };
-    const studentInfo = students.find(s => s.id === user.id) || (user.id === 'guest-student' ? guestStudent : undefined);
+    const studentInfo = user.id === 'guest-student' 
+      ? guestStudentState 
+      : students.find(s => s.id === user.id);
+
     if (studentInfo) {
       return (
         <StudentDashboard
@@ -659,7 +675,12 @@ const App: React.FC = () => {
           setPosts={setForumPosts}
           onLogout={handleLogout}
           onSaveProfile={(updated) => {
-            setStudents(prev => prev.map(s => s.id === updated.id ? updated : s));
+            if (updated.id === 'guest-student') {
+              setGuestStudentState(updated);
+              localStorage.setItem('playcode_guest_student', JSON.stringify(updated));
+            } else {
+              setStudents(prev => prev.map(s => s.id === updated.id ? updated : s));
+            }
           }}
           dbStatus={dbStatus}
           dbError={dbError}

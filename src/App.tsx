@@ -512,6 +512,20 @@ const App: React.FC = () => {
     if (!currentGuest) {
       const randomNum = Math.floor(1000 + Math.random() * 9000);
       const guestUsername = `invitado_${randomNum}`;
+      
+      const firstPlatformId = platforms.length > 0 ? platforms[0].id : '';
+      const guestPlatformIds = firstPlatformId ? [firstPlatformId] : [];
+      
+      // Filter classrooms belonging to the first platform
+      const guestAulaIds = classrooms
+        .filter(c => {
+          if (!firstPlatformId) return false;
+          // Matches if classroom platformId matches, or if it is inside the platform's aulas list
+          return c.platformId === firstPlatformId || 
+            (platforms[0].aulas && platforms[0].aulas.some(a => a.id === c.id));
+        })
+        .map(c => c.id);
+
       currentGuest = {
         id: 'guest-student',
         name: `Invitado #${randomNum}`,
@@ -520,13 +534,13 @@ const App: React.FC = () => {
         googleAuthAllowed: false,
         googleEmail: '',
         photoUrl: '',
-        platformIds: platforms.map(p => p.id),
+        platformIds: guestPlatformIds,
         role: 'alumno',
         inventory: ['libro-sabiduria', 'baston-codigo'],
         unlockedBadgeIds: ['Aprendiz Curioso', 'Maestro del Código'],
         unopenedChestsCount: 1,
         completedLessonIds: [],
-        aulaIds: classrooms.map(c => c.id)
+        aulaIds: guestAulaIds
       };
       setGuestStudentState(currentGuest);
       localStorage.setItem('playcode_guest_student', JSON.stringify(currentGuest));

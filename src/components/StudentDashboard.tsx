@@ -2060,10 +2060,10 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           <div className="space-y-6">
             <div>
               <h3 className="text-xl font-bold text-[#0d1b2e] font-pixel uppercase tracking-wide">
-                Recursos del Administrador
+                Biblioteca de Recursos
               </h3>
               <p className="text-xs text-slate-500 font-semibold mt-1">
-                Aquí tienes acceso a todos los recursos agregados por el administrador de la plataforma.
+                Aqui tienes acceso a servidores privados de Play Code, asi como tambien a herramientas, juegos y apps desarrolladas por nosotros para ayudarte en tu aprendizaje
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

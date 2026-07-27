@@ -420,6 +420,10 @@ const App: React.FC = () => {
     name?: string,
     googleData?: { email: string; displayName: string; photoURL?: string }
   ): { success: boolean; error?: string } => {
+    if (loading || !dbLoaded) {
+      return { success: false, error: 'Cargando datos de la plataforma. Por favor, intenta de nuevo en unos segundos.' };
+    }
+
     const googleEmail = username.toLowerCase().trim();
     const formattedUsername = username.toLowerCase().replace(/\s+/g, '').trim();
 
@@ -464,7 +468,7 @@ const App: React.FC = () => {
     } else {
       // 3. Google SSO login
       const existingStudentGoogle = students.find(
-        s => s.googleAuthAllowed && s.googleEmail?.toLowerCase().trim() === googleEmail
+        s => s.googleEmail?.toLowerCase().trim() === googleEmail
       );
 
       if (!existingStudentGoogle) {
@@ -476,6 +480,10 @@ const App: React.FC = () => {
         });
         setView('google_registration');
         return { success: true };
+      }
+
+      if (!existingStudentGoogle.googleAuthAllowed) {
+        return { success: false, error: 'El inicio de sesión con Google no está habilitado para esta cuenta. Por favor, solicita al administrador autorizar tu acceso.' };
       }
 
       if (existingStudentGoogle.status === 'Pendiente') {
@@ -500,6 +508,12 @@ const App: React.FC = () => {
   const handleGoogleRegistration = async (username: string, platformId: string): Promise<void> => {
     if (!pendingGoogleData) throw new Error('No hay datos de Google pendientes.');
 
+    const emailClean = pendingGoogleData.email.toLowerCase().trim();
+    const existingEmail = students.some(s => s.googleEmail?.toLowerCase().trim() === emailClean);
+    if (existingEmail) {
+      throw new Error('Esta cuenta de Google ya está registrada en la plataforma.');
+    }
+
     const newId = `student-google-${Date.now()}`;
     const newStudent: Student = {
       id: newId,
@@ -507,7 +521,7 @@ const App: React.FC = () => {
       username: username.toLowerCase().trim(),
       status: 'Pendiente',
       googleAuthAllowed: true,
-      googleEmail: pendingGoogleData.email.toLowerCase().trim(),
+      googleEmail: emailClean,
       photoUrl: pendingGoogleData.photoURL || '',
       platformIds: [platformId],
       role: 'alumno',
@@ -599,7 +613,7 @@ const App: React.FC = () => {
   }
 
   if (view === 'login') {
-    return <Login onLogin={handleLogin} onBack={() => setView('landing')} onGuestLogin={handleGuestLogin} />;
+    return <Login onLogin={handleLogin} onBack={() => setView('landing')} onGuestLogin={handleGuestLogin} dbLoading={loading || !dbLoaded} />;
   }
 
   if (view === 'google_registration' && pendingGoogleData) {

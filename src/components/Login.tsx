@@ -13,15 +13,17 @@ interface LoginProps {
   onLogin: (username: string, password?: string, name?: string, googleData?: GoogleUserData) => { success: boolean; error?: string };
   onBack: () => void;
   onGuestLogin: () => void;
+  dbLoading?: boolean;
 }
 
-export const Login: React.FC<LoginProps> = ({ onLogin, onBack, onGuestLogin }) => {
+export const Login: React.FC<LoginProps> = ({ onLogin, onBack, onGuestLogin, dbLoading = false }) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [usernameInput, setUsernameInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
 
   const handleGoogleLogin = async () => {
+    if (dbLoading) return;
     setLoading(true);
     setError('');
     try {
@@ -54,6 +56,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onBack, onGuestLogin }) =
 
   const handleManualLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    if (dbLoading) return;
     if (!usernameInput.trim() || !passwordInput) {
       setError('Por favor, ingresa tu usuario y contraseña.');
       return;
@@ -99,7 +102,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onBack, onGuestLogin }) =
           {/* Google Sign-in */}
           <button
             onClick={handleGoogleLogin}
-            disabled={loading}
+            disabled={loading || dbLoading}
             className="w-full py-3.5 px-4 bg-white hover:bg-slate-50 text-slate-900 font-bold border-3 border-slate-900 shadow-[4px_4px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[4px] active:translate-x-[4px] transition-all flex items-center justify-center gap-3 cursor-pointer text-sm disabled:opacity-50"
           >
             {/* Google Icon Logo */}
@@ -121,17 +124,17 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onBack, onGuestLogin }) =
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            {loading ? 'Conectando...' : 'Conectar con Google'}
+            {dbLoading ? 'Cargando plataforma...' : (loading ? 'Conectando...' : 'Conectar con Google')}
           </button>
 
           {/* Guest Sign-in */}
           <button
             type="button"
             onClick={onGuestLogin}
-            disabled={loading}
+            disabled={loading || dbLoading}
             className="w-full py-3.5 px-4 bg-[#2ec4b6] hover:bg-[#20a396] text-white font-bold border-3 border-slate-900 shadow-[4px_4px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[4px] active:translate-x-[4px] transition-all flex items-center justify-center gap-3 cursor-pointer text-sm disabled:opacity-50"
           >
-            👤 Ingresar como Invitado
+            👤 {dbLoading ? 'Cargando...' : 'Ingresar como Invitado'}
           </button>
 
           {/* Divider */}
@@ -169,10 +172,10 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onBack, onGuestLogin }) =
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || dbLoading}
               className="w-full py-3.5 bg-[#001f4a] hover:bg-[#002f6c] text-white font-bold border-3 border-slate-900 shadow-[4px_4px_0_0_#001f4a] active:shadow-[0px_0px_0_0_#001f4a] active:translate-y-[4px] active:translate-x-[4px] transition-all cursor-pointer text-sm disabled:opacity-50 mt-2"
             >
-              Iniciar Sesión
+              {dbLoading ? 'Cargando...' : 'Iniciar Sesión'}
             </button>
           </form>
         </div>

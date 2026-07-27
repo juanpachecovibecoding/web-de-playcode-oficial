@@ -809,6 +809,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     e.preventDefault();
     if (!newStudentName || !newStudentUsername) return;
     const formattedUsername = newStudentUsername.toLowerCase().replace(/\s+/g, '').trim();
+    const emailClean = newStudentGoogleEmail.toLowerCase().replace(/\s+/g, '').trim();
+    if (emailClean) {
+      const emailExists = students.some(s => s.googleEmail?.toLowerCase().trim() === emailClean);
+      if (emailExists) {
+        alert('Este correo de Google ya está registrado para otro alumno.');
+        return;
+      }
+    }
     const newStudent: Student = {
       id: Date.now().toString(),
       name: newStudentName,
@@ -872,6 +880,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     if (!editingStudentId || !editStudentName.trim() || !editStudentUsername.trim()) return;
 
     const formattedUsername = editStudentUsername.toLowerCase().replace(/\s+/g, '').trim();
+    const emailClean = editStudentGoogleEmail.toLowerCase().replace(/\s+/g, '').trim();
+    if (emailClean) {
+      const emailExists = students.some(s => s.id !== editingStudentId && s.googleEmail?.toLowerCase().trim() === emailClean);
+      if (emailExists) {
+        alert('Este correo de Google ya está registrado para otro alumno.');
+        return;
+      }
+    }
 
     setStudents(prev => prev.map(s => {
       if (s.id === editingStudentId) {

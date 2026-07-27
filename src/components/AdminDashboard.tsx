@@ -28,6 +28,7 @@ import {
   Trophy,
   Award
 } from 'lucide-react';
+import { SafeHTMLViewer } from './SafeHTMLViewer';
 
 interface Course {
   id: string;
@@ -3493,10 +3494,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
               {/* Modal Content */}
               <div className="flex-1 overflow-y-auto p-0">
-                <div
-                  className="lesson-preview-content"
-                  dangerouslySetInnerHTML={{ __html: previewLesson.htmlContent }}
-                  style={{ minHeight: '300px' }}
+                <SafeHTMLViewer
+                  htmlContent={previewLesson.htmlContent}
+                  className="w-full"
+                  minHeight={300}
                 />
               </div>
             </div>

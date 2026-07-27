@@ -28,6 +28,7 @@ import {
   Trophy,
   FolderOpen
 } from 'lucide-react';
+import { SafeHTMLViewer } from './SafeHTMLViewer';
 
 interface Student {
   id: string;
@@ -1697,9 +1698,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                                     />
                                   </div>
                                 </div>
-                                <div 
-                                  className="prose max-w-none text-xs text-slate-700 leading-relaxed overflow-x-auto"
-                                  dangerouslySetInnerHTML={{ __html: selectedPlatformLesson.htmlContent }}
+                                <SafeHTMLViewer 
+                                  htmlContent={selectedPlatformLesson.htmlContent}
+                                  className="w-full"
                                 />
                               </div>
                             ) : (
@@ -1910,10 +1911,10 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                       <div className="bg-white border-4 border-[#0d1b2e] shadow-[6px_6px_0_0_#000000] overflow-hidden w-full flex flex-col">
                         {/* Embed Frame */}
                         <div className="bg-slate-50 flex items-center justify-center">
-                          <div
+                          <SafeHTMLViewer
                             key={selectedLessonForPreview.id}
-                            className="w-full flex justify-center items-center [&_iframe]:w-full [&_iframe]:border-0 [&_iframe]:min-h-[500px] [&_iframe]:aspect-video"
-                            dangerouslySetInnerHTML={{ __html: selectedLessonForPreview.htmlContent }}
+                            htmlContent={selectedLessonForPreview.htmlContent}
+                            className="w-full"
                           />
                         </div>
 

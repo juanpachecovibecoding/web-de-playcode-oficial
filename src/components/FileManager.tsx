@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { db } from '../firebase';
 import { doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { upload } from '@vercel/blob/client';
 import { 
   Folder, FileText, FileCode, Image, Upload, Plus, Trash2, 
   Pencil, Search, ChevronRight, Grid, List, Download, Copy, Check, FileArchive, Eye, ExternalLink
@@ -27,6 +28,7 @@ export const FileManager: React.FC<FileManagerProps> = ({ files, setFiles }) => 
   const [currentFolderId, setCurrentFolderId] = useState<string>('root');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
   
   // Modals / Creation State
   const [showNewFolderModal, setShowNewFolderModal] = useState(false);
@@ -211,15 +213,20 @@ export const FileManager: React.FC<FileManagerProps> = ({ files, setFiles }) => 
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 1.5 * 1024 * 1024) {
-        alert('El tamaño máximo permitido para archivos en base de datos es de 1.5MB.');
+      if (file.size > 50 * 1024 * 1024) {
+        alert('El tamaño máximo permitido para archivos en Vercel Blob es de 50MB.');
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = async () => {
+      setIsUploading(true);
+      try {
+        const blob = await upload(file.name, file, {
+          access: 'public',
+          handleUploadUrl: '/api/upload',
+        });
+
         const id = `file-${Date.now()}`;
         const newFile: VirtualFile = {
           id,
@@ -228,34 +235,36 @@ export const FileManager: React.FC<FileManagerProps> = ({ files, setFiles }) => 
           mimeType: file.type,
           size: file.size,
           parentId: currentFolderId,
-          content: reader.result as string, // base64 Data URL
+          content: blob.url,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
 
-        try {
-          await setDoc(doc(db, 'files', id), newFile);
-          setFiles(prev => [...prev, newFile]);
-        } catch (err) {
-          console.error('Error uploading file:', err);
-          alert('Error al subir el archivo');
-        }
-      };
-      if (file.type.startsWith('text/') || file.name.endsWith('.html') || file.name.endsWith('.css') || file.name.endsWith('.js') || file.name.endsWith('.json') || file.name.endsWith('.md')) {
-        reader.readAsText(file);
-      } else {
-        reader.readAsDataURL(file);
+        await setDoc(doc(db, 'files', id), newFile);
+        setFiles(prev => [...prev, newFile]);
+      } catch (err) {
+        console.error('Error uploading file to Vercel Blob:', err);
+        alert('Error al subir el archivo a Vercel Blob. Por favor, asegúrate de haber configurado tu base de datos Storage (Vercel Blob) en el panel de Vercel.');
+      } finally {
+        setIsUploading(false);
       }
     }
   };
 
   const handleSaveEditor = async () => {
     if (!editingFile) return;
+    setIsUploading(true);
     try {
+      const blobFile = new Blob([editorContent], { type: editingFile.mimeType || 'text/html' });
+      const blob = await upload(editingFile.name, blobFile, {
+        access: 'public',
+        handleUploadUrl: '/api/upload',
+      });
+
       const updated: VirtualFile = {
         ...editingFile,
-        content: editorContent,
-        size: new Blob([editorContent]).size,
+        content: blob.url,
+        size: blobFile.size,
         updatedAt: new Date().toISOString(),
       };
       await setDoc(doc(db, 'files', editingFile.id), updated);
@@ -263,7 +272,9 @@ export const FileManager: React.FC<FileManagerProps> = ({ files, setFiles }) => 
       setEditingFile(null);
     } catch (err) {
       console.error('Error saving file:', err);
-      alert('Error al guardar el archivo');
+      alert('Error al guardar el archivo en Vercel Blob');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -331,26 +342,33 @@ export const FileManager: React.FC<FileManagerProps> = ({ files, setFiles }) => 
 
   const handleDownload = (file: VirtualFile) => {
     if (!file.content) return;
-    const element = document.createElement('a');
-    let fileUrl = file.content;
-    
-    // If it's raw text content, turn it into blob
-    if (!file.content.startsWith('data:')) {
-      const blob = new Blob([file.content], { type: file.mimeType || 'text/plain' });
-      fileUrl = URL.createObjectURL(blob);
+    if (file.content.startsWith('http')) {
+      const element = document.createElement('a');
+      element.href = file.content;
+      element.target = '_blank';
+      element.download = file.name;
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+    } else {
+      const element = document.createElement('a');
+      let fileUrl = file.content;
+      if (!file.content.startsWith('data:')) {
+        const blob = new Blob([file.content], { type: file.mimeType || 'text/plain' });
+        fileUrl = URL.createObjectURL(blob);
+      }
+      element.href = fileUrl;
+      element.download = file.name;
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
     }
-    
-    element.href = fileUrl;
-    element.download = file.name;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
   };
 
   const handleCopyPath = (file: VirtualFile) => {
     if (!file.content) return;
     let shareableUrl = file.content;
-    if (!file.content.startsWith('data:')) {
+    if (!file.content.startsWith('http') && !file.content.startsWith('data:')) {
       const mime = file.mimeType || 'text/html';
       shareableUrl = `data:${mime};charset=utf-8,${encodeURIComponent(file.content)}`;
     }
@@ -361,36 +379,51 @@ export const FileManager: React.FC<FileManagerProps> = ({ files, setFiles }) => 
 
   const handleOpenInNewTab = (file: VirtualFile) => {
     if (!file.content) return;
-    const newWindow = window.open();
-    if (newWindow) {
-      if (file.content.startsWith('data:')) {
-        if (file.mimeType?.startsWith('image/') || file.mimeType === 'application/pdf') {
-          newWindow.document.write(`
-            <html>
-              <head><title>${file.name}</title></head>
-              <body style="margin:0;display:flex;justify-content:center;align-items:center;background:#f0f4f8;">
-                <embed src="${file.content}" type="${file.mimeType}" style="width:100%;height:100vh;border:none;" />
-              </body>
-            </html>
-          `);
+    if (file.content.startsWith('http')) {
+      window.open(file.content, '_blank');
+    } else {
+      const newWindow = window.open();
+      if (newWindow) {
+        if (file.content.startsWith('data:')) {
+          if (file.mimeType?.startsWith('image/') || file.mimeType === 'application/pdf') {
+            newWindow.document.write(`
+              <html>
+                <head><title>${file.name}</title></head>
+                <body style="margin:0;display:flex;justify-content:center;align-items:center;background:#f0f4f8;">
+                  <embed src="${file.content}" type="${file.mimeType}" style="width:100%;height:100vh;border:none;" />
+                </body>
+              </html>
+            `);
+          } else {
+            newWindow.location.href = file.content;
+          }
         } else {
-          newWindow.location.href = file.content;
+          newWindow.document.write(file.content);
+          newWindow.document.close();
         }
-      } else {
-        newWindow.document.write(file.content);
-        newWindow.document.close();
       }
     }
   };
 
-  const handleItemClick = (item: VirtualFile) => {
+  const handleItemClick = async (item: VirtualFile) => {
     if (item.type === 'directory') {
       setCurrentFolderId(item.id);
     } else {
-      // File clicked
       if (isEditable(item)) {
         setEditingFile(item);
-        setEditorContent(item.content || '');
+        setEditorContent('Cargando contenido...');
+        try {
+          if (item.content && item.content.startsWith('http')) {
+            const res = await fetch(item.content);
+            const text = await res.text();
+            setEditorContent(text);
+          } else {
+            setEditorContent(item.content || '');
+          }
+        } catch (err) {
+          console.error("Error fetching file content:", err);
+          setEditorContent(item.content || '');
+        }
       } else {
         setPreviewFile(item);
       }
@@ -420,9 +453,10 @@ export const FileManager: React.FC<FileManagerProps> = ({ files, setFiles }) => 
           
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="px-3 py-2 bg-[#2ec4b6] hover:bg-[#20a396] text-white border-2 border-slate-900 shadow-[2px_2px_0_0_#000] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer flex items-center gap-1.5"
+            disabled={isUploading}
+            className="px-3 py-2 bg-[#2ec4b6] hover:bg-[#20a396] text-white border-2 border-slate-900 shadow-[2px_2px_0_0_#000] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
           >
-            <Upload className="w-3.5 h-3.5" /> Subir Archivo
+            <Upload className="w-3.5 h-3.5" /> {isUploading ? 'Subiendo...' : 'Subir Archivo'}
           </button>
 
           <button
@@ -831,9 +865,10 @@ export const FileManager: React.FC<FileManagerProps> = ({ files, setFiles }) => 
               </button>
               <button
                 onClick={handleSaveEditor}
-                className="px-5 py-2 bg-[#2ec4b6] hover:bg-[#20a396] text-white font-bold border-2 border-slate-900 shadow-[2px_2px_0_0_#000] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer text-xs uppercase"
+                disabled={isUploading}
+                className="px-5 py-2 bg-[#2ec4b6] hover:bg-[#20a396] text-white font-bold border-2 border-slate-900 shadow-[2px_2px_0_0_#000] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer text-xs uppercase disabled:opacity-50"
               >
-                Guardar Cambios
+                {isUploading ? 'Guardando...' : 'Guardar Cambios'}
               </button>
             </div>
           </div>

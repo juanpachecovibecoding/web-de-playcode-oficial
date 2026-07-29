@@ -3,7 +3,7 @@ import { db } from '../firebase';
 import { doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { 
   Folder, FileText, FileCode, Image, Upload, Plus, Trash2, 
-  Pencil, Search, ChevronRight, Grid, List, Download, Copy, Check, FileArchive
+  Pencil, Search, ChevronRight, Grid, List, Download, Copy, Check, FileArchive, Eye
 } from 'lucide-react';
 
 export interface VirtualFile {
@@ -48,6 +48,28 @@ export const FileManager: React.FC<FileManagerProps> = ({ files, setFiles }) => 
 
   // Copy success indicator
   const [copiedFileId, setCopiedFileId] = useState<string | null>(null);
+
+  // Context Menu State
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    item: VirtualFile;
+  } | null>(null);
+
+  React.useEffect(() => {
+    const closeMenu = () => setContextMenu(null);
+    window.addEventListener('click', closeMenu);
+    return () => window.removeEventListener('click', closeMenu);
+  }, []);
+
+  const handleContextMenu = (e: React.MouseEvent, item: VirtualFile) => {
+    e.preventDefault();
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      item
+    });
+  };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -480,6 +502,7 @@ export const FileManager: React.FC<FileManagerProps> = ({ files, setFiles }) => 
                       key={item.id}
                       className="group bg-white border-2 border-slate-200 hover:border-slate-900 rounded p-3 flex flex-col items-center justify-between text-center relative hover:shadow-[3px_3px_0_0_#0d1b2e] transition-all cursor-pointer min-h-[120px]"
                       onClick={() => handleItemClick(item)}
+                      onContextMenu={(e) => handleContextMenu(e, item)}
                     >
                       <div className="flex-1 flex items-center justify-center mb-2">
                         {getFileIcon(item)}
@@ -563,6 +586,7 @@ export const FileManager: React.FC<FileManagerProps> = ({ files, setFiles }) => 
                           key={item.id} 
                           className="border-b border-slate-100 hover:bg-slate-50 cursor-pointer"
                           onClick={() => handleItemClick(item)}
+                          onContextMenu={(e) => handleContextMenu(e, item)}
                         >
                           <td className="p-3 flex items-center gap-2">
                             <span className="shrink-0">{getFileIcon(item)}</span>
@@ -836,6 +860,112 @@ export const FileManager: React.FC<FileManagerProps> = ({ files, setFiles }) => 
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* CONTEXT MENU */}
+      {contextMenu && (
+        <div 
+          className="fixed bg-white border-3 border-slate-900 shadow-[4px_4px_0_0_#000] z-50 text-xs font-bold text-slate-700 py-1 w-44 rounded flex flex-col"
+          style={{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {contextMenu.item.type === 'directory' ? (
+            <>
+              <button
+                onClick={() => {
+                  setCurrentFolderId(contextMenu.item.id);
+                  setContextMenu(null);
+                }}
+                className="w-full text-left px-3 py-1.5 hover:bg-[#ffe66d] hover:text-slate-900 cursor-pointer flex items-center gap-2"
+              >
+                <Folder className="w-3.5 h-3.5 text-yellow-500 fill-yellow-250" /> Abrir Carpeta
+              </button>
+              <button
+                onClick={() => {
+                  setRenameName(contextMenu.item.name);
+                  setRenamingItem(contextMenu.item);
+                  setContextMenu(null);
+                }}
+                className="w-full text-left px-3 py-1.5 hover:bg-[#ffe66d] hover:text-slate-900 cursor-pointer flex items-center gap-2"
+              >
+                <Pencil className="w-3.5 h-3.5" /> Renombrar
+              </button>
+              <hr className="border-slate-200 my-1" />
+              <button
+                onClick={() => {
+                  handleDeleteItem(contextMenu.item);
+                  setContextMenu(null);
+                }}
+                className="w-full text-left px-3 py-1.5 hover:bg-red-50 text-red-650 cursor-pointer flex items-center gap-2"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Eliminar
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => {
+                  handleItemClick(contextMenu.item);
+                  setContextMenu(null);
+                }}
+                className="w-full text-left px-3 py-1.5 hover:bg-[#ffe66d] hover:text-slate-900 cursor-pointer flex items-center gap-2"
+              >
+                <Eye className="w-3.5 h-3.5" /> {isEditable(contextMenu.item) ? 'Editar' : 'Previsualizar'}
+              </button>
+              {isEditable(contextMenu.item) && (
+                <button
+                  onClick={() => {
+                    setEditingFile(contextMenu.item);
+                    setEditorContent(contextMenu.item.content || '');
+                    setContextMenu(null);
+                  }}
+                  className="w-full text-left px-3 py-1.5 hover:bg-[#ffe66d] hover:text-slate-900 cursor-pointer flex items-center gap-2"
+                >
+                  <FileCode className="w-3.5 h-3.5 text-indigo-500" /> Editar Código
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  handleDownload(contextMenu.item);
+                  setContextMenu(null);
+                }}
+                className="w-full text-left px-3 py-1.5 hover:bg-[#ffe66d] hover:text-slate-900 cursor-pointer flex items-center gap-2"
+              >
+                <Download className="w-3.5 h-3.5" /> Descargar
+              </button>
+              <button
+                onClick={() => {
+                  handleCopyPath(contextMenu.item);
+                  alert('¡Vínculo base64 copiado al portapapeles!');
+                  setContextMenu(null);
+                }}
+                className="w-full text-left px-3 py-1.5 hover:bg-[#ffe66d] hover:text-slate-900 cursor-pointer flex items-center gap-2"
+              >
+                <Copy className="w-3.5 h-3.5" /> Copiar Vínculo
+              </button>
+              <button
+                onClick={() => {
+                  setRenameName(contextMenu.item.name);
+                  setRenamingItem(contextMenu.item);
+                  setContextMenu(null);
+                }}
+                className="w-full text-left px-3 py-1.5 hover:bg-[#ffe66d] hover:text-slate-900 cursor-pointer flex items-center gap-2"
+              >
+                <Pencil className="w-3.5 h-3.5" /> Renombrar
+              </button>
+              <hr className="border-slate-200 my-1" />
+              <button
+                onClick={() => {
+                  handleDeleteItem(contextMenu.item);
+                  setContextMenu(null);
+                }}
+                className="w-full text-left px-3 py-1.5 hover:bg-red-50 text-red-650 cursor-pointer flex items-center gap-2"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Eliminar
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>

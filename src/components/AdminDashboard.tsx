@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { db } from '../firebase';
+import { doc, setDoc, deleteDoc } from 'firebase/firestore';
 import {
   LayoutDashboard,
   BookOpen,
@@ -26,9 +28,11 @@ import {
   ChevronRight,
   User,
   Trophy,
-  Award
+  Award,
+  Clock
 } from 'lucide-react';
 import { SafeHTMLViewer } from './SafeHTMLViewer';
+import type { InformationalBooking } from '../App';
 
 interface Course {
   id: string;
@@ -128,6 +132,10 @@ interface AdminDashboardProps {
   dbStatus: 'connecting' | 'connected' | 'error';
   dbError: string | null;
   firebaseProjectId: string;
+  informationalBookings: InformationalBooking[];
+  setInformationalBookings: React.Dispatch<React.SetStateAction<InformationalBooking[]>>;
+  bookingSettings: { weeklySlots: { [key: string]: string[] } };
+  setBookingSettings: React.Dispatch<React.SetStateAction<{ weeklySlots: { [key: string]: string[] } }>>;
 }
 
 export interface GameItem {
@@ -196,11 +204,109 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   setResources,
   dbStatus,
   dbError,
-  firebaseProjectId
+  firebaseProjectId,
+  informationalBookings,
+  setInformationalBookings,
+  bookingSettings,
+  setBookingSettings
 }) => {
   void setCourses;
   void courses;
-  const [activeTab, setActiveTab] = useState<'inicio' | 'cursos' | 'usuarios' | 'docentes' | 'clases' | 'contenido' | 'config' | 'foro' | 'plataformas' | 'gamificacion' | 'recursos'>('inicio');
+  const [activeTab, setActiveTab] = useState<'inicio' | 'cursos' | 'usuarios' | 'docentes' | 'clases' | 'contenido' | 'config' | 'foro' | 'plataformas' | 'gamificacion' | 'recursos' | 'reuniones'>('inicio');
+
+  // Booking system states & handlers
+  const dayNamesES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+  const dayKeysEN = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
+  const [editingWeeklySlots, setEditingWeeklySlots] = useState<{ [key: string]: string[] }>(() => bookingSettings?.weeklySlots || {});
+  const [newSlotStart, setNewSlotStart] = useState('15:00');
+  const [newSlotEnd, setNewSlotEnd] = useState('16:00');
+  const [selectedDayForSlot, setSelectedDayForSlot] = useState('monday');
+  const [savingSettings, setSavingSettings] = useState(false);
+
+  useEffect(() => {
+    if (bookingSettings && bookingSettings.weeklySlots) {
+      setEditingWeeklySlots(bookingSettings.weeklySlots);
+    }
+  }, [bookingSettings]);
+
+  const handleAddSlot = (day: string) => {
+    if (!newSlotStart || !newSlotEnd) return;
+    const slotStr = `${newSlotStart}-${newSlotEnd}`;
+    if (editingWeeklySlots[day]?.includes(slotStr)) {
+      alert("Esta franja horaria ya está configurada para este día.");
+      return;
+    }
+    setEditingWeeklySlots(prev => {
+      const daySlots = prev[day] || [];
+      const updatedSlots = [...daySlots, slotStr].sort((a, b) => a.localeCompare(b));
+      return { ...prev, [day]: updatedSlots };
+    });
+  };
+
+  const handleRemoveSlot = (day: string, slotStr: string) => {
+    setEditingWeeklySlots(prev => {
+      const daySlots = prev[day] || [];
+      return { ...prev, [day]: daySlots.filter(s => s !== slotStr) };
+    });
+  };
+
+  const handleApproveBooking = async (bookingId: string) => {
+    try {
+      const bObj = informationalBookings.find(b => b.id === bookingId);
+      if (!bObj) return;
+      await setDoc(doc(db, 'informational_bookings', bookingId), {
+        ...bObj,
+        status: 'Aprobada'
+      });
+      setInformationalBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: 'Aprobada' } : b));
+    } catch (err) {
+      console.error("Error approving booking:", err);
+      alert("Error al aprobar la reserva");
+    }
+  };
+
+  const handleCancelBooking = async (bookingId: string) => {
+    try {
+      const bObj = informationalBookings.find(b => b.id === bookingId);
+      if (!bObj) return;
+      await setDoc(doc(db, 'informational_bookings', bookingId), {
+        ...bObj,
+        status: 'Cancelada'
+      });
+      setInformationalBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: 'Cancelada' } : b));
+    } catch (err) {
+      console.error("Error canceling booking:", err);
+      alert("Error al cancelar la reserva");
+    }
+  };
+
+  const handleDeleteBooking = async (bookingId: string) => {
+    if (!confirm('¿Estás seguro de eliminar permanentemente esta reserva?')) return;
+    try {
+      await deleteDoc(doc(db, 'informational_bookings', bookingId));
+      setInformationalBookings(prev => prev.filter(b => b.id !== bookingId));
+    } catch (err) {
+      console.error("Error deleting booking:", err);
+      alert("Error al eliminar la reserva");
+    }
+  };
+
+  const handleSaveBookingSettings = async () => {
+    setSavingSettings(true);
+    try {
+      await setDoc(doc(db, 'booking_settings', 'settings'), {
+        weeklySlots: editingWeeklySlots
+      });
+      setBookingSettings({ weeklySlots: editingWeeklySlots });
+      alert("Configuración de horarios guardada con éxito.");
+    } catch (err) {
+      console.error("Error saving booking settings:", err);
+      alert("Error al guardar la configuración.");
+    } finally {
+      setSavingSettings(false);
+    }
+  };
 
   // Resources management state
   const [newResourceName, setNewResourceName] = useState('');
@@ -1172,6 +1278,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </button>
 
           <button
+            onClick={() => setActiveTab('reuniones')}
+            className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${activeTab === 'reuniones'
+                ? 'bg-[#a3b8cc] text-[#0d1b2e] border-[#0d1b2e] shadow-[2px_2px_0_0_#ffffff] translate-x-0.5 -translate-y-0.5'
+                : 'border-transparent text-slate-400 hover:text-white hover:bg-[#1e385c]/50'
+              }`}
+          >
+            <Clock className="w-3.5 h-3.5" /> REUNIONES
+            {informationalBookings.filter(b => b.status === 'Pendiente').length > 0 && (
+              <span className="ml-auto min-w-[18px] h-[18px] bg-[#2ec4b6] text-white text-[9px] font-extrabold rounded-full flex items-center justify-center px-1 animate-pulse">
+                {informationalBookings.filter(b => b.status === 'Pendiente').length}
+              </span>
+            )}
+          </button>
+
+          <button
             onClick={() => setActiveTab('config')}
             className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${activeTab === 'config'
                 ? 'bg-[#a3b8cc] text-[#0d1b2e] border-[#0d1b2e] shadow-[2px_2px_0_0_#ffffff] translate-x-0.5 -translate-y-0.5'
@@ -1697,6 +1818,230 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
               </div>
 
+            </div>
+          </div>
+        )}
+
+        {/* REUNIONES TAB */}
+        {activeTab === 'reuniones' && (
+          <div className="space-y-8 animate-in fade-in duration-200">
+            {/* Top Cards Info */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-white border-4 border-[#0d1b2e] shadow-[4px_4px_0_0_#0d1b2e] p-5">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Total Solicitudes</span>
+                <span className="text-3xl font-pixel font-bold text-[#0d1b2e]">{informationalBookings.length}</span>
+              </div>
+              <div className="bg-white border-4 border-[#0d1b2e] shadow-[4px_4px_0_0_#0d1b2e] p-5">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Pendientes de Aprobación</span>
+                <span className="text-3xl font-pixel font-bold text-[#ca8a04]">{informationalBookings.filter(b => b.status === 'Pendiente').length}</span>
+              </div>
+              <div className="bg-white border-4 border-[#0d1b2e] shadow-[4px_4px_0_0_#0d1b2e] p-5">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Reuniones Confirmadas</span>
+                <span className="text-3xl font-pixel font-bold text-[#16a34a]">{informationalBookings.filter(b => b.status === 'Aprobada').length}</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              {/* Left Column: Bookings Tray */}
+              <div className="lg:col-span-8 space-y-6">
+                <div className="bg-white border-4 border-[#0d1b2e] shadow-[6px_6px_0_0_#000] p-6">
+                  <h3 className="text-base font-bold text-[#0d1b2e] uppercase tracking-wider mb-6 flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-[#2ec4b6]" />
+                    Bandeja de Entrada de Reservas
+                  </h3>
+
+                  {informationalBookings.length === 0 ? (
+                    <div className="bg-slate-50 border-2 border-dashed border-slate-300 p-8 text-center text-xs text-slate-400 italic">
+                      No hay solicitudes de reunión registradas.
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse text-left text-xs">
+                        <thead>
+                          <tr className="border-b-2 border-[#0d1b2e] text-slate-500 font-extrabold uppercase text-[10px]">
+                            <th className="p-3">Visitante / Contacto</th>
+                            <th className="p-3">Fecha y Hora</th>
+                            <th className="p-3">Notas</th>
+                            <th className="p-3">Estado</th>
+                            <th className="p-3 text-right">Acciones</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {informationalBookings.slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map((booking) => {
+                            const dateObj = new Date(booking.date + 'T00:00:00');
+                            const formattedDate = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+                            
+                            const waText = encodeURIComponent(`Hola ${booking.visitorName}, te contacto desde Play Code respecto a la reunión informativa que solicitaste para el día ${formattedDate} a las ${booking.timeSlot} hs.`);
+                            const waUrl = `https://wa.me/${booking.visitorPhone.replace(/[^0-9]/g, '')}?text=${waText}`;
+
+                            return (
+                              <tr key={booking.id} className="border-b border-slate-200 hover:bg-slate-50 font-medium">
+                                <td className="p-3 space-y-1">
+                                  <div className="font-bold text-slate-900">{booking.visitorName}</div>
+                                  <div className="text-[10px] text-slate-450 block">{booking.visitorEmail}</div>
+                                  <div className="text-[10px] text-slate-450 block">{booking.visitorPhone}</div>
+                                </td>
+                                <td className="p-3 space-y-0.5">
+                                  <div className="font-bold text-slate-800">{formattedDate}</div>
+                                  <div className="text-[10px] text-[#2ec4b6] font-extrabold">{booking.timeSlot} hs</div>
+                                </td>
+                                <td className="p-3 text-slate-600 max-w-[200px] truncate" title={booking.notes}>
+                                  {booking.notes || <span className="text-slate-350 italic">Sin comentarios</span>}
+                                </td>
+                                <td className="p-3">
+                                  <span className={`px-2.5 py-1 text-[9px] font-extrabold uppercase border rounded ${
+                                    booking.status === 'Aprobada'
+                                      ? 'bg-green-50 border-green-500 text-green-700'
+                                      : booking.status === 'Cancelada'
+                                        ? 'bg-red-50 border-red-500 text-red-700'
+                                        : 'bg-amber-50 border-amber-500 text-amber-700'
+                                  }`}>
+                                    {booking.status}
+                                  </span>
+                                </td>
+                                <td className="p-3 text-right">
+                                  <div className="flex items-center justify-end gap-2 font-bold">
+                                    <a
+                                      href={waUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="p-1.5 bg-[#25D366] text-white border border-[#128C7E] rounded hover:opacity-90 transition-all text-[10px] shadow-[1px_1px_0_0_#000] active:translate-y-[1px] active:shadow-none"
+                                      title="Abrir chat de WhatsApp"
+                                    >
+                                      💬 WA
+                                    </a>
+                                    {booking.status === 'Pendiente' && (
+                                      <>
+                                        <button
+                                          onClick={() => handleApproveBooking(booking.id)}
+                                          className="px-2 py-1.5 bg-[#16a34a] hover:bg-[#15803d] text-white border border-[#0d1b2e] font-bold text-[10px] rounded cursor-pointer shadow-[1px_1px_0_0_#000] active:translate-y-[1px] active:shadow-none"
+                                        >
+                                          Aprobar
+                                        </button>
+                                        <button
+                                          onClick={() => handleCancelBooking(booking.id)}
+                                          className="px-2 py-1.5 bg-[#dc2626] hover:bg-[#b91c1c] text-white border border-[#0d1b2e] font-bold text-[10px] rounded cursor-pointer shadow-[1px_1px_0_0_#000] active:translate-y-[1px] active:shadow-none"
+                                        >
+                                          Rechazar
+                                        </button>
+                                      </>
+                                    )}
+                                    {booking.status !== 'Pendiente' && (
+                                      <button
+                                        onClick={() => handleDeleteBooking(booking.id)}
+                                        className="p-1.5 text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
+                                        title="Eliminar registro"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Right Column: Availability Grid Editor */}
+              <div className="lg:col-span-4 space-y-6">
+                <div className="bg-white border-4 border-[#0d1b2e] shadow-[6px_6px_0_0_#000] p-6 flex flex-col">
+                  <h3 className="text-base font-bold text-[#0d1b2e] uppercase tracking-wider mb-6 flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-[#ffe66d]" />
+                    Horarios Disponibles
+                  </h3>
+
+                  {/* Add Slot Block */}
+                  <div className="bg-slate-50 border-2 border-slate-200 p-4 mb-6 space-y-3.5 text-xs font-semibold rounded">
+                    <div className="text-[10px] font-extrabold uppercase tracking-wide text-slate-450">Agregar Franja Horaria</div>
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[10px] text-slate-400 block mb-0.5">Desde</label>
+                        <input
+                          type="time"
+                          value={newSlotStart}
+                          onChange={(e) => setNewSlotStart(e.target.value)}
+                          className="w-full p-2 border border-slate-350 rounded focus:outline-none focus:ring-1 focus:ring-[#0d1b2e] text-slate-900"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-slate-400 block mb-0.5">Hasta</label>
+                        <input
+                          type="time"
+                          value={newSlotEnd}
+                          onChange={(e) => setNewSlotEnd(e.target.value)}
+                          className="w-full p-2 border border-slate-350 rounded focus:outline-none focus:ring-1 focus:ring-[#0d1b2e] text-slate-900"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] text-slate-400 block mb-0.5">Día de la Semana</label>
+                      <select
+                        value={selectedDayForSlot}
+                        onChange={(e) => setSelectedDayForSlot(e.target.value)}
+                        className="w-full p-2 border border-slate-355 rounded focus:outline-none focus:ring-1 focus:ring-[#0d1b2e] text-slate-900 font-bold"
+                      >
+                        {dayKeysEN.map((dayKey, idx) => (
+                          <option key={idx} value={dayKey}>{dayNamesES[idx]}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <button
+                      onClick={() => handleAddSlot(selectedDayForSlot)}
+                      className="w-full py-2 bg-[#ffe66d] hover:bg-[#ffd166] text-slate-900 font-bold border-2 border-slate-900 shadow-[2px_2px_0_0_#000] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer text-xs uppercase"
+                    >
+                      Agregar Horario
+                    </button>
+                  </div>
+
+                  {/* Day by Day Slots List */}
+                  <div className="space-y-4 max-h-[350px] overflow-y-auto pr-1 flex-1">
+                    {dayKeysEN.map((dayKey, idx) => {
+                      const daySlots = editingWeeklySlots[dayKey] || [];
+                      return (
+                        <div key={idx} className="border-b border-slate-100 pb-3 last:border-0 last:pb-0">
+                          <span className="font-bold text-slate-800 text-xs block mb-1.5">{dayNamesES[idx]}</span>
+                          {daySlots.length === 0 ? (
+                            <span className="text-[10px] text-slate-400 italic block">Sin horarios</span>
+                          ) : (
+                            <div className="flex flex-wrap gap-1.5">
+                              {daySlots.map((slot, sIdx) => (
+                                <span
+                                  key={sIdx}
+                                  className="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 border border-slate-300 font-bold text-[10px] text-slate-700"
+                                >
+                                  {slot}
+                                  <button
+                                    onClick={() => handleRemoveSlot(dayKey, slot)}
+                                    className="text-slate-400 hover:text-red-600 transition-colors font-bold text-[11px] p-0.5 cursor-pointer leading-none"
+                                  >
+                                    ✕
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    onClick={handleSaveBookingSettings}
+                    disabled={savingSettings}
+                    className="w-full mt-6 py-3.5 bg-[#2ec4b6] hover:bg-[#20a396] text-white font-bold border-3 border-slate-900 shadow-[4px_4px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[4px] active:translate-x-[4px] transition-all cursor-pointer text-xs uppercase tracking-wider disabled:opacity-50"
+                  >
+                    {savingSettings ? 'Guardando...' : 'Guardar Horarios'}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}

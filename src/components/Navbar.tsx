@@ -3,9 +3,10 @@ import { Code2, Menu, X } from 'lucide-react';
 
 interface NavbarProps {
   onGoToPlatform: () => void;
+  onBookMeeting: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onGoToPlatform }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onGoToPlatform, onBookMeeting }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -70,9 +71,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onGoToPlatform }) => {
             <button
               onClick={(e) => {
                 e.preventDefault();
+                onBookMeeting();
+              }}
+              className="px-5 py-2.5 bg-[#2ec4b6] hover:bg-[#20a396] text-white text-sm font-pixel tracking-wide border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[4px] active:translate-x-[4px] transition-all cursor-pointer"
+            >
+              AGENDAR REUNIÓN
+            </button>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
                 onGoToPlatform();
               }}
-              className="px-6 py-2.5 bg-[#ff6b6b] hover:bg-[#ff5252] text-white text-sm font-pixel tracking-wide border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[4px] active:translate-x-[4px] transition-all cursor-pointer"
+              className="px-5 py-2.5 bg-[#ff6b6b] hover:bg-[#ff5252] text-white text-sm font-pixel tracking-wide border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[4px] active:translate-x-[4px] transition-all cursor-pointer"
             >
               IR A LA PLATAFORMA
             </button>
@@ -124,6 +134,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onGoToPlatform }) => {
           >
             Para Empresas
           </a>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              setIsOpen(false);
+              onBookMeeting();
+            }}
+            className="w-full px-6 py-3 bg-[#2ec4b6] hover:bg-[#20a396] text-white text-sm font-pixel tracking-wide border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[4px] active:translate-x-[4px] transition-all text-center uppercase cursor-pointer mb-2"
+          >
+            AGENDAR REUNIÓN
+          </button>
           <button
             onClick={(e) => {
               e.preventDefault();

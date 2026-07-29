@@ -12,7 +12,21 @@ import { StudentDashboard } from './components/StudentDashboard';
 import { GoogleRegistrationForm } from './components/GoogleRegistrationForm';
 import { ShieldAlert, ArrowLeft, Clock } from 'lucide-react';
 import { db } from './firebase';
-import { collection, doc, setDoc, getDocs, deleteDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, getDocs, deleteDoc, getDoc } from 'firebase/firestore';
+import { BookingModal } from './components/BookingModal';
+
+export interface InformationalBooking {
+  id: string;
+  date: string;
+  timeSlot: string;
+  timestamp: number;
+  visitorName: string;
+  visitorEmail: string;
+  visitorPhone: string;
+  notes: string;
+  status: 'Pendiente' | 'Aprobada' | 'Cancelada';
+  createdAt: string;
+}
 
 interface LoggedInUser {
   username: string;
@@ -170,6 +184,17 @@ const App: React.FC = () => {
   const [platforms, setPlatforms] = useState<Platform[]>([]);
   const [forumPosts, setForumPosts] = useState<ForumPost[]>([]);
   const [resources, setResources] = useState<Resource[]>([]);
+  const [informationalBookings, setInformationalBookings] = useState<InformationalBooking[]>([]);
+  const [bookingSettings, setBookingSettings] = useState<{ weeklySlots: { [key: string]: string[] } }>({
+    weeklySlots: {
+      monday: ['15:00-16:00', '16:00-17:00', '17:00-18:00'],
+      tuesday: ['15:00-16:00', '16:00-17:00', '17:00-18:00'],
+      wednesday: ['15:00-16:00', '16:00-17:00', '17:00-18:00'],
+      thursday: ['15:00-16:00', '16:00-17:00', '17:00-18:00'],
+      friday: ['15:00-16:00', '16:00-17:00', '17:00-18:00']
+    }
+  });
+  const [bookingModalOpen, setBookingModalOpen] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [dbStatus, setDbStatus] = useState<'connecting' | 'connected' | 'error'>('connecting');
@@ -282,6 +307,29 @@ const App: React.FC = () => {
         const loadedResources = resourcesSnap.docs.map(d => ({ id: d.id, ...d.data() } as Resource));
         setResources(loadedResources);
 
+        // 9. Fetch Informational Bookings
+        const bookingsSnap = await getDocs(collection(db, 'informational_bookings'));
+        const loadedBookings = bookingsSnap.docs.map(d => ({ id: d.id, ...d.data() } as InformationalBooking));
+        setInformationalBookings(loadedBookings);
+
+        // 10. Fetch Booking Settings
+        const defaultWeeklySlots: { [key: string]: string[] } = {
+          monday: ['15:00-16:00', '16:00-17:00', '17:00-18:00'],
+          tuesday: ['15:00-16:00', '16:00-17:00', '17:00-18:00'],
+          wednesday: ['15:00-16:00', '16:00-17:00', '17:00-18:00'],
+          thursday: ['15:00-16:00', '16:00-17:00', '17:00-18:00'],
+          friday: ['15:00-16:00', '16:00-17:00', '17:00-18:00']
+        };
+        let loadedSettings = { weeklySlots: defaultWeeklySlots };
+        const settingsDocRef = doc(db, 'booking_settings', 'settings');
+        const settingsDocSnap = await getDoc(settingsDocRef);
+        if (settingsDocSnap.exists()) {
+          loadedSettings = settingsDocSnap.data() as { weeklySlots: { [key: string]: string[] } };
+        } else {
+          await setDoc(settingsDocRef, loadedSettings);
+        }
+        setBookingSettings(loadedSettings);
+
         setDbLoaded(true);
         setDbStatus('connected');
         setDbError(null);
@@ -300,6 +348,7 @@ const App: React.FC = () => {
           setPlatforms(lc('playcode_platforms') || []);
           setForumPosts(lc('playcode_forum_posts') || []);
           setResources(lc('playcode_resources') || []);
+          setInformationalBookings(lc('playcode_informational_bookings') || []);
         } catch { /* localStorage also failed, arrays stay empty */ }
       } finally {
         setLoading(false);
@@ -359,6 +408,12 @@ const App: React.FC = () => {
   }, [resources, loading, dbLoaded]);
 
   React.useEffect(() => {
+    if (loading || !dbLoaded) return;
+    localStorage.setItem('playcode_informational_bookings', JSON.stringify(informationalBookings));
+    syncCollection('informational_bookings', informationalBookings);
+  }, [informationalBookings, loading, dbLoaded]);
+
+  React.useEffect(() => {
     if (user) {
       localStorage.setItem('playcode_user', JSON.stringify(user));
     } else {
@@ -413,6 +468,26 @@ const App: React.FC = () => {
       setStudents(nextStudents);
     }
   }, [forumPosts, students, loading, dbLoaded]);
+
+  const handleSubmitBooking = async (bookingData: {
+    date: string;
+    timeSlot: string;
+    visitorName: string;
+    visitorEmail: string;
+    visitorPhone: string;
+    notes: string;
+  }) => {
+    const newId = `booking-${Date.now()}`;
+    const newBooking: InformationalBooking = {
+      id: newId,
+      ...bookingData,
+      timestamp: new Date(bookingData.date + 'T00:00:00').getTime(),
+      status: 'Pendiente',
+      createdAt: new Date().toISOString()
+    };
+    await setDoc(doc(db, 'informational_bookings', newId), newBooking);
+    setInformationalBookings(prev => [...prev, newBooking]);
+  };
 
   const handleLogin = (
     username: string,
@@ -703,6 +778,10 @@ const App: React.FC = () => {
         dbStatus={dbStatus}
         dbError={dbError}
         firebaseProjectId={db.app.options.projectId || 'playcode-39ce5'}
+        informationalBookings={informationalBookings}
+        setInformationalBookings={setInformationalBookings}
+        bookingSettings={bookingSettings}
+        setBookingSettings={setBookingSettings}
       />
     );
   }
@@ -744,13 +823,20 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans selection:bg-[#a3b8cc] selection:text-[#0d1b2e] antialiased">
-      <Navbar onGoToPlatform={() => setView('login')} />
-      <Hero />
+      <Navbar onGoToPlatform={() => setView('login')} onBookMeeting={() => setBookingModalOpen(true)} />
+      <Hero onBookMeeting={() => setBookingModalOpen(true)} />
       <About />
       <Courses />
       <Schools />
       <Corporate />
       <Footer />
+      <BookingModal
+        isOpen={bookingModalOpen}
+        onClose={() => setBookingModalOpen(false)}
+        weeklySlots={bookingSettings.weeklySlots}
+        existingBookings={informationalBookings}
+        onSubmitBooking={handleSubmitBooking}
+      />
     </div>
   );
 };

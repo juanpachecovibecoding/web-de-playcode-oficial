@@ -29,10 +29,13 @@ import {
   User,
   Trophy,
   Award,
-  Clock
+  Clock,
+  FolderOpen
 } from 'lucide-react';
 import { SafeHTMLViewer } from './SafeHTMLViewer';
 import type { InformationalBooking } from '../App';
+import { FileManager } from './FileManager';
+import type { VirtualFile } from './FileManager';
 
 interface Course {
   id: string;
@@ -136,6 +139,8 @@ interface AdminDashboardProps {
   setInformationalBookings: React.Dispatch<React.SetStateAction<InformationalBooking[]>>;
   bookingSettings: { weeklySlots: { [key: string]: string[] } };
   setBookingSettings: React.Dispatch<React.SetStateAction<{ weeklySlots: { [key: string]: string[] } }>>;
+  virtualFiles: VirtualFile[];
+  setVirtualFiles: React.Dispatch<React.SetStateAction<VirtualFile[]>>;
 }
 
 export interface GameItem {
@@ -208,11 +213,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   informationalBookings,
   setInformationalBookings,
   bookingSettings,
-  setBookingSettings
+  setBookingSettings,
+  virtualFiles,
+  setVirtualFiles
 }) => {
   void setCourses;
   void courses;
-  const [activeTab, setActiveTab] = useState<'inicio' | 'cursos' | 'usuarios' | 'docentes' | 'clases' | 'contenido' | 'config' | 'foro' | 'plataformas' | 'gamificacion' | 'recursos' | 'reuniones'>('inicio');
+  const [activeTab, setActiveTab] = useState<'inicio' | 'cursos' | 'usuarios' | 'docentes' | 'clases' | 'contenido' | 'config' | 'foro' | 'plataformas' | 'gamificacion' | 'recursos' | 'reuniones' | 'archivos'>('inicio');
 
   // Booking system states & handlers
   const dayNamesES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
@@ -1337,6 +1344,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </button>
 
           <button
+            onClick={() => setActiveTab('archivos')}
+            className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${activeTab === 'archivos'
+                ? 'bg-[#a3b8cc] text-[#0d1b2e] border-[#0d1b2e] shadow-[2px_2px_0_0_#ffffff] translate-x-0.5 -translate-y-0.5'
+                : 'border-transparent text-slate-400 hover:text-white hover:bg-[#1e385c]/50'
+              }`}
+          >
+            <FolderOpen className="w-3.5 h-3.5" /> GESTOR DE ARCHIVOS
+          </button>
+
+          <button
             onClick={() => setActiveTab('config')}
             className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${activeTab === 'config'
                 ? 'bg-[#a3b8cc] text-[#0d1b2e] border-[#0d1b2e] shadow-[2px_2px_0_0_#ffffff] translate-x-0.5 -translate-y-0.5'
@@ -2103,6 +2120,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ARCHIVOS TAB */}
+        {activeTab === 'archivos' && (
+          <div className="space-y-6">
+            <h2 className="text-xl font-bold text-[#0d1b2e] border-b border-slate-200 pb-4">
+              Gestor de Archivos de la Plataforma
+            </h2>
+            <FileManager 
+              files={virtualFiles}
+              setFiles={setVirtualFiles}
+            />
           </div>
         )}
 

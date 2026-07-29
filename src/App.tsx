@@ -14,6 +14,8 @@ import { ShieldAlert, ArrowLeft, Clock } from 'lucide-react';
 import { db } from './firebase';
 import { collection, doc, setDoc, getDocs, deleteDoc, getDoc } from 'firebase/firestore';
 import { BookingModal } from './components/BookingModal';
+import type { VirtualFile } from './components/FileManager';
+
 
 export interface InformationalBooking {
   id: string;
@@ -178,6 +180,7 @@ const App: React.FC = () => {
   // Centralized State — initialized EMPTY; Firestore is the single source of truth.
   // localStorage is only used as a read-only fallback if Firestore fails.
   const [courses, setCourses] = useState<Course[]>([]);
+  const [virtualFiles, setVirtualFiles] = useState<VirtualFile[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
@@ -331,6 +334,11 @@ const App: React.FC = () => {
         }
         setBookingSettings(loadedSettings);
 
+        // 11. Fetch Virtual Files
+        const filesSnap = await getDocs(collection(db, 'files'));
+        const loadedFiles = filesSnap.docs.map(d => ({ id: d.id, ...d.data() } as VirtualFile));
+        setVirtualFiles(loadedFiles);
+
         setDbLoaded(true);
         setDbStatus('connected');
         setDbError(null);
@@ -350,6 +358,7 @@ const App: React.FC = () => {
           setForumPosts(lc('playcode_forum_posts') || []);
           setResources(lc('playcode_resources') || []);
           setInformationalBookings(lc('playcode_informational_bookings') || []);
+          setVirtualFiles(lc('playcode_virtual_files') || []);
         } catch { /* localStorage also failed, arrays stay empty */ }
       } finally {
         setLoading(false);
@@ -413,6 +422,12 @@ const App: React.FC = () => {
     localStorage.setItem('playcode_informational_bookings', JSON.stringify(informationalBookings));
     syncCollection('informational_bookings', informationalBookings);
   }, [informationalBookings, loading, dbLoaded]);
+
+  React.useEffect(() => {
+    if (loading || !dbLoaded) return;
+    localStorage.setItem('playcode_virtual_files', JSON.stringify(virtualFiles));
+    syncCollection('files', virtualFiles);
+  }, [virtualFiles, loading, dbLoaded]);
 
   React.useEffect(() => {
     if (user) {
@@ -783,6 +798,8 @@ const App: React.FC = () => {
         setInformationalBookings={setInformationalBookings}
         bookingSettings={bookingSettings}
         setBookingSettings={setBookingSettings}
+        virtualFiles={virtualFiles}
+        setVirtualFiles={setVirtualFiles}
       />
     );
   }

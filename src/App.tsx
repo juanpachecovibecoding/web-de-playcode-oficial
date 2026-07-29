@@ -823,13 +823,13 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans selection:bg-[#a3b8cc] selection:text-[#0d1b2e] antialiased">
-      <Navbar onGoToPlatform={() => setView('login')} onBookMeeting={() => setBookingModalOpen(true)} />
-      <Hero onBookMeeting={() => setBookingModalOpen(true)} />
+      <Navbar onGoToPlatform={() => setView('login')} />
+      <Hero />
       <About />
       <Courses />
       <Schools />
       <Corporate />
-      <Footer />
+      <Footer onBookMeeting={() => setBookingModalOpen(true)} />
       <BookingModal
         isOpen={bookingModalOpen}
         onClose={() => setBookingModalOpen(false)}

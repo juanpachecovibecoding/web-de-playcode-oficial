@@ -1,7 +1,11 @@
 import React from 'react';
-import { Code2, Instagram, Facebook, Linkedin, MapPin, Mail } from 'lucide-react';
+import { Code2, Instagram, Facebook, Linkedin, MapPin, Mail, Calendar } from 'lucide-react';
 
-export const Footer: React.FC = () => {
+interface FooterProps {
+  onBookMeeting: () => void;
+}
+
+export const Footer: React.FC<FooterProps> = ({ onBookMeeting }) => {
   const currentYear = new Date().getFullYear();
 
   return (
@@ -85,6 +89,18 @@ export const Footer: React.FC = () => {
                 <a href="mailto:hola@playcode.com.ar" className="hover:text-[#ffe66d] transition-colors">
                   hola@playcode.com.ar
                 </a>
+              </li>
+              <li className="flex items-center gap-3">
+                <Calendar className="text-[#2ec4b6] w-5 h-5 shrink-0" />
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onBookMeeting();
+                  }}
+                  className="hover:text-[#2ec4b6] text-left transition-colors font-bold underline cursor-pointer"
+                >
+                  Agendar Reunión Informativa
+                </button>
               </li>
             </ul>
           </div>

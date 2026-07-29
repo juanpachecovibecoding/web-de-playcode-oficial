@@ -1,11 +1,7 @@
 import React from 'react';
-import { Sparkles, Rocket, Calendar } from 'lucide-react';
+import { Sparkles, Rocket, MonitorPlay } from 'lucide-react';
 
-interface HeroProps {
-  onBookMeeting: () => void;
-}
-
-export const Hero: React.FC<HeroProps> = ({ onBookMeeting }) => {
+export const Hero: React.FC = () => {
   return (
     <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-slate-50">
       {/* Pixel Grid Background */}
@@ -47,13 +43,13 @@ export const Hero: React.FC<HeroProps> = ({ onBookMeeting }) => {
               <Rocket className="w-5 h-5 shrink-0" />
               VER CURSOS
             </a>
-            <button
-              onClick={onBookMeeting}
-              className="inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-4 bg-[#2ec4b6] hover:bg-[#20a396] text-white font-pixel tracking-wide border-4 border-slate-900 shadow-[6px_6px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[6px] active:translate-x-[6px] transition-all text-sm sm:text-base w-full sm:w-auto cursor-pointer"
+            <a
+              href="#nosotros"
+              className="inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-4 bg-white hover:bg-slate-50 text-slate-900 font-pixel tracking-wide border-4 border-slate-900 shadow-[6px_6px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[6px] active:translate-x-[6px] transition-all text-sm sm:text-base w-full sm:w-auto"
             >
-              <Calendar className="w-5 h-5 shrink-0" />
-              AGENDAR REUNIÓN
-            </button>
+              <MonitorPlay className="w-5 h-5 shrink-0" />
+              CONÓCENOS
+            </a>
           </div>
         </div>
       </div>

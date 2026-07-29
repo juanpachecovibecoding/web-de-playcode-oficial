@@ -308,6 +308,50 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
   };
 
+  const [editingBooking, setEditingBooking] = useState<InformationalBooking | null>(null);
+  const [editBookingName, setEditBookingName] = useState('');
+  const [editBookingEmail, setEditBookingEmail] = useState('');
+  const [editBookingPhone, setEditBookingPhone] = useState('');
+  const [editBookingDate, setEditBookingDate] = useState('');
+  const [editBookingTimeSlot, setEditBookingTimeSlot] = useState('');
+  const [editBookingMeetUrl, setEditBookingMeetUrl] = useState('');
+  const [editBookingStatus, setEditBookingStatus] = useState<'Pendiente' | 'Aprobada' | 'Cancelada'>('Pendiente');
+
+  const handleStartEditBooking = (booking: InformationalBooking) => {
+    setEditingBooking(booking);
+    setEditBookingName(booking.visitorName);
+    setEditBookingEmail(booking.visitorEmail);
+    setEditBookingPhone(booking.visitorPhone);
+    setEditBookingDate(booking.date);
+    setEditBookingTimeSlot(booking.timeSlot);
+    setEditBookingMeetUrl(booking.meetUrl || '');
+    setEditBookingStatus(booking.status);
+  };
+
+  const handleSaveBooking = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingBooking) return;
+    try {
+      const updatedBooking: InformationalBooking = {
+        ...editingBooking,
+        visitorName: editBookingName,
+        visitorEmail: editBookingEmail,
+        visitorPhone: editBookingPhone,
+        date: editBookingDate,
+        timeSlot: editBookingTimeSlot,
+        meetUrl: editBookingMeetUrl,
+        status: editBookingStatus,
+        timestamp: new Date(editBookingDate + 'T00:00:00').getTime()
+      };
+      await setDoc(doc(db, 'informational_bookings', editingBooking.id), updatedBooking);
+      setInformationalBookings(prev => prev.map(b => b.id === editingBooking.id ? updatedBooking : b));
+      setEditingBooking(null);
+    } catch (err) {
+      console.error("Error saving booking:", err);
+      alert("Error al guardar la reunión");
+    }
+  };
+
   // Resources management state
   const [newResourceName, setNewResourceName] = useState('');
   const [newResourceDesc, setNewResourceDesc] = useState('');
@@ -1871,7 +1915,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             const dateObj = new Date(booking.date + 'T00:00:00');
                             const formattedDate = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
                             
-                            const waText = encodeURIComponent(`Hola ${booking.visitorName}, te contacto desde Play Code respecto a la reunión informativa que solicitaste para el día ${formattedDate} a las ${booking.timeSlot} hs.`);
+                            const meetLinkText = booking.meetUrl 
+                              ? `Enlace de Google Meet para la videollamada: ${booking.meetUrl}` 
+                              : `El enlace de Google Meet para la videollamada se te enviará a la brevedad.`;
+                            const waText = encodeURIComponent(`¡Hola ${booking.visitorName}! Te confirmo que tu reunión informativa de Play Code ha sido aprobada para el día ${formattedDate} a las ${booking.timeSlot} hs.\n\n${meetLinkText}\n\n¡Te esperamos!`);
                             const waUrl = `https://wa.me/${booking.visitorPhone.replace(/[^0-9]/g, '')}?text=${waText}`;
 
                             return (
@@ -1884,6 +1931,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 <td className="p-3 space-y-0.5">
                                   <div className="font-bold text-slate-800">{formattedDate}</div>
                                   <div className="text-[10px] text-[#2ec4b6] font-extrabold">{booking.timeSlot} hs</div>
+                                  {booking.meetUrl && (
+                                    <a
+                                      href={booking.meetUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-[9px] text-[#001F4A] hover:underline font-bold block truncate max-w-[120px] mt-0.5"
+                                      title={booking.meetUrl}
+                                    >
+                                      🔗 Meet Link
+                                    </a>
+                                  )}
                                 </td>
                                 <td className="p-3 text-slate-600 max-w-[200px] truncate" title={booking.notes}>
                                   {booking.notes || <span className="text-slate-350 italic">Sin comentarios</span>}
@@ -1910,6 +1968,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     >
                                       💬 WA
                                     </a>
+                                    <button
+                                      onClick={() => handleStartEditBooking(booking)}
+                                      className="p-1.5 bg-[#ffe66d] hover:bg-[#ffd166] text-slate-900 border border-slate-900 rounded font-bold text-[10px] shadow-[1px_1px_0_0_#000] active:translate-y-[1px] active:shadow-none cursor-pointer"
+                                      title="Editar reserva / Meet Link"
+                                    >
+                                      <Pencil className="w-3.5 h-3.5" />
+                                    </button>
                                     {booking.status === 'Pendiente' && (
                                       <>
                                         <button
@@ -5110,6 +5175,125 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   className="px-3 py-1.5 bg-[#2a4e7c] hover:bg-[#1e385c] text-white font-bold border-2 border-[#0d1b2e] shadow-[1.5px_1.5px_0_0_#000000] active:translate-y-[1.5px] active:shadow-[0px_0px_0_0_#000000] transition-all cursor-pointer"
                 >
                   Guardar Cambios
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT BOOKING MODAL */}
+      {editingBooking && (
+        <div className="fixed inset-0 bg-[#0d1b2e]/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border-4 border-[#0d1b2e] shadow-[8px_8px_0_0_#0f172a] w-full max-w-md overflow-hidden flex flex-col">
+            <div className="bg-[#001F4A] text-white px-5 py-4 border-b-4 border-slate-900 flex justify-between items-center shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="bg-[#ffe66d] p-1.5 border-2 border-slate-900 text-[#001F4A]">
+                  <Pencil className="w-4 h-4" />
+                </div>
+                <h3 className="font-pixel text-xs tracking-wider">Editar Reunión</h3>
+              </div>
+              <button onClick={() => setEditingBooking(null)} className="text-slate-400 hover:text-white font-bold cursor-pointer">
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveBooking} className="p-6 space-y-4 text-xs font-semibold">
+              <div>
+                <label className="text-slate-500 block mb-1">Nombre del Visitante *</label>
+                <input
+                  type="text"
+                  required
+                  value={editBookingName}
+                  onChange={(e) => setEditBookingName(e.target.value)}
+                  className="w-full p-2 border-2 border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#0d1b2e] text-slate-900"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-slate-500 block mb-1">Email *</label>
+                  <input
+                    type="email"
+                    required
+                    value={editBookingEmail}
+                    onChange={(e) => setEditBookingEmail(e.target.value)}
+                    className="w-full p-2 border-2 border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#0d1b2e] text-slate-900"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-500 block mb-1">Teléfono / WA *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editBookingPhone}
+                    onChange={(e) => setEditBookingPhone(e.target.value)}
+                    className="w-full p-2 border-2 border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#0d1b2e] text-slate-900"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-slate-500 block mb-1">Fecha *</label>
+                  <input
+                    type="date"
+                    required
+                    value={editBookingDate}
+                    onChange={(e) => setEditBookingDate(e.target.value)}
+                    className="w-full p-2 border-2 border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#0d1b2e] text-slate-900"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-500 block mb-1">Franja Horaria *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editBookingTimeSlot}
+                    placeholder="e.g. 15:00-16:00"
+                    onChange={(e) => setEditBookingTimeSlot(e.target.value)}
+                    className="w-full p-2 border-2 border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#0d1b2e] text-slate-900"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-slate-500 block mb-1">Enlace de Google Meet (Opcional)</label>
+                <input
+                  type="url"
+                  value={editBookingMeetUrl}
+                  placeholder="https://meet.google.com/abc-defg-hij"
+                  onChange={(e) => setEditBookingMeetUrl(e.target.value)}
+                  className="w-full p-2 border-2 border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#0d1b2e] text-slate-900 font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="text-slate-500 block mb-1">Estado *</label>
+                <select
+                  value={editBookingStatus}
+                  onChange={(e) => setEditBookingStatus(e.target.value as any)}
+                  className="w-full p-2 border-2 border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-[#0d1b2e] font-bold text-slate-900"
+                >
+                  <option value="Pendiente">Pendiente</option>
+                  <option value="Aprobada">Aprobada</option>
+                  <option value="Cancelada">Cancelada</option>
+                </select>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingBooking(null)}
+                  className="flex-1 py-2.5 bg-white hover:bg-slate-50 text-slate-700 font-bold border-2 border-slate-400 rounded cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 bg-[#2ec4b6] hover:bg-[#20a396] text-white font-bold border-2 border-slate-900 shadow-[2px_2px_0_0_#000] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer"
+                >
+                  Guardar
                 </button>
               </div>
             </form>

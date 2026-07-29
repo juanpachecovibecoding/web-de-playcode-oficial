@@ -26,6 +26,7 @@ export interface InformationalBooking {
   notes: string;
   status: 'Pendiente' | 'Aprobada' | 'Cancelada';
   createdAt: string;
+  meetUrl?: string;
 }
 
 interface LoggedInUser {

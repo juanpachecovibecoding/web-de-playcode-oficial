@@ -3,7 +3,7 @@ import { db } from '../firebase';
 import { doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { 
   Folder, FileText, FileCode, Image, Upload, Plus, Trash2, 
-  Pencil, Search, ChevronRight, Grid, List, Download, Copy, Check, FileArchive, Eye
+  Pencil, Search, ChevronRight, Grid, List, Download, Copy, Check, FileArchive, Eye, ExternalLink
 } from 'lucide-react';
 
 export interface VirtualFile {
@@ -349,10 +349,38 @@ export const FileManager: React.FC<FileManagerProps> = ({ files, setFiles }) => 
 
   const handleCopyPath = (file: VirtualFile) => {
     if (!file.content) return;
-    // Copy the raw base64 contents (or text content)
-    navigator.clipboard.writeText(file.content);
+    let shareableUrl = file.content;
+    if (!file.content.startsWith('data:')) {
+      const mime = file.mimeType || 'text/html';
+      shareableUrl = `data:${mime};charset=utf-8,${encodeURIComponent(file.content)}`;
+    }
+    navigator.clipboard.writeText(shareableUrl);
     setCopiedFileId(file.id);
     setTimeout(() => setCopiedFileId(null), 2000);
+  };
+
+  const handleOpenInNewTab = (file: VirtualFile) => {
+    if (!file.content) return;
+    const newWindow = window.open();
+    if (newWindow) {
+      if (file.content.startsWith('data:')) {
+        if (file.mimeType?.startsWith('image/') || file.mimeType === 'application/pdf') {
+          newWindow.document.write(`
+            <html>
+              <head><title>${file.name}</title></head>
+              <body style="margin:0;display:flex;justify-content:center;align-items:center;background:#f0f4f8;">
+                <embed src="${file.content}" type="${file.mimeType}" style="width:100%;height:100vh;border:none;" />
+              </body>
+            </html>
+          `);
+        } else {
+          newWindow.location.href = file.content;
+        }
+      } else {
+        newWindow.document.write(file.content);
+        newWindow.document.close();
+      }
+    }
   };
 
   const handleItemClick = (item: VirtualFile) => {
@@ -842,15 +870,21 @@ export const FileManager: React.FC<FileManagerProps> = ({ files, setFiles }) => 
               <div>Subido el: <span className="text-slate-800">{new Date(previewFile.createdAt).toLocaleString('es-ES')}</span></div>
             </div>
 
-            <div className="mt-6 flex gap-2">
+            <div className="mt-6 flex flex-col sm:flex-row gap-2">
               <button
                 onClick={() => {
                   handleCopyPath(previewFile);
-                  alert('¡Ruta copiada al portapapeles!');
+                  alert('¡Vínculo copiado al portapapeles!');
                 }}
                 className="flex-1 py-2 bg-[#ffe66d] hover:bg-[#ffd166] text-slate-900 font-bold border-2 border-slate-900 shadow-[2px_2px_0_0_#000] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] cursor-pointer text-center text-xs uppercase"
               >
-                Copiar base64 URL
+                Copiar Vínculo
+              </button>
+              <button
+                onClick={() => handleOpenInNewTab(previewFile)}
+                className="flex-1 py-2 bg-[#a3b8cc] hover:bg-[#8da2b5] text-[#0d1b2e] font-bold border-2 border-slate-900 shadow-[2px_2px_0_0_#000] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] cursor-pointer text-center text-xs uppercase flex items-center justify-center gap-1"
+              >
+                <ExternalLink className="w-3 h-3" /> Ver en pestaña
               </button>
               <button
                 onClick={() => handleDownload(previewFile)}
@@ -936,8 +970,17 @@ export const FileManager: React.FC<FileManagerProps> = ({ files, setFiles }) => 
               </button>
               <button
                 onClick={() => {
+                  handleOpenInNewTab(contextMenu.item);
+                  setContextMenu(null);
+                }}
+                className="w-full text-left px-3 py-1.5 hover:bg-[#ffe66d] hover:text-slate-900 cursor-pointer flex items-center gap-2"
+              >
+                <ExternalLink className="w-3.5 h-3.5" /> Abrir en pestaña
+              </button>
+              <button
+                onClick={() => {
                   handleCopyPath(contextMenu.item);
-                  alert('¡Vínculo base64 copiado al portapapeles!');
+                  alert('¡Vínculo copiado al portapapeles!');
                   setContextMenu(null);
                 }}
                 className="w-full text-left px-3 py-1.5 hover:bg-[#ffe66d] hover:text-slate-900 cursor-pointer flex items-center gap-2"

@@ -15,6 +15,7 @@ import { db } from './firebase';
 import { collection, doc, setDoc, getDocs, deleteDoc, getDoc } from 'firebase/firestore';
 import { BookingModal } from './components/BookingModal';
 import type { VirtualFile } from './components/FileManager';
+import { SafeHTMLViewer } from './components/SafeHTMLViewer';
 
 
 export interface InformationalBooking {
@@ -121,6 +122,7 @@ interface Lesson {
   title: string;
   courseName: string;
   htmlContent: string;
+  slug?: string;
 }
 
 interface ForumComment {
@@ -198,6 +200,7 @@ const App: React.FC = () => {
       friday: ['15:00-16:00', '16:00-17:00', '17:00-18:00']
     }
   });
+  const [publicLessonToShow, setPublicLessonToShow] = useState<Lesson | null>(null);
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
 
   const [loading, setLoading] = useState(true);
@@ -263,6 +266,15 @@ const App: React.FC = () => {
         const lessonsSnap = await getDocs(collection(db, 'lessons'));
         const loadedLessons = lessonsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Lesson));
         setLessons(loadedLessons);
+
+        // Check if current URL pathname matches any lesson slug
+        const path = window.location.pathname.replace(/^\//, '').trim().toLowerCase();
+        if (path && !['login', 'student_dashboard', 'admin_dashboard', 'dashboard', 'nosotros', 'cursos', 'contacto'].includes(path)) {
+          const matched = loadedLessons.find(l => l.slug === path);
+          if (matched) {
+            setPublicLessonToShow(matched);
+          }
+        }
 
         // 6. Fetch Platforms
         const platformsSnap = await getDocs(collection(db, 'platforms'));
@@ -353,7 +365,16 @@ const App: React.FC = () => {
           setStudents(lc('playcode_students') || []);
           setMeetings(lc('playcode_meetings') || []);
           setClassrooms(lc('playcode_classrooms') || []);
-          setLessons(lc('playcode_lessons') || []);
+          const localLessons = lc('playcode_lessons') || [];
+          setLessons(localLessons);
+          
+          const fallbackPath = window.location.pathname.replace(/^\//, '').trim().toLowerCase();
+          if (fallbackPath && !['login', 'student_dashboard', 'admin_dashboard', 'dashboard', 'nosotros', 'cursos', 'contacto'].includes(fallbackPath)) {
+            const matched = localLessons.find((l: any) => l.slug === fallbackPath);
+            if (matched) {
+              setPublicLessonToShow(matched);
+            }
+          }
           setPlatforms(lc('playcode_platforms') || []);
           setForumPosts(lc('playcode_forum_posts') || []);
           setResources(lc('playcode_resources') || []);
@@ -692,6 +713,22 @@ const App: React.FC = () => {
     localStorage.removeItem('playcode_attempted_name');
   };
 
+  if (loading) {
+    const path = window.location.pathname.replace(/^\//, '').trim().toLowerCase();
+    const isPublicSlug = path && !['login', 'student_dashboard', 'admin_dashboard', 'dashboard', 'nosotros', 'cursos', 'contacto'].includes(path);
+    
+    if (isPublicSlug) {
+      return (
+        <div className="min-h-screen bg-[#0d1b2e] flex flex-col items-center justify-center text-white font-sans">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-4 border-[#ffe66d] border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-sm font-bold uppercase tracking-widest text-[#a3b8cc] animate-pulse">Cargando Lección...</p>
+          </div>
+        </div>
+      );
+    }
+  }
+
   if (loading && (view === 'dashboard' || view === 'student_dashboard' || view === 'pending_activation')) {
     return (
       <div className="min-h-screen bg-[#0d1b2e] flex flex-col items-center justify-center text-white font-sans">
@@ -699,6 +736,54 @@ const App: React.FC = () => {
           <div className="w-12 h-12 border-4 border-[#ffe66d] border-t-transparent rounded-full animate-spin"></div>
           <p className="text-sm font-bold uppercase tracking-widest text-[#a3b8cc] animate-pulse">Cargando Plataforma...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (publicLessonToShow) {
+    return (
+      <div className="min-h-screen bg-slate-50 font-sans selection:bg-[#a3b8cc] selection:text-[#0d1b2e] antialiased flex flex-col animate-in fade-in duration-200">
+        {/* Navigation / Header */}
+        <header className="bg-[#001F4A] border-b-4 border-slate-900 px-6 py-4 flex items-center justify-between shadow-[0_4px_0_0_#0f172a] shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="bg-[#4ecdc4] p-1.5 border-2 border-slate-900 text-slate-900 font-pixel text-[10px] tracking-widest uppercase">
+              Play Code
+            </div>
+            <span className="text-white font-extrabold text-sm tracking-wide hidden sm:inline">Visualizador Público</span>
+          </div>
+          <button
+            onClick={() => {
+              window.history.pushState({}, '', '/');
+              setPublicLessonToShow(null);
+              setView('landing');
+            }}
+            className="px-3.5 py-1.5 bg-[#ff6b6b] hover:bg-[#ff5252] text-white border-2 border-slate-900 shadow-[2px_2px_0_0_#000] active:translate-y-[2px] active:shadow-none font-bold text-xs uppercase cursor-pointer"
+          >
+            Volver a la Web
+          </button>
+        </header>
+
+        {/* Content Area */}
+        <main className="flex-1 max-w-4xl w-full mx-auto p-6 md:p-8">
+          <div className="bg-white border-4 border-slate-900 shadow-[8px_8px_0_0_#000] p-6 md:p-10 space-y-6">
+            <div>
+              <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 px-2.5 py-1 uppercase rounded tracking-wider">
+                {publicLessonToShow.courseName || 'Lección Pública'}
+              </span>
+              <h1 className="text-3xl font-extrabold text-slate-900 mt-3 leading-tight">{publicLessonToShow.title}</h1>
+            </div>
+
+            {/* Render HTML content safely */}
+            <div className="border-t-2 border-slate-200 pt-6">
+              <SafeHTMLViewer htmlContent={publicLessonToShow.htmlContent || ''} />
+            </div>
+          </div>
+        </main>
+
+        {/* Minimal Footer */}
+        <footer className="py-6 border-t border-slate-200 text-center text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-white">
+          © {new Date().getFullYear()} Play Code. Todos los derechos reservados.
+        </footer>
       </div>
     );
   }

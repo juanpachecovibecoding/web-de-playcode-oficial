@@ -84,6 +84,7 @@ interface Lesson {
   title: string;
   courseName: string;
   htmlContent: string;
+  slug?: string;
 }
 
 interface PlatformAula {
@@ -1158,6 +1159,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       htmlContent: editLessonHtmlContent
     } : l));
     setEditingLesson(null);
+  };
+
+  const handleSaveLessonSlug = async (lessonId: string, slug: string) => {
+    if (slug) {
+      const isDuplicate = lessons.some(l => l.slug === slug && l.id !== lessonId);
+      if (isDuplicate) {
+        alert('Este slug ya está siendo utilizado por otra lección.');
+        return;
+      }
+    }
+    try {
+      const lesson = lessons.find(l => l.id === lessonId);
+      if (!lesson) return;
+      const updatedLesson = { ...lesson, slug: slug || '' };
+      await setDoc(doc(db, 'lessons', lessonId), updatedLesson);
+      setLessons(prev => prev.map(l => l.id === lessonId ? updatedLesson : l));
+    } catch (err) {
+      console.error("Error saving lesson slug:", err);
+      alert("Error al guardar la URL pública de la lección");
+    }
   };
 
   const handleAddClassroom = (e: React.FormEvent) => {
@@ -3884,6 +3905,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             >
                               <Pencil className="w-3.5 h-3.5" />
                             </button>
+
+                            <div className="flex items-center gap-1 bg-slate-50 border border-slate-300 rounded px-1.5 py-0.5 font-mono text-[9px] select-all shadow-[1px_1px_0_0_#a3b8cc] shrink-0">
+                              <span className="text-slate-400 font-bold">playcode.com.ar/</span>
+                              <input
+                                type="text"
+                                placeholder="slug-unico"
+                                defaultValue={lesson.slug || ''}
+                                onBlur={async (e) => {
+                                  const val = e.target.value.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '');
+                                  e.target.value = val;
+                                  if (val !== (lesson.slug || '')) {
+                                    await handleSaveLessonSlug(lesson.id, val);
+                                  }
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    (e.target as HTMLInputElement).blur();
+                                  }
+                                }}
+                                className="bg-transparent text-[10px] font-bold text-slate-700 outline-none w-28 placeholder:text-slate-300 font-sans"
+                                title="Define un slug único para generar una URL pública sin requerir login"
+                              />
+                            </div>
                             <button
                               onClick={() => handleDeleteLesson(lesson.id)}
                               className="text-slate-400 hover:text-red-600 p-1 cursor-pointer transition-colors"

@@ -1,5 +1,5 @@
 import React from 'react';
-import { HeartHandshake, Users, Bot, Music, Target, Presentation, Briefcase } from 'lucide-react';
+import { HeartHandshake, Users, Bot, Music, Target, Presentation, Briefcase, Wrench, ClipboardList, Zap } from 'lucide-react';
 
 export const Corporate: React.FC = () => {
   return (
@@ -105,6 +105,52 @@ export const Corporate: React.FC = () => {
           </div>
 
         </div>
+
+        {/* Full-width Software Card */}
+        <div className="bg-gradient-to-r from-slate-800 to-slate-900 border-4 border-[#ffe66d] p-8 shadow-[8px_8px_0_0_#ffe66d] hover:-translate-y-1 hover:shadow-[12px_12px_0_0_#ffe66d] transition-all">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-8">
+            {/* Left: Title & Description */}
+            <div className="flex-1 space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-[#ffe66d] text-slate-900 border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a] shrink-0">
+                  <Wrench className="w-7 h-7" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-pixel text-[#4ecdc4] tracking-widest uppercase">Nuevo Servicio</span>
+                  <h3 className="font-pixel text-lg sm:text-2xl tracking-wide text-white leading-tight">SISTEMA DE GESTIÓN PARA TALLERES DE SERVICIO TÉCNICO</h3>
+                </div>
+              </div>
+              <p className="text-slate-300 font-medium leading-relaxed">
+                Software a medida para talleres de reparación: gestioná órdenes de trabajo, seguimiento de reparaciones, stock de repuestos, clientes y facturación desde un único panel de control. Optimizá tu negocio y ofrecé a tus clientes visibilidad en tiempo real del estado de sus equipos.
+              </p>
+            </div>
+
+            {/* Right: Feature pills */}
+            <div className="flex flex-col gap-3 shrink-0 lg:w-72">
+              <div className="flex items-center gap-3 bg-slate-900 px-4 py-2.5 border-2 border-slate-700">
+                <ClipboardList className="w-4 h-4 text-[#ffe66d] shrink-0" />
+                <span className="text-slate-300 text-sm font-semibold">Órdenes de trabajo y seguimiento</span>
+              </div>
+              <div className="flex items-center gap-3 bg-slate-900 px-4 py-2.5 border-2 border-slate-700">
+                <Wrench className="w-4 h-4 text-[#4ecdc4] shrink-0" />
+                <span className="text-slate-300 text-sm font-semibold">Control de stock de repuestos</span>
+              </div>
+              <div className="flex items-center gap-3 bg-slate-900 px-4 py-2.5 border-2 border-slate-700">
+                <Zap className="w-4 h-4 text-[#ff6b6b] shrink-0" />
+                <span className="text-slate-300 text-sm font-semibold">Notificaciones automáticas al cliente</span>
+              </div>
+              <a
+                href="https://wa.me/5491173708555?text=Hola,%20quiero%20informaci%C3%B3n%20sobre%20el%20Software%20de%20Gesti%C3%B3n%20para%20Talleres%20de%20Servicio%20T%C3%A9cnico"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 w-full text-center px-6 py-3 bg-[#ffe66d] hover:bg-yellow-300 text-slate-900 font-pixel tracking-wide border-4 border-slate-900 shadow-[4px_4px_0_0_#0f172a] active:shadow-none active:translate-y-[4px] active:translate-x-[4px] transition-all text-sm"
+              >
+                CONSULTAR AHORA
+              </a>
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
   );

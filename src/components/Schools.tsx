@@ -12,7 +12,7 @@ export const Schools: React.FC = () => {
           <div className="lg:w-1/3">
             <div className="lg:sticky lg:top-32">
               <h2 className="text-4xl md:text-5xl font-bold text-[#0F172B] mb-6 leading-tight" style={{ textShadow: '4px 4px 0 #e2e8f0' }}>
-                EL <span className="text-[#FF6B6B]">ALIADO ACADÉMICO</span> PARA TU COLEGIO
+                EL <span className="text-[#FF6B6B]">ALIADO ACADÉMICO</span> PARA TU INSTITUCION EDUCATIVA
               </h2>
               <p className="text-lg text-slate-600 mb-8 font-medium">
                 Desarrollamos y coordinamos la estrategia de Educación Digital 

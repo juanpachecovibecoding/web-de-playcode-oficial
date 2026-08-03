@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Search, ExternalLink, Cpu, Code, Sparkles, BookOpen, Layers, ArrowLeft, Terminal } from 'lucide-react';
 import type { Resource, Course } from '../App';
-import cloudConstructorImg from '../assets/cloud-constructor.png';
 
 interface PublicResourcesProps {
   resources: Resource[];
@@ -9,18 +8,8 @@ interface PublicResourcesProps {
   onBack: () => void;
 }
 
-const CLOUD_CONSTRUCTOR_RESOURCE: Resource = {
-  id: 'def-7',
-  name: 'Constructor en la Nube',
-  description: 'Cloud Constructor es un juego interactivo que introduce diversos conceptos sobre computación en la nube, arquitectura cliente-servidor y sistemas distribuidos.',
-  courseId: 'Juegos & Sistemas',
-  url: 'https://cloud-constructor.vercel.app/',
-  imageUrl: cloudConstructorImg
-};
-
 // Featured default resources used at Play Code when custom resources are empty or as showcase
 const DEFAULT_STEAM_RESOURCES: Resource[] = [
-  CLOUD_CONSTRUCTOR_RESOURCE,
   {
     id: 'def-1',
     name: 'Arduino Web Editor & Cloud',
@@ -74,12 +63,8 @@ const DEFAULT_STEAM_RESOURCES: Resource[] = [
 export const PublicResources: React.FC<PublicResourcesProps> = ({ resources, courses, onBack }) => {
   const [search, setSearch] = useState('');
 
-  // Combine custom Firestore resources and default resources (ensuring Cloud Constructor is present)
-  const displayResources = resources.length > 0 
-    ? (resources.some(r => r.url === 'https://cloud-constructor.vercel.app/' || r.name === 'Constructor en la Nube')
-        ? resources 
-        : [CLOUD_CONSTRUCTOR_RESOURCE, ...resources])
-    : DEFAULT_STEAM_RESOURCES;
+  // Combine custom Firestore resources and default resources (filtering duplicates if any)
+  const displayResources = resources.length > 0 ? resources : DEFAULT_STEAM_RESOURCES;
 
   const filteredResources = displayResources.filter(res => {
     return res.name.toLowerCase().includes(search.toLowerCase()) || 

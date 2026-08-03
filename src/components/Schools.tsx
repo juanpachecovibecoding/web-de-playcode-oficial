@@ -26,6 +26,20 @@ export const Schools: React.FC = () => {
               >
                 CONTACTAR A ASESORÍA
               </a>
+
+              <div className="mt-8 pt-6 border-t-2 border-slate-200">
+                <p className="text-sm font-bold text-slate-900 mb-3 uppercase tracking-wide">
+                  ¿Qué herramientas usamos?
+                </p>
+                <a
+                  href="https://wa.me/5491173708555?text=Hola,%20quiero%20conocer%20las%20herramientas%20y%20recursos%20que%20utilizan%20en%20Play%20Code"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block text-center px-6 py-3 bg-[#ffe66d] hover:bg-[#ffd166] text-slate-900 font-pixel tracking-wide border-4 border-slate-900 shadow-[6px_6px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[6px] active:translate-x-[6px] transition-all"
+                >
+                  CONOCE NUESTROS RECURSOS
+                </a>
+              </div>
             </div>
           </div>
 

@@ -16,6 +16,7 @@ import { collection, doc, setDoc, getDocs, deleteDoc, getDoc } from 'firebase/fi
 import { BookingModal } from './components/BookingModal';
 import type { VirtualFile } from './components/FileManager';
 import { SafeHTMLViewer } from './components/SafeHTMLViewer';
+import { PublicResources } from './components/PublicResources';
 
 
 export interface InformationalBooking {
@@ -39,7 +40,7 @@ interface LoggedInUser {
   id?: string;
 }
 
-interface Course {
+export interface Course {
   id: string;
   title: string;
   ageGroup: string;
@@ -201,7 +202,24 @@ const App: React.FC = () => {
     }
   });
   const [publicLessonToShow, setPublicLessonToShow] = useState<Lesson | null>(null);
+  const [showPublicResources, setShowPublicResources] = useState<boolean>(() => {
+    return window.location.pathname.replace(/^\//, '').trim().toLowerCase() === 'recursos';
+  });
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
+
+  React.useEffect(() => {
+    const handleLocationChange = () => {
+      const p = window.location.pathname.replace(/^\//, '').trim().toLowerCase();
+      if (p === 'recursos') {
+        setShowPublicResources(true);
+      } else {
+        setShowPublicResources(false);
+      }
+    };
+
+    window.addEventListener('popstate', handleLocationChange);
+    return () => window.removeEventListener('popstate', handleLocationChange);
+  }, []);
 
   const [loading, setLoading] = useState(true);
   const [dbStatus, setDbStatus] = useState<'connecting' | 'connected' | 'error'>('connecting');
@@ -737,6 +755,20 @@ const App: React.FC = () => {
           <p className="text-sm font-bold uppercase tracking-widest text-[#a3b8cc] animate-pulse">Cargando Plataforma...</p>
         </div>
       </div>
+    );
+  }
+
+  if (showPublicResources) {
+    return (
+      <PublicResources
+        resources={resources}
+        courses={courses}
+        onBack={() => {
+          window.history.pushState({}, '', '/');
+          setShowPublicResources(false);
+          setView('landing');
+        }}
+      />
     );
   }
 

@@ -41,7 +41,19 @@ export const SafeHTMLViewer: React.FC<SafeHTMLViewerProps> = ({
     );
   }
 
-  // Construct height calculation script to inject
+  // Override CSS to prevent inner min-height: 100vh from locking the iframe height measurement
+  const styleOverride = `
+    <style id="playcode-view-overrides">
+      html, body {
+        min-height: auto !important;
+        height: auto !important;
+        overflow-x: hidden !important;
+        overflow-y: visible !important;
+      }
+    </style>
+  `;
+
+  // Height calculation script to inject inside iframe
   const scriptToInject = `
     <script>
       (function() {
@@ -50,34 +62,30 @@ export const SafeHTMLViewer: React.FC<SafeHTMLViewerProps> = ({
           
           if (document.body) {
             h = Math.max(h, document.body.scrollHeight, document.body.offsetHeight);
-            const bodyRect = document.body.getBoundingClientRect();
-            if (bodyRect.height > h) h = Math.ceil(bodyRect.height);
           }
           if (document.documentElement) {
             h = Math.max(h, document.documentElement.scrollHeight, document.documentElement.offsetHeight);
           }
-          
-          const wrapper = document.getElementById('iframe-content-wrapper');
-          if (wrapper) {
-            h = Math.max(h, wrapper.scrollHeight, Math.ceil(wrapper.getBoundingClientRect().height));
-          }
 
-          // Check children position for dynamic absolute/flex/collapsed elements
-          const children = (document.body && document.body.children) ? document.body.children : [];
-          for (let i = 0; i < children.length; i++) {
-            if (children[i].tagName === 'SCRIPT' || children[i].tagName === 'STYLE') continue;
-            const childRect = children[i].getBoundingClientRect();
-            const childBottom = childRect.bottom + window.scrollY;
-            if (childBottom > h) {
-              h = Math.ceil(childBottom);
+          // Measure all major elements to get true bottom bound
+          try {
+            const elems = document.querySelectorAll('.main, #mh-form, .cat-section, .out-section, body > *');
+            for (let i = 0; i < elems.length; i++) {
+              const el = elems[i];
+              if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE') continue;
+              const rect = el.getBoundingClientRect();
+              const bottom = rect.bottom + (window.pageYOffset || document.documentElement.scrollTop || 0);
+              if (bottom > h) {
+                h = Math.ceil(bottom);
+              }
             }
-          }
+          } catch(e) {}
 
           if (h > 0) {
             window.parent.postMessage({
               type: 'resize-iframe',
               id: '${idRef.current}',
-              height: h + 20
+              height: h + 50
             }, '*');
           }
         };
@@ -85,12 +93,13 @@ export const SafeHTMLViewer: React.FC<SafeHTMLViewerProps> = ({
         window.addEventListener('load', sendHeight);
         document.addEventListener('DOMContentLoaded', sendHeight);
         
-        // Immediate and delayed trigger on clicks (e.g. accordion toggles, row expansion)
+        // Triggers on click / interactions (accordion toggles, tabs, etc)
         document.addEventListener('click', function() {
           sendHeight();
           setTimeout(sendHeight, 50);
-          setTimeout(sendHeight, 200);
-          setTimeout(sendHeight, 400);
+          setTimeout(sendHeight, 150);
+          setTimeout(sendHeight, 300);
+          setTimeout(sendHeight, 500);
         });
 
         window.addEventListener('resize', sendHeight);
@@ -114,7 +123,6 @@ export const SafeHTMLViewer: React.FC<SafeHTMLViewerProps> = ({
           } catch(e) {}
         }
 
-        // Periodic check fallback for animations/delayed renders
         setInterval(sendHeight, 500);
       })();
     </script>
@@ -124,12 +132,21 @@ export const SafeHTMLViewer: React.FC<SafeHTMLViewerProps> = ({
   const isFullDoc = /^\s*<!DOCTYPE|^\s*<html/i.test(trimmed);
 
   if (isFullDoc) {
-    if (trimmed.includes('</body>')) {
-      docContent = trimmed.replace('</body>', `${scriptToInject}\n</body>`);
-    } else if (trimmed.includes('</html>')) {
-      docContent = trimmed.replace('</html>', `${scriptToInject}\n</html>`);
+    let prepared = trimmed;
+    // Inject style override into <head>
+    if (prepared.includes('</head>')) {
+      prepared = prepared.replace('</head>', `${styleOverride}\n</head>`);
     } else {
-      docContent = trimmed + scriptToInject;
+      prepared = styleOverride + prepared;
+    }
+
+    // Inject height script before </body> or </html>
+    if (prepared.includes('</body>')) {
+      docContent = prepared.replace('</body>', `${scriptToInject}\n</body>`);
+    } else if (prepared.includes('</html>')) {
+      docContent = prepared.replace('</html>', `${scriptToInject}\n</html>`);
+    } else {
+      docContent = prepared + scriptToInject;
     }
   } else {
     docContent = `
@@ -138,18 +155,8 @@ export const SafeHTMLViewer: React.FC<SafeHTMLViewerProps> = ({
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1">
+          ${styleOverride}
           <style>
-            html, body {
-              margin: 0;
-              padding: 0;
-              font-family: system-ui, -apple-system, sans-serif;
-              background: transparent;
-              overflow-x: hidden;
-              overflow-y: visible;
-              font-size: 14px;
-              color: #334155;
-              line-height: 1.6;
-            }
             #iframe-content-wrapper {
               padding: 1px 0;
               width: 100%;

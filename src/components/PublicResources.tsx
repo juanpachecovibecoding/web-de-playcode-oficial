@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, ExternalLink, Cpu, Code, Sparkles, BookOpen, Layers, ArrowLeft, Terminal } from 'lucide-react';
+import { Search, ExternalLink, Cpu, Code, Sparkles, BookOpen, Layers, ArrowLeft, Terminal, Users } from 'lucide-react';
 import type { Resource, Course } from '../App';
 
 interface PublicResourcesProps {
@@ -16,7 +16,8 @@ const DEFAULT_STEAM_RESOURCES: Resource[] = [
     description: 'Entorno de programación y simulación electrónica para proyectos de robótica interactiva y automatización.',
     courseId: 'Robótica y Programación',
     url: 'https://create.arduino.cc/',
-    imageUrl: 'https://images.unsplash.com/photo-1555680202-c86f0e12f086?w=600&auto=format&fit=crop&q=80'
+    imageUrl: 'https://images.unsplash.com/photo-1555680202-c86f0e12f086?w=600&auto=format&fit=crop&q=80',
+    ageGroup: '9 a 13 años'
   },
   {
     id: 'def-2',
@@ -24,7 +25,8 @@ const DEFAULT_STEAM_RESOURCES: Resource[] = [
     description: 'Plataforma del MIT para aprender programación por bloques, crear videojuegos, historias animadas y dinámicas lógicas.',
     courseId: 'Aula Maker',
     url: 'https://scratch.mit.edu/',
-    imageUrl: 'https://images.unsplash.com/photo-1516116211223-4c71424afd67?w=600&auto=format&fit=crop&q=80'
+    imageUrl: 'https://images.unsplash.com/photo-1516116211223-4c71424afd67?w=600&auto=format&fit=crop&q=80',
+    ageGroup: '6 a 8 años'
   },
   {
     id: 'def-3',
@@ -32,7 +34,8 @@ const DEFAULT_STEAM_RESOURCES: Resource[] = [
     description: 'Modelado 3D y simulación virtual de circuitos integrados con sensores, motores y componentes electrónicos.',
     courseId: 'Robótica y Programación',
     url: 'https://www.tinkercad.com/',
-    imageUrl: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600&auto=format&fit=crop&q=80'
+    imageUrl: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600&auto=format&fit=crop&q=80',
+    ageGroup: '9 a 13 años'
   },
   {
     id: 'def-4',
@@ -40,7 +43,8 @@ const DEFAULT_STEAM_RESOURCES: Resource[] = [
     description: 'Plataforma internacional de ciencias de la computación con desafíos de lógica y código paso a paso para estudiantes.',
     courseId: 'PlayCoders',
     url: 'https://studio.code.org/',
-    imageUrl: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=600&auto=format&fit=crop&q=80'
+    imageUrl: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=600&auto=format&fit=crop&q=80',
+    ageGroup: '6 a 13 años'
   },
   {
     id: 'def-5',
@@ -48,7 +52,8 @@ const DEFAULT_STEAM_RESOURCES: Resource[] = [
     description: 'Herramientas de experimentación con modelos de Inteligencia Artificial para proyectos educativos y prototipos.',
     courseId: 'Capacitación Docente & IA',
     url: 'https://aistudio.google.com/',
-    imageUrl: 'https://images.unsplash.com/photo-1677442136019-21780efad99a?w=600&auto=format&fit=crop&q=80'
+    imageUrl: 'https://images.unsplash.com/photo-1677442136019-21780efad99a?w=600&auto=format&fit=crop&q=80',
+    ageGroup: 'Docentes & Familias'
   },
   {
     id: 'def-6',
@@ -56,7 +61,8 @@ const DEFAULT_STEAM_RESOURCES: Resource[] = [
     description: 'Editor visual y en Python para programar dispositivos físicos, sensores de movimiento y microcontroladores.',
     courseId: 'Aula Maker',
     url: 'https://makecode.microbit.org/',
-    imageUrl: 'https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?w=600&auto=format&fit=crop&q=80'
+    imageUrl: 'https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?w=600&auto=format&fit=crop&q=80',
+    ageGroup: '6 a 13 años'
   }
 ];
 
@@ -180,11 +186,18 @@ export const PublicResources: React.FC<PublicResourcesProps> = ({ resources, cou
                     )}
 
                     {/* Badge */}
-                    <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-pixel px-2.5 py-1 bg-[#ffe66d] text-slate-900 border border-slate-900 font-bold uppercase tracking-wider">
-                        {courseTag}
-                      </span>
-                      <Code className="w-4 h-4 text-[#4ecdc4]" />
+                    <div className="flex justify-between items-center flex-wrap gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[10px] font-pixel px-2.5 py-1 bg-[#ffe66d] text-slate-900 border border-slate-900 font-bold uppercase tracking-wider">
+                          {courseTag}
+                        </span>
+                        {res.ageGroup && (
+                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-[#1e385c] text-[#4ecdc4] border border-[#2a4e7c] rounded flex items-center gap-1">
+                            <Users className="w-3 h-3 text-[#ffe66d]" /> {res.ageGroup}
+                          </span>
+                        )}
+                      </div>
+                      <Code className="w-4 h-4 text-[#4ecdc4] shrink-0" />
                     </div>
 
                     {/* Title & Description */}

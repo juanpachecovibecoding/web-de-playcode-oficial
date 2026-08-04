@@ -187,6 +187,7 @@ interface Resource {
   courseId: string;
   url: string;
   imageUrl?: string;
+  ageGroup?: string;
 }
 
 interface StudentDashboardProps {
@@ -2097,11 +2098,18 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                             }}
                           />
                         )}
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-amber-100 text-amber-800 border border-amber-300 rounded uppercase">
-                            {relatedCourse ? relatedCourse.title : 'General'}
-                          </span>
-                          <BookOpen className="w-4 h-4 text-amber-500" />
+                        <div className="flex justify-between items-center mb-2 gap-2 flex-wrap">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-amber-100 text-amber-800 border border-amber-300 rounded uppercase">
+                              {relatedCourse ? relatedCourse.title : 'General'}
+                            </span>
+                            {res.ageGroup && (
+                              <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-purple-100 text-purple-800 border border-purple-300 rounded">
+                                {res.ageGroup}
+                              </span>
+                            )}
+                          </div>
+                          <BookOpen className="w-4 h-4 text-amber-500 shrink-0" />
                         </div>
                         <h4 className="text-base font-bold text-[#0d1b2e] line-clamp-2">{res.name}</h4>
                         <p className="text-xs text-slate-600 mt-2 leading-relaxed">

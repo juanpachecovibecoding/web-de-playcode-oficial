@@ -105,6 +105,7 @@ export interface Resource {
   courseId: string;
   url: string;
   imageUrl?: string;
+  ageGroup?: string;
 }
 
 interface Classroom {

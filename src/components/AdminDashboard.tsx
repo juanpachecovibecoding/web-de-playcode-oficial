@@ -113,6 +113,7 @@ export interface Resource {
   courseId: string;
   url: string;
   imageUrl?: string;
+  ageGroup?: string;
 }
 
 interface AdminDashboardProps {
@@ -366,6 +367,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [newResourceCourseId, setNewResourceCourseId] = useState('');
   const [newResourceUrl, setNewResourceUrl] = useState('');
   const [newResourceImageUrl, setNewResourceImageUrl] = useState('');
+  const [newResourceAgeGroup, setNewResourceAgeGroup] = useState('');
   const [isCreatingResource, setIsCreatingResource] = useState(false);
 
   // Resources editing state
@@ -375,6 +377,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [editResourceCourseId, setEditResourceCourseId] = useState('');
   const [editResourceUrl, setEditResourceUrl] = useState('');
   const [editResourceImageUrl, setEditResourceImageUrl] = useState('');
+  const [editResourceAgeGroup, setEditResourceAgeGroup] = useState('');
 
   const handleCreateResource = (e: React.FormEvent) => {
     e.preventDefault();
@@ -388,7 +391,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       description: newResourceDesc.trim(),
       courseId: newResourceCourseId,
       url: newResourceUrl.trim(),
-      imageUrl: newResourceImageUrl.trim() || undefined
+      imageUrl: newResourceImageUrl.trim() || undefined,
+      ageGroup: newResourceAgeGroup.trim() || undefined
     };
     setResources(prev => [...prev, newResource]);
     setNewResourceName('');
@@ -396,6 +400,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setNewResourceCourseId('');
     setNewResourceUrl('');
     setNewResourceImageUrl('');
+    setNewResourceAgeGroup('');
     setIsCreatingResource(false);
   };
 
@@ -406,6 +411,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setEditResourceCourseId(res.courseId);
     setEditResourceUrl(res.url);
     setEditResourceImageUrl(res.imageUrl || '');
+    setEditResourceAgeGroup(res.ageGroup || '');
   };
 
   const handleUpdateResource = (e: React.FormEvent) => {
@@ -422,7 +428,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       description: editResourceDesc.trim(),
       courseId: editResourceCourseId,
       url: editResourceUrl.trim(),
-      imageUrl: editResourceImageUrl.trim() || undefined
+      imageUrl: editResourceImageUrl.trim() || undefined,
+      ageGroup: editResourceAgeGroup.trim() || undefined
     } : r));
 
     setEditingResource(null);
@@ -3545,6 +3552,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   setNewResourceDesc('');
                   setNewResourceCourseId('');
                   setNewResourceUrl('');
+                  setNewResourceImageUrl('');
+                  setNewResourceAgeGroup('');
                   setIsCreatingResource(true);
                 }}
                 className="px-3.5 py-2 bg-[#2ec4b6] hover:bg-[#20a396] text-white font-bold border-2 border-[#0d1b2e] shadow-[3px_3px_0_0_#000000] active:translate-y-[3px] active:shadow-[0px_0px_0_0_#000000] transition-all flex items-center gap-2 cursor-pointer text-xs uppercase shrink-0"
@@ -3562,6 +3571,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       <th className="p-4 border-r border-[#0d1b2e]">Nombre</th>
                       <th className="p-4 border-r border-[#0d1b2e]">Descripción</th>
                       <th className="p-4 border-r border-[#0d1b2e]">Curso Relacionado</th>
+                      <th className="p-4 border-r border-[#0d1b2e]">Edad Sugerida</th>
                       <th className="p-4 border-r border-[#0d1b2e]">Enlace / URL</th>
                       <th className="p-4 text-center">Acciones</th>
                     </tr>
@@ -3569,7 +3579,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <tbody className="divide-y divide-[#0d1b2e]/10 text-xs font-semibold text-[#0d1b2e]">
                     {resources.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="p-8 text-center text-slate-450 italic">
+                        <td colSpan={6} className="p-8 text-center text-slate-450 italic">
                           No hay recursos registrados. ¡Crea uno nuevo presionando el botón superior!
                         </td>
                       </tr>
@@ -3584,6 +3594,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               <span className="px-2 py-1 bg-amber-100 text-amber-800 border border-amber-300 rounded text-[10px]">
                                 {relatedCourse ? relatedCourse.title : 'Curso no encontrado'}
                               </span>
+                            </td>
+                            <td className="p-4 border-r border-[#0d1b2e]/10">
+                              {res.ageGroup ? (
+                                <span className="px-2 py-1 bg-purple-100 text-purple-800 border border-purple-300 rounded text-[10px] font-bold">
+                                  {res.ageGroup}
+                                </span>
+                              ) : (
+                                <span className="text-slate-400 text-[10px] italic">No especificada</span>
+                              )}
                             </td>
                             <td className="p-4 border-r border-[#0d1b2e]/10">
                               <a 
@@ -3699,6 +3718,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       />
                     </div>
 
+                    <div>
+                      <label className="font-bold text-slate-500 block mb-1">Edad Sugerida (opcional)</label>
+                      <input
+                        type="text"
+                        value={newResourceAgeGroup}
+                        onChange={(e) => setNewResourceAgeGroup(e.target.value)}
+                        placeholder="Ej. 8 a 12 años, 6+ años"
+                        className="w-full p-2.5 border-2 border-[#0d1b2e] rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-[#0d1b2e] font-semibold"
+                      />
+                    </div>
+
                     <div className="pt-4 border-t border-[#0d1b2e]/10 flex justify-end gap-3">
                       <button
                         type="button"
@@ -3794,6 +3824,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         value={editResourceImageUrl}
                         onChange={(e) => setEditResourceImageUrl(e.target.value)}
                         placeholder="https://.../imagen.png"
+                        className="w-full p-2.5 border-2 border-[#0d1b2e] rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-[#0d1b2e] font-semibold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-slate-500 block mb-1">Edad Sugerida (opcional)</label>
+                      <input
+                        type="text"
+                        value={editResourceAgeGroup}
+                        onChange={(e) => setEditResourceAgeGroup(e.target.value)}
+                        placeholder="Ej. 8 a 12 años, 6+ años"
                         className="w-full p-2.5 border-2 border-[#0d1b2e] rounded focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] text-[#0d1b2e] font-semibold"
                       />
                     </div>

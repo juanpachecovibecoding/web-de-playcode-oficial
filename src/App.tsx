@@ -775,48 +775,45 @@ const App: React.FC = () => {
 
   if (publicLessonToShow) {
     return (
-      <div className="min-h-screen bg-slate-50 font-sans selection:bg-[#a3b8cc] selection:text-[#0d1b2e] antialiased flex flex-col animate-in fade-in duration-200">
+      <div className="min-h-screen bg-white font-sans selection:bg-[#a3b8cc] selection:text-[#0d1b2e] antialiased flex flex-col animate-in fade-in duration-200">
         {/* Navigation / Header */}
-        <header className="bg-[#001F4A] border-b-4 border-slate-900 px-6 py-4 flex items-center justify-between shadow-[0_4px_0_0_#0f172a] shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="bg-[#4ecdc4] p-1.5 border-2 border-slate-900 text-slate-900 font-pixel text-[10px] tracking-widest uppercase">
+        <header className="bg-[#001F4A] border-b-4 border-slate-900 px-4 sm:px-6 py-3 flex items-center justify-between shadow-[0_4px_0_0_#0f172a] shrink-0 z-50">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="bg-[#4ecdc4] p-1.5 border-2 border-slate-900 text-slate-900 font-pixel text-[10px] tracking-widest uppercase shrink-0">
               Play Code
             </div>
-            <span className="text-white font-extrabold text-sm tracking-wide hidden sm:inline">Visualizador Público</span>
+            <div className="flex items-center gap-2 min-w-0 border-l-2 border-slate-700 pl-3">
+              {publicLessonToShow.courseName && (
+                <span className="text-[10px] font-bold text-[#ffe66d] uppercase bg-slate-900/70 px-2 py-0.5 rounded border border-slate-700 shrink-0 hidden sm:inline-block">
+                  {publicLessonToShow.courseName}
+                </span>
+              )}
+              <span className="text-white font-bold text-xs sm:text-sm truncate" title={publicLessonToShow.title}>
+                {publicLessonToShow.title}
+              </span>
+            </div>
           </div>
+
           <button
             onClick={() => {
               window.history.pushState({}, '', '/');
               setPublicLessonToShow(null);
               setView('landing');
             }}
-            className="px-3.5 py-1.5 bg-[#ff6b6b] hover:bg-[#ff5252] text-white border-2 border-slate-900 shadow-[2px_2px_0_0_#000] active:translate-y-[2px] active:shadow-none font-bold text-xs uppercase cursor-pointer"
+            className="px-3.5 py-1.5 bg-[#ff6b6b] hover:bg-[#ff5252] text-white border-2 border-slate-900 shadow-[2px_2px_0_0_#000] active:translate-y-[2px] active:shadow-none font-bold text-xs uppercase cursor-pointer shrink-0 ml-2"
           >
             Volver a la Web
           </button>
         </header>
 
-        {/* Content Area */}
-        <main className="flex-1 max-w-4xl w-full mx-auto p-6 md:p-8">
-          <div className="bg-white border-4 border-slate-900 shadow-[8px_8px_0_0_#000] p-6 md:p-10 space-y-6">
-            <div>
-              <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 px-2.5 py-1 uppercase rounded tracking-wider">
-                {publicLessonToShow.courseName || 'Lección Pública'}
-              </span>
-              <h1 className="text-3xl font-extrabold text-slate-900 mt-3 leading-tight">{publicLessonToShow.title}</h1>
-            </div>
-
-            {/* Render HTML content safely */}
-            <div className="border-t-2 border-slate-200 pt-6">
-              <SafeHTMLViewer htmlContent={publicLessonToShow.htmlContent || ''} />
-            </div>
-          </div>
+        {/* Content Area - Full Width & Height, No Box Framing */}
+        <main className="flex-1 w-full bg-white flex flex-col overflow-y-auto">
+          <SafeHTMLViewer 
+            htmlContent={publicLessonToShow.htmlContent || ''} 
+            className="w-full flex-1" 
+            minHeight={600}
+          />
         </main>
-
-        {/* Minimal Footer */}
-        <footer className="py-6 border-t border-slate-200 text-center text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-white">
-          © {new Date().getFullYear()} Play Code. Todos los derechos reservados.
-        </footer>
       </div>
     );
   }

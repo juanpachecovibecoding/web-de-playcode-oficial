@@ -806,12 +806,12 @@ const App: React.FC = () => {
           </button>
         </header>
 
-        {/* Content Area - Full Width & Viewport Height with active vertical scrollbar */}
-        <main className="flex-1 w-full bg-white overflow-y-auto flex flex-col">
+        {/* Content Area - Fixed height, iframe scrolls internally */}
+        <main className="flex-1 w-full bg-white flex flex-col overflow-hidden">
           <SafeHTMLViewer 
             htmlContent={publicLessonToShow.htmlContent || ''} 
-            className="w-full flex-1" 
-            minHeight={500}
+            className="w-full h-full" 
+            fillContainer
           />
         </main>
       </div>

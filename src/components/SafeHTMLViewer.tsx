@@ -18,7 +18,9 @@ export const SafeHTMLViewer: React.FC<SafeHTMLViewerProps> = ({
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
       if (e.data && e.data.type === 'resize-iframe' && e.data.id === idRef.current) {
-        setHeight(Math.max(e.data.height, minHeight));
+        if (typeof e.data.height === 'number' && e.data.height > 0) {
+          setHeight(Math.max(e.data.height, minHeight));
+        }
       }
     };
     window.addEventListener('message', handleMessage);
@@ -31,7 +33,6 @@ export const SafeHTMLViewer: React.FC<SafeHTMLViewerProps> = ({
   const isIframe = trimmed.startsWith('<iframe') && (trimmed.endsWith('</iframe>') || trimmed.endsWith('/>'));
 
   if (isIframe) {
-    // If it's already an iframe (like YouTube embed, Scratch, etc.), render it directly
     return (
       <div
         className={`w-full flex justify-center items-center [&_iframe]:w-full [&_iframe]:border-0 [&_iframe]:min-h-[500px] [&_iframe]:aspect-video ${className}`}
@@ -40,74 +41,135 @@ export const SafeHTMLViewer: React.FC<SafeHTMLViewerProps> = ({
     );
   }
 
-  // Inject a resize script and basic style resetting
-  const docContent = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <style>
-          html, body {
-            margin: 0;
-            padding: 0;
-            font-family: system-ui, -apple-system, sans-serif;
-            background: transparent;
-            overflow-x: hidden;
-            overflow-y: visible;
-            font-size: 14px;
-            color: #334155;
-            line-height: 1.6;
+  // Construct height calculation script to inject
+  const scriptToInject = `
+    <script>
+      (function() {
+        const sendHeight = () => {
+          let h = 0;
+          
+          if (document.body) {
+            h = Math.max(h, document.body.scrollHeight, document.body.offsetHeight);
+            const bodyRect = document.body.getBoundingClientRect();
+            if (bodyRect.height > h) h = Math.ceil(bodyRect.height);
           }
-          #iframe-content-wrapper {
-            padding: 1px 0; /* Prevents margin collapsing issues */
-            width: 100%;
-            box-sizing: border-box;
+          if (document.documentElement) {
+            h = Math.max(h, document.documentElement.scrollHeight, document.documentElement.offsetHeight);
           }
-          /* Responsive media items */
-          img, video, iframe {
-            max-width: 100%;
-            height: auto;
+          
+          const wrapper = document.getElementById('iframe-content-wrapper');
+          if (wrapper) {
+            h = Math.max(h, wrapper.scrollHeight, Math.ceil(wrapper.getBoundingClientRect().height));
           }
-        </style>
-      </head>
-      <body>
-        <div id="iframe-content-wrapper">
-          ${htmlContent}
-        </div>
-        <script>
-          const sendHeight = () => {
-            const wrapper = document.getElementById('iframe-content-wrapper');
-            if (!wrapper) return;
-            const rect = wrapper.getBoundingClientRect();
-            const height = Math.max(
-              Math.ceil(rect.height),
-              wrapper.scrollHeight,
-              document.body.scrollHeight,
-              document.documentElement.scrollHeight
-            );
+
+          // Check children position for dynamic absolute/flex/collapsed elements
+          const children = (document.body && document.body.children) ? document.body.children : [];
+          for (let i = 0; i < children.length; i++) {
+            if (children[i].tagName === 'SCRIPT' || children[i].tagName === 'STYLE') continue;
+            const childRect = children[i].getBoundingClientRect();
+            const childBottom = childRect.bottom + window.scrollY;
+            if (childBottom > h) {
+              h = Math.ceil(childBottom);
+            }
+          }
+
+          if (h > 0) {
             window.parent.postMessage({
               type: 'resize-iframe',
               id: '${idRef.current}',
-              height: height
+              height: h + 20
             }, '*');
-          };
-          window.addEventListener('load', sendHeight);
-          // Wait for images to load to get correct height
-          document.querySelectorAll('img').forEach(img => {
-            if (img.complete) return;
-            img.addEventListener('load', sendHeight);
-            img.addEventListener('error', sendHeight);
-          });
-          if (window.ResizeObserver) {
-            new ResizeObserver(sendHeight).observe(document.body);
           }
-          // Periodic fallback check (e.g. for dynamic JS modifications or late fonts loading)
-          setInterval(sendHeight, 1000);
-        </script>
-      </body>
-    </html>
+        };
+
+        window.addEventListener('load', sendHeight);
+        document.addEventListener('DOMContentLoaded', sendHeight);
+        
+        // Immediate and delayed trigger on clicks (e.g. accordion toggles, row expansion)
+        document.addEventListener('click', function() {
+          sendHeight();
+          setTimeout(sendHeight, 50);
+          setTimeout(sendHeight, 200);
+          setTimeout(sendHeight, 400);
+        });
+
+        window.addEventListener('resize', sendHeight);
+
+        // Observe DOM mutations & size changes
+        if (window.MutationObserver) {
+          try {
+            const observer = new MutationObserver(sendHeight);
+            observer.observe(document.documentElement || document.body, {
+              childList: true,
+              subtree: true,
+              attributes: true,
+              characterData: true
+            });
+          } catch(e) {}
+        }
+
+        if (window.ResizeObserver && document.body) {
+          try {
+            new ResizeObserver(sendHeight).observe(document.body);
+          } catch(e) {}
+        }
+
+        // Periodic check fallback for animations/delayed renders
+        setInterval(sendHeight, 500);
+      })();
+    </script>
   `;
+
+  let docContent = '';
+  const isFullDoc = /^\s*<!DOCTYPE|^\s*<html/i.test(trimmed);
+
+  if (isFullDoc) {
+    if (trimmed.includes('</body>')) {
+      docContent = trimmed.replace('</body>', `${scriptToInject}\n</body>`);
+    } else if (trimmed.includes('</html>')) {
+      docContent = trimmed.replace('</html>', `${scriptToInject}\n</html>`);
+    } else {
+      docContent = trimmed + scriptToInject;
+    }
+  } else {
+    docContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <style>
+            html, body {
+              margin: 0;
+              padding: 0;
+              font-family: system-ui, -apple-system, sans-serif;
+              background: transparent;
+              overflow-x: hidden;
+              overflow-y: visible;
+              font-size: 14px;
+              color: #334155;
+              line-height: 1.6;
+            }
+            #iframe-content-wrapper {
+              padding: 1px 0;
+              width: 100%;
+              box-sizing: border-box;
+            }
+            img, video, iframe {
+              max-width: 100%;
+              height: auto;
+            }
+          </style>
+        </head>
+        <body>
+          <div id="iframe-content-wrapper">
+            ${htmlContent}
+          </div>
+          ${scriptToInject}
+        </body>
+      </html>
+    `;
+  }
 
   return (
     <iframe

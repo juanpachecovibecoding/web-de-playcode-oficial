@@ -53,7 +53,8 @@ export const SafeHTMLViewer: React.FC<SafeHTMLViewerProps> = ({
             padding: 0;
             font-family: system-ui, -apple-system, sans-serif;
             background: transparent;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: visible;
             font-size: 14px;
             color: #334155;
             line-height: 1.6;
@@ -78,9 +79,13 @@ export const SafeHTMLViewer: React.FC<SafeHTMLViewerProps> = ({
           const sendHeight = () => {
             const wrapper = document.getElementById('iframe-content-wrapper');
             if (!wrapper) return;
-            // Get height including margins and paddings
             const rect = wrapper.getBoundingClientRect();
-            const height = Math.ceil(rect.height);
+            const height = Math.max(
+              Math.ceil(rect.height),
+              wrapper.scrollHeight,
+              document.body.scrollHeight,
+              document.documentElement.scrollHeight
+            );
             window.parent.postMessage({
               type: 'resize-iframe',
               id: '${idRef.current}',

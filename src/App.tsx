@@ -775,7 +775,7 @@ const App: React.FC = () => {
 
   if (publicLessonToShow) {
     return (
-      <div className="min-h-screen bg-white font-sans selection:bg-[#a3b8cc] selection:text-[#0d1b2e] antialiased flex flex-col animate-in fade-in duration-200">
+      <div className="h-screen w-screen bg-white font-sans selection:bg-[#a3b8cc] selection:text-[#0d1b2e] antialiased flex flex-col overflow-hidden animate-in fade-in duration-200">
         {/* Navigation / Header */}
         <header className="bg-[#001F4A] border-b-4 border-slate-900 px-4 sm:px-6 py-3 flex items-center justify-between shadow-[0_4px_0_0_#0f172a] shrink-0 z-50">
           <div className="flex items-center gap-3 min-w-0">
@@ -806,12 +806,12 @@ const App: React.FC = () => {
           </button>
         </header>
 
-        {/* Content Area - Full Width & Height, No Box Framing */}
-        <main className="flex-1 w-full bg-white flex flex-col overflow-y-auto">
+        {/* Content Area - Full Width & Viewport Height with active vertical scrollbar */}
+        <main className="flex-1 w-full bg-white overflow-y-auto flex flex-col">
           <SafeHTMLViewer 
             htmlContent={publicLessonToShow.htmlContent || ''} 
             className="w-full flex-1" 
-            minHeight={600}
+            minHeight={500}
           />
         </main>
       </div>

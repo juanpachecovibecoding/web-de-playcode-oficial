@@ -143,6 +143,8 @@ interface AdminDashboardProps {
   setBookingSettings: React.Dispatch<React.SetStateAction<{ weeklySlots: { [key: string]: string[] } }>>;
   virtualFiles: VirtualFile[];
   setVirtualFiles: React.Dispatch<React.SetStateAction<VirtualFile[]>>;
+  isClientAdmin?: boolean;
+  clientPlatformId?: string;
 }
 
 export interface GameItem {
@@ -197,13 +199,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onLogout,
   courses,
   setCourses,
-  students,
+  students: propStudents,
   setStudents,
-  classrooms,
+  classrooms: propClassrooms,
   setClassrooms,
   lessons,
   setLessons,
-  platforms,
+  platforms: propPlatforms,
   setPlatforms,
   posts,
   setPosts,
@@ -217,8 +219,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   bookingSettings,
   setBookingSettings,
   virtualFiles,
-  setVirtualFiles
+  setVirtualFiles,
+  isClientAdmin = false,
+  clientPlatformId = ''
 }) => {
+  // Shadow and filter values for B2B multi-tenancy
+  const platforms = isClientAdmin
+    ? propPlatforms.filter(p => p.id === clientPlatformId)
+    : propPlatforms;
+
+  const currentPlatform = isClientAdmin 
+    ? propPlatforms.find(p => p.id === clientPlatformId)
+    : null;
+
+  const clientAulaIds = currentPlatform?.aulas?.map(a => a.id) || [];
+
+  const students = isClientAdmin
+    ? propStudents.filter(s => s.platformIds?.includes(clientPlatformId) || s.platformId === clientPlatformId)
+    : propStudents;
+
+  const classrooms = isClientAdmin
+    ? propClassrooms.filter(c => clientAulaIds.includes(c.id))
+    : propClassrooms;
+
   void setCourses;
   void courses;
   const [activeTab, setActiveTab] = useState<'inicio' | 'cursos' | 'usuarios' | 'docentes' | 'clases' | 'contenido' | 'config' | 'foro' | 'plataformas' | 'gamificacion' | 'recursos' | 'reuniones' | 'archivos'>('inicio');
@@ -492,6 +515,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [editingPlatformId, setEditingPlatformId] = useState<string | null>(null);
   const [editPlatformName, setEditPlatformName] = useState('');
   const [editPlatformDesc, setEditPlatformDesc] = useState('');
+  
+  // B2B client platform customization state
+  const [clientBrandingName, setClientBrandingName] = useState(() => currentPlatform?.name || '');
+  const [clientBrandingDesc, setClientBrandingDesc] = useState(() => currentPlatform?.description || '');
+  const [clientBrandingLogo, setClientBrandingLogo] = useState(() => (currentPlatform as any)?.logoUrl || '');
+  const [clientBrandingTheme, setClientBrandingTheme] = useState<'default' | 'cyberpunk' | 'playcode'>(() => (currentPlatform as any)?.theme || 'default');
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+
+  useEffect(() => {
+    if (currentPlatform) {
+      setClientBrandingName(currentPlatform.name || '');
+      setClientBrandingDesc(currentPlatform.description || '');
+      setClientBrandingLogo((currentPlatform as any).logoUrl || '');
+      setClientBrandingTheme((currentPlatform as any).theme || 'default');
+    }
+  }, [currentPlatform]);
+
   const [showNewAulaForPlatform, setShowNewAulaForPlatform] = useState<string | null>(null);
   const [newAulaName, setNewAulaName] = useState('');
   const [newAulaAge, setNewAulaAge] = useState('');
@@ -990,7 +1030,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       status: 'Activo',
       password: newStudentPassword || '123456',
       role: newStudentRole,
-      platformIds: newStudentPlatformIds,
+      platformIds: isClientAdmin ? [clientPlatformId] : newStudentPlatformIds,
       aulaIds: newStudentAulaIds,
       googleAuthAllowed: newStudentGoogleAuthAllowed,
       googleEmail: newStudentGoogleEmail.toLowerCase().replace(/\s+/g, '').trim()
@@ -1063,7 +1103,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           username: formattedUsername,
           role: editStudentRole,
           password: editStudentPassword || '123456',
-          platformIds: editStudentPlatformIds,
+          platformIds: isClientAdmin ? [clientPlatformId] : editStudentPlatformIds,
           aulaIds: editStudentAulaIds,
           googleAuthAllowed: editStudentGoogleAuthAllowed,
           googleEmail: editStudentGoogleEmail.toLowerCase().replace(/\s+/g, '').trim()
@@ -1269,27 +1309,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <LayoutDashboard className="w-3.5 h-3.5" /> INICIO / MÉTRICAS
           </button>
 
-          <button
-            onClick={() => setActiveTab('clases')}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${activeTab === 'clases'
-                ? 'bg-[#a3b8cc] text-[#0d1b2e] border-[#0d1b2e] shadow-[2px_2px_0_0_#ffffff] translate-x-0.5 -translate-y-0.5'
-                : 'border-transparent text-slate-400 hover:text-white hover:bg-[#1e385c]/50'
-              }`}
-          >
-            <BookOpen className="w-3.5 h-3.5" /> CURSOS
-          </button>
+          {!isClientAdmin && (
+            <>
+              <button
+                onClick={() => setActiveTab('clases')}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${activeTab === 'clases'
+                    ? 'bg-[#a3b8cc] text-[#0d1b2e] border-[#0d1b2e] shadow-[2px_2px_0_0_#ffffff] translate-x-0.5 -translate-y-0.5'
+                    : 'border-transparent text-slate-400 hover:text-white hover:bg-[#1e385c]/50'
+                  }`}
+              >
+                <BookOpen className="w-3.5 h-3.5" /> CURSOS
+              </button>
 
-
-
-          <button
-            onClick={() => setActiveTab('contenido')}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${activeTab === 'contenido'
-                ? 'bg-[#a3b8cc] text-[#0d1b2e] border-[#0d1b2e] shadow-[2px_2px_0_0_#ffffff] translate-x-0.5 -translate-y-0.5'
-                : 'border-transparent text-slate-400 hover:text-white hover:bg-[#1e385c]/50'
-              }`}
-          >
-            <Code2 className="w-3.5 h-3.5" /> CONTENIDO / LECCIONES
-          </button>
+              <button
+                onClick={() => setActiveTab('contenido')}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${activeTab === 'contenido'
+                    ? 'bg-[#a3b8cc] text-[#0d1b2e] border-[#0d1b2e] shadow-[2px_2px_0_0_#ffffff] translate-x-0.5 -translate-y-0.5'
+                    : 'border-transparent text-slate-400 hover:text-white hover:bg-[#1e385c]/50'
+                  }`}
+              >
+                <Code2 className="w-3.5 h-3.5" /> CONTENIDO / LECCIONES
+              </button>
+            </>
+          )}
 
           <button
             onClick={() => setActiveTab('usuarios')}
@@ -1317,44 +1359,51 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </button>
 
           <button
-            onClick={() => setActiveTab('plataformas')}
+            onClick={() => {
+              setActiveTab('plataformas');
+              if (isClientAdmin) setExpandedPlatformId(clientPlatformId);
+            }}
             className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${activeTab === 'plataformas'
                 ? 'bg-[#a3b8cc] text-[#0d1b2e] border-[#0d1b2e] shadow-[2px_2px_0_0_#ffffff] translate-x-0.5 -translate-y-0.5'
                 : 'border-transparent text-slate-400 hover:text-white hover:bg-[#1e385c]/50'
               }`}
           >
-            <Building2 className="w-3.5 h-3.5" /> PLATAFORMAS
+            <Building2 className="w-3.5 h-3.5" /> {isClientAdmin ? 'AULAS / GRUPOS' : 'PLATAFORMAS'}
           </button>
 
-          <button
-            onClick={() => setActiveTab('foro')}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${activeTab === 'foro'
-                ? 'bg-[#a3b8cc] text-[#0d1b2e] border-[#0d1b2e] shadow-[2px_2px_0_0_#ffffff] translate-x-0.5 -translate-y-0.5'
-                : 'border-transparent text-slate-400 hover:text-white hover:bg-[#1e385c]/50'
-              }`}
-          >
-            <MessageSquare className="w-3.5 h-3.5" /> FOROS (MODERAR)
-          </button>
+          {!isClientAdmin && (
+            <>
+              <button
+                onClick={() => setActiveTab('foro')}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${activeTab === 'foro'
+                    ? 'bg-[#a3b8cc] text-[#0d1b2e] border-[#0d1b2e] shadow-[2px_2px_0_0_#ffffff] translate-x-0.5 -translate-y-0.5'
+                    : 'border-transparent text-slate-400 hover:text-white hover:bg-[#1e385c]/50'
+                  }`}
+              >
+                <MessageSquare className="w-3.5 h-3.5" /> FOROS (MODERAR)
+              </button>
 
-          <button
-            onClick={() => setActiveTab('gamificacion')}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${activeTab === 'gamificacion'
-                ? 'bg-[#a3b8cc] text-[#0d1b2e] border-[#0d1b2e] shadow-[2px_2px_0_0_#ffffff] translate-x-0.5 -translate-y-0.5'
-                : 'border-transparent text-slate-400 hover:text-white hover:bg-[#1e385c]/50'
-              }`}
-          >
-            <Trophy className="w-3.5 h-3.5" /> GAMIFICACIÓN
-          </button>
+              <button
+                onClick={() => setActiveTab('gamificacion')}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${activeTab === 'gamificacion'
+                    ? 'bg-[#a3b8cc] text-[#0d1b2e] border-[#0d1b2e] shadow-[2px_2px_0_0_#ffffff] translate-x-0.5 -translate-y-0.5'
+                    : 'border-transparent text-slate-400 hover:text-white hover:bg-[#1e385c]/50'
+                  }`}
+              >
+                <Trophy className="w-3.5 h-3.5" /> GAMIFICACIÓN
+              </button>
 
-          <button
-            onClick={() => setActiveTab('recursos')}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${activeTab === 'recursos'
-                ? 'bg-[#a3b8cc] text-[#0d1b2e] border-[#0d1b2e] shadow-[2px_2px_0_0_#ffffff] translate-x-0.5 -translate-y-0.5'
-                : 'border-transparent text-slate-400 hover:text-white hover:bg-[#1e385c]/50'
-              }`}
-          >
-            <BookOpen className="w-3.5 h-3.5" /> RECURSOS
-          </button>
+              <button
+                onClick={() => setActiveTab('recursos')}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${activeTab === 'recursos'
+                    ? 'bg-[#a3b8cc] text-[#0d1b2e] border-[#0d1b2e] shadow-[2px_2px_0_0_#ffffff] translate-x-0.5 -translate-y-0.5'
+                    : 'border-transparent text-slate-400 hover:text-white hover:bg-[#1e385c]/50'
+                  }`}
+              >
+                <BookOpen className="w-3.5 h-3.5" /> RECURSOS
+              </button>
+            </>
+          )}
 
           <button
             onClick={() => setActiveTab('reuniones')}
@@ -1371,15 +1420,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             )}
           </button>
 
-          <button
-            onClick={() => setActiveTab('archivos')}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${activeTab === 'archivos'
-                ? 'bg-[#a3b8cc] text-[#0d1b2e] border-[#0d1b2e] shadow-[2px_2px_0_0_#ffffff] translate-x-0.5 -translate-y-0.5'
-                : 'border-transparent text-slate-400 hover:text-white hover:bg-[#1e385c]/50'
-              }`}
-          >
-            <FolderOpen className="w-3.5 h-3.5" /> GESTOR DE ARCHIVOS
-          </button>
+          {!isClientAdmin && (
+            <button
+              onClick={() => setActiveTab('archivos')}
+              className={`w-full flex items-center gap-3 px-4 py-2.5 font-bold text-xs border transition-all cursor-pointer ${activeTab === 'archivos'
+                  ? 'bg-[#a3b8cc] text-[#0d1b2e] border-[#0d1b2e] shadow-[2px_2px_0_0_#ffffff] translate-x-0.5 -translate-y-0.5'
+                  : 'border-transparent text-slate-400 hover:text-white hover:bg-[#1e385c]/50'
+                }`}
+            >
+              <FolderOpen className="w-3.5 h-3.5" /> GESTOR DE ARCHIVOS
+            </button>
+          )}
 
           <button
             onClick={() => setActiveTab('config')}
@@ -2168,49 +2219,182 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         {activeTab === 'config' && (
           <div className="space-y-6">
             <h2 className="text-xl font-bold text-[#0d1b2e] border-b border-slate-200 pb-4">
-              Configuración de la Plataforma
+              {isClientAdmin ? 'Personalización del Portal (Marca Blanca)' : 'Configuración de la Plataforma'}
             </h2>
 
-            <div className="bg-white border-2 border-[#0d1b2e] p-6 shadow-[4px_4px_0_0_#0d1b2e] max-w-xl">
-              <form onSubmit={(e) => { e.preventDefault(); alert('Configuración guardada correctamente.'); }} className="space-y-5 text-xs">
-                <div>
-                  <label className="font-bold text-[#6180a6] block mb-1.5">Nombre del LMS</label>
-                  <input
-                    type="text"
-                    defaultValue="Play Code Academia"
-                    className="w-full p-2 border border-slate-300 rounded font-medium text-slate-900 focus:outline-none focus:ring-1 focus:ring-[#2a4e7c]"
-                  />
-                </div>
+            {isClientAdmin ? (
+              <div className="bg-white border-2 border-[#0d1b2e] p-6 shadow-[4px_4px_0_0_#0d1b2e] max-w-xl">
+                <form 
+                  onSubmit={async (e) => { 
+                    e.preventDefault();
+                    if (!clientPlatformId) return;
+                    try {
+                      const platformRef = doc(db, 'platforms', clientPlatformId);
+                      await setDoc(platformRef, { 
+                        name: clientBrandingName.trim(), 
+                        description: clientBrandingDesc.trim(), 
+                        logoUrl: clientBrandingLogo, 
+                        theme: clientBrandingTheme 
+                      }, { merge: true });
 
-                <div>
-                  <label className="font-bold text-[#6180a6] block mb-1.5">Dominio Principal</label>
-                  <input
-                    type="text"
-                    defaultValue="edu.playcode.com.ar"
-                    className="w-full p-2 border border-slate-300 rounded font-medium text-slate-900 focus:outline-none focus:ring-1 focus:ring-[#2a4e7c]"
-                  />
-                </div>
+                      setPlatforms(prev => prev.map(p => p.id === clientPlatformId ? { 
+                        ...p, 
+                        name: clientBrandingName.trim(), 
+                        description: clientBrandingDesc.trim(), 
+                        logoUrl: clientBrandingLogo, 
+                        theme: clientBrandingTheme 
+                      } : p));
 
-                <div className="flex items-center gap-2 pt-2">
-                  <input
-                    type="checkbox"
-                    defaultChecked
-                    className="w-4 h-4 border border-[#a3b8cc] rounded accent-[#2a4e7c] cursor-pointer"
-                    id="strict-auth"
-                  />
-                  <label htmlFor="strict-auth" className="font-semibold text-slate-650 cursor-pointer">
-                    Exigir verificación Google Auth a todos los accesos
-                  </label>
-                </div>
-
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-[#2a4e7c] hover:bg-[#1e385c] text-white font-bold border-2 border-[#0d1b2e] shadow-[2px_2px_0_0_#000000] active:translate-y-[2px] active:shadow-[0px_0px_0_0_#000000] transition-all cursor-pointer text-xs"
+                      alert('Portal personalizado guardado con éxito.');
+                    } catch (err) {
+                      console.error('Error saving branding:', err);
+                      alert('Error al guardar la configuración: ' + (err as Error).message);
+                    }
+                  }} 
+                  className="space-y-5 text-xs"
                 >
-                  Guardar Cambios
-                </button>
-              </form>
-            </div>
+                  <div>
+                    <label className="font-bold text-[#6180a6] block mb-1.5">Nombre de la Academia / Institución *</label>
+                    <input
+                      type="text"
+                      required
+                      value={clientBrandingName}
+                      onChange={e => setClientBrandingName(e.target.value)}
+                      placeholder="Ej. Coder Academy Alfa"
+                      className="w-full p-2 border border-slate-300 rounded font-medium text-slate-900 focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-[#6180a6] block mb-1.5">Descripción o Eslogan</label>
+                    <input
+                      type="text"
+                      value={clientBrandingDesc}
+                      onChange={e => setClientBrandingDesc(e.target.value)}
+                      placeholder="Ej. Escuela de Creadores Tecnológicos"
+                      className="w-full p-2 border border-slate-300 rounded font-medium text-slate-900 focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-[#6180a6] block mb-1.5">Logo de la Institución</label>
+                    <div className="flex items-center gap-4 mt-1.5">
+                      {clientBrandingLogo ? (
+                        <div className="w-16 h-16 border-2 border-[#0d1b2e] bg-slate-100 flex items-center justify-center p-1 rounded">
+                          <img src={clientBrandingLogo} alt="Logo preview" className="max-w-full max-h-full object-contain" />
+                        </div>
+                      ) : (
+                        <div className="w-16 h-16 border-2 border-dashed border-slate-300 bg-slate-50 flex items-center justify-center text-slate-400 text-[10px] rounded">
+                          Sin Logo
+                        </div>
+                      )}
+                      <div className="flex-1 space-y-2">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          disabled={isUploadingLogo}
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              if (file.size > 4.5 * 1024 * 1024) {
+                                alert('El tamaño máximo permitido es de 4.5MB.');
+                                return;
+                              }
+                              setIsUploadingLogo(true);
+                              try {
+                                const res = await fetch(
+                                  `/api/upload?filename=${encodeURIComponent(file.name)}&contentType=${encodeURIComponent(file.type || 'image/png')}`,
+                                  { method: 'POST', body: file }
+                                );
+                                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                                const blob = await res.json();
+                                setClientBrandingLogo(blob.url);
+                              } catch (err) {
+                                console.error('Error uploading logo:', err);
+                                alert('Error al subir la imagen: ' + (err as Error).message);
+                              } finally {
+                                setIsUploadingLogo(false);
+                              }
+                            }
+                          }}
+                          className="w-full text-xs text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded file:border-2 file:border-[#0d1b2e] file:text-xs file:font-bold file:bg-[#4ecdc4] file:text-slate-900 file:cursor-pointer hover:file:bg-[#3dbdb4]"
+                        />
+                        {clientBrandingLogo && (
+                          <button
+                            type="button"
+                            onClick={() => setClientBrandingLogo('')}
+                            className="text-red-500 hover:text-red-700 font-bold block"
+                          >
+                            Eliminar Logo
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-[#6180a6] block mb-1.5">Paleta de Colores (Tema del LMS)</label>
+                    <select
+                      value={clientBrandingTheme}
+                      onChange={e => setClientBrandingTheme(e.target.value as any)}
+                      className="w-full p-2 border border-slate-300 rounded font-medium text-slate-900 focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] bg-white cursor-pointer"
+                    >
+                      <option value="default">Default Blue (Clásico y formal)</option>
+                      <option value="playcode">Play Code Orange (Píxel y divertido)</option>
+                      <option value="cyberpunk">Cyberpunk Neon (Futurista y dinámico)</option>
+                    </select>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-[#2a4e7c] hover:bg-[#1e385c] text-white font-bold border-2 border-[#0d1b2e] shadow-[2px_2px_0_0_#000000] active:translate-y-[2px] active:shadow-[0px_0px_0_0_#000000] transition-all cursor-pointer text-xs"
+                  >
+                    Guardar Configuración de Marca
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <div className="bg-white border-2 border-[#0d1b2e] p-6 shadow-[4px_4px_0_0_#0d1b2e] max-w-xl">
+                <form onSubmit={(e) => { e.preventDefault(); alert('Configuración guardada correctamente.'); }} className="space-y-5 text-xs">
+                  <div>
+                    <label className="font-bold text-[#6180a6] block mb-1.5">Nombre del LMS</label>
+                    <input
+                      type="text"
+                      defaultValue="Play Code Academia"
+                      className="w-full p-2 border border-slate-300 rounded font-medium text-slate-900 focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-[#6180a6] block mb-1.5">Dominio Principal</label>
+                    <input
+                      type="text"
+                      defaultValue="edu.playcode.com.ar"
+                      className="w-full p-2 border border-slate-300 rounded font-medium text-slate-900 focus:outline-none focus:ring-1 focus:ring-[#2a4e7c] bg-white"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-2">
+                    <input
+                      type="checkbox"
+                      defaultChecked
+                      className="w-4 h-4 border border-[#a3b8cc] rounded accent-[#2a4e7c] cursor-pointer bg-white"
+                      id="strict-auth"
+                    />
+                    <label htmlFor="strict-auth" className="font-semibold text-slate-650 cursor-pointer">
+                      Exigir verificación Google Auth a todos los accesos
+                    </label>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-[#2a4e7c] hover:bg-[#1e385c] text-white font-bold border-2 border-[#0d1b2e] shadow-[2px_2px_0_0_#000000] active:translate-y-[2px] active:shadow-[0px_0px_0_0_#000000] transition-all cursor-pointer text-xs"
+                  >
+                    Guardar Cambios
+                  </button>
+                </form>
+              </div>
+            )}
           </div>
         )}
 
@@ -2768,19 +2952,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         {activeTab === 'plataformas' && (
           <div className="space-y-6 animate-in fade-in zoom-in duration-150">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-4">
+             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-4">
               <div>
-                <h2 className="text-xl font-bold text-[#0d1b2e]">Plataformas</h2>
+                <h2 className="text-xl font-bold text-[#0d1b2e]">
+                  {isClientAdmin ? 'Aulas y Grupos' : 'Plataformas'}
+                </h2>
                 <p className="text-xs text-[#6180a6] font-semibold mt-1">
-                  Gestiona entidades educativas y sus aulas. Cada entidad puede tener múltiples aulas con distintas edades y modalidades.
+                  {isClientAdmin 
+                    ? 'Gestiona las aulas y grupos de tu academia. Puedes configurar horarios, enlaces virtuales y coordinar alumnos.'
+                    : 'Gestiona entidades educativas y sus aulas. Cada entidad puede tener múltiples aulas con distintas edades y modalidades.'
+                  }
                 </p>
               </div>
-              <button
-                onClick={() => setShowNewPlatformForm(!showNewPlatformForm)}
-                className="px-3 py-1.5 bg-[#2a4e7c] hover:bg-[#1e385c] text-white font-bold border-2 border-[#0d1b2e] shadow-[2px_2px_0_0_#000000] active:translate-y-[2px] active:shadow-[0px_0px_0_0_#000000] transition-all cursor-pointer text-xs flex items-center gap-1.5"
-              >
-                {showNewPlatformForm ? 'Cancelar' : 'Nueva Entidad'} <Plus className="w-3.5 h-3.5" />
-              </button>
+              {!isClientAdmin && (
+                <button
+                  onClick={() => setShowNewPlatformForm(!showNewPlatformForm)}
+                  className="px-3 py-1.5 bg-[#2a4e7c] hover:bg-[#1e385c] text-white font-bold border-2 border-[#0d1b2e] shadow-[2px_2px_0_0_#000000] active:translate-y-[2px] active:shadow-[0px_0px_0_0_#000000] transition-all cursor-pointer text-xs flex items-center gap-1.5"
+                >
+                  {showNewPlatformForm ? 'Cancelar' : 'Nueva Entidad'} <Plus className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
 
             {/* Nuevo Platform Form */}
@@ -2866,20 +3057,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         </span>
                       </div>
                       <div className="flex items-center gap-2 shrink-0 ml-3">
-                        <button
-                          onClick={e => { e.stopPropagation(); handleStartEditPlatform(platform); }}
-                          className="p-1.5 text-slate-400 hover:text-[#2a4e7c] border border-transparent hover:border-[#2a4e7c] transition-all cursor-pointer"
-                          title="Editar entidad"
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={e => { e.stopPropagation(); handleDeletePlatform(platform.id); }}
-                          className="p-1.5 text-slate-400 hover:text-red-600 border border-transparent hover:border-red-400 transition-all cursor-pointer"
-                          title="Eliminar entidad"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        {!isClientAdmin && (
+                          <>
+                            <button
+                              onClick={e => { e.stopPropagation(); handleStartEditPlatform(platform); }}
+                              className="p-1.5 text-slate-400 hover:text-[#2a4e7c] border border-transparent hover:border-[#2a4e7c] transition-all cursor-pointer"
+                              title="Editar entidad"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={e => { e.stopPropagation(); handleDeletePlatform(platform.id); }}
+                              className="p-1.5 text-slate-400 hover:text-red-600 border border-transparent hover:border-red-400 transition-all cursor-pointer"
+                              title="Eliminar entidad"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </>
+                        )}
                         {expandedPlatformId === platform.id
                           ? <ChevronDown className="w-4 h-4 text-[#2a4e7c]" />
                           : <ChevronRight className="w-4 h-4 text-slate-400" />

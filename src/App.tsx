@@ -36,7 +36,7 @@ export interface InformationalBooking {
 interface LoggedInUser {
   username: string;
   name: string;
-  role: 'superadmin' | 'student';
+  role: 'superadmin' | 'admin' | 'docente' | 'student';
   id?: string;
 }
 
@@ -592,9 +592,25 @@ const App: React.FC = () => {
         return { success: true };
       }
 
-      const u: LoggedInUser = { username: formattedUsername, name: existingStudent.name, role: 'student', id: existingStudent.id };
+      // Determine manual login user's role and destination view
+      let mappedRole: 'student' | 'admin' | 'docente' = 'student';
+      let targetView: 'student_dashboard' | 'dashboard' = 'student_dashboard';
+
+      if (existingStudent.role === 'admin') {
+        mappedRole = 'admin';
+        targetView = 'dashboard';
+      } else if (existingStudent.role === 'docente' || existingStudent.role === 'profesor') {
+        mappedRole = 'docente';
+      }
+
+      const u: LoggedInUser = { 
+        username: formattedUsername, 
+        name: existingStudent.name, 
+        role: mappedRole, 
+        id: existingStudent.id 
+      };
       setUser(u);
-      setView('student_dashboard');
+      setView(targetView);
       return { success: true };
     } else {
       // 3. Google SSO login
@@ -624,14 +640,25 @@ const App: React.FC = () => {
         return { success: true };
       }
 
+      // Determine Google SSO user's role and destination view
+      let mappedRole: 'student' | 'admin' | 'docente' = 'student';
+      let targetView: 'student_dashboard' | 'dashboard' = 'student_dashboard';
+
+      if (existingStudentGoogle.role === 'admin') {
+        mappedRole = 'admin';
+        targetView = 'dashboard';
+      } else if (existingStudentGoogle.role === 'docente' || existingStudentGoogle.role === 'profesor') {
+        mappedRole = 'docente';
+      }
+
       const u: LoggedInUser = {
         username: existingStudentGoogle.username,
         name: existingStudentGoogle.name,
-        role: 'student',
+        role: mappedRole,
         id: existingStudentGoogle.id
       };
       setUser(u);
-      setView('student_dashboard');
+      setView(targetView);
       return { success: true };
     }
   };
@@ -887,6 +914,12 @@ const App: React.FC = () => {
   }
 
   if (view === 'dashboard' && user) {
+    const loggedInStudent = user.id ? students.find(s => s.id === user.id) : null;
+    const isClientAdmin = user.role === 'admin';
+    const clientPlatformId = loggedInStudent 
+      ? (loggedInStudent.platformId || loggedInStudent.platformIds?.[0] || '') 
+      : '';
+
     return (
       <AdminDashboard
         userUsername={user.username}
@@ -915,6 +948,8 @@ const App: React.FC = () => {
         setBookingSettings={setBookingSettings}
         virtualFiles={virtualFiles}
         setVirtualFiles={setVirtualFiles}
+        isClientAdmin={isClientAdmin}
+        clientPlatformId={clientPlatformId}
       />
     );
   }

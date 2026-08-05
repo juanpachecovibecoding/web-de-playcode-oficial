@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   BookOpen,
   LogOut,
@@ -337,7 +337,16 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   const [activeTab, setActiveTab] = useState<'dashboard' | 'aprendizaje' | 'recursos' | 'certificados' | 'puntos' | 'foro' | 'perfil'>('dashboard');
   const [selectedCertificateCourse, setSelectedCertificateCourse] = useState<Classroom | null>(null);
   const [hideLessonsSidebar, setHideLessonsSidebar] = useState(false);
-  const [palette, setPalette] = useState<'default' | 'cyberpunk' | 'playcode'>(student.theme || 'default');
+  // B2B multi-tenant branding/theme resolution
+  const studentPlatformId = student.platformId || student.platformIds?.[0] || '';
+  const myPlatform = platforms.find(p => p.id === studentPlatformId);
+  const platformTheme = (myPlatform as any)?.theme || student.theme || 'default';
+  const [palette, setPalette] = useState<'default' | 'cyberpunk' | 'playcode'>(platformTheme);
+
+  useEffect(() => {
+    setPalette(platformTheme);
+  }, [platformTheme]);
+
   const [isOpeningChest, setIsOpeningChest] = useState(false);
   const [chestOpened, setChestOpened] = useState(false);
   const [revealedItem, setRevealedItem] = useState<GameItem | null>(null);
@@ -664,12 +673,22 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           
           {/* Logo / Brand */}
           <div className="flex items-center gap-3">
-            <div className={`p-1.5 border border-white/20 bg-opacity-20 text-white shadow-[1px_1px_0_0_#ffffff]`}>
-              <Code2 className="w-5 h-5" />
-            </div>
+            {myPlatform && (myPlatform as any).logoUrl ? (
+              <div className="h-10 border border-white/20 bg-slate-800/80 p-0.5 rounded flex items-center justify-center shadow-[1px_1px_0_0_#ffffff]">
+                <img src={(myPlatform as any).logoUrl} alt="Logo" className="h-full object-contain" />
+              </div>
+            ) : (
+              <div className={`p-1.5 border border-white/20 bg-opacity-20 text-white shadow-[1px_1px_0_0_#ffffff]`}>
+                <Code2 className="w-5 h-5" />
+              </div>
+            )}
             <div className="hidden sm:block">
-              <span className="font-pixel text-sm tracking-wider text-white block">Play Code</span>
-              <span className="text-[9px] text-[#a3b8cc] font-bold uppercase tracking-widest">Portal Alumno</span>
+              <span className="font-pixel text-sm tracking-wider text-white block">
+                {myPlatform?.name || 'Play Code'}
+              </span>
+              <span className="text-[9px] text-[#a3b8cc] font-bold uppercase tracking-widest">
+                {student.role === 'docente' || student.role === 'profesor' ? 'Portal Docente' : 'Portal Alumno'}
+              </span>
             </div>
           </div>
 

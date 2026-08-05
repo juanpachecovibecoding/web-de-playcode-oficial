@@ -50,10 +50,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onGoToPlatform }) => {
               Nosotros
             </a>
             <a
-              href="#cursos"
+              href="#servicios"
               className="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors uppercase tracking-widest"
             >
-              Cursos
+              Servicios
             </a>
             <a
               href="#escuelas"
@@ -104,11 +104,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onGoToPlatform }) => {
             Nosotros
           </a>
           <a
-            href="#cursos"
+            href="#servicios"
             onClick={() => setIsOpen(false)}
             className="text-base font-medium text-slate-600 hover:text-indigo-600"
           >
-            Cursos
+            Servicios
           </a>
           <a
             href="#escuelas"

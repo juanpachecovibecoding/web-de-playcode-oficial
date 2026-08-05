@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { db } from '../firebase';
 import { doc, setDoc, deleteDoc } from 'firebase/firestore';
-import { upload } from '@vercel/blob/client';
 import { 
   Folder, FileText, FileCode, Image, Upload, Plus, Trash2, 
   Pencil, Search, ChevronRight, Grid, List, Download, Copy, Check, FileArchive, Eye, ExternalLink
@@ -217,16 +216,21 @@ export const FileManager: React.FC<FileManagerProps> = ({ files, setFiles }) => 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 50 * 1024 * 1024) {
-        alert('El tamaño máximo permitido para archivos en Vercel Blob es de 50MB.');
+      if (file.size > 4.5 * 1024 * 1024) {
+        alert('El tamaño máximo permitido es de 4.5MB por archivo.');
         return;
       }
       setIsUploading(true);
       try {
-        const blob = await upload(file.name, file, {
-          access: 'public',
-          handleUploadUrl: '/api/upload',
-        });
+        const res = await fetch(
+          `/api/upload?filename=${encodeURIComponent(file.name)}&contentType=${encodeURIComponent(file.type || 'application/octet-stream')}`,
+          { method: 'POST', body: file }
+        );
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: 'Upload failed' }));
+          throw new Error(err.error || `HTTP ${res.status}`);
+        }
+        const blob = await res.json();
 
         const id = `file-${Date.now()}`;
         const newFile: VirtualFile = {
@@ -244,8 +248,8 @@ export const FileManager: React.FC<FileManagerProps> = ({ files, setFiles }) => 
         await setDoc(doc(db, 'files', id), newFile);
         setFiles(prev => [...prev, newFile]);
       } catch (err) {
-        console.error('Error uploading file to Vercel Blob:', err);
-        alert('Error al subir el archivo a Vercel Blob. Por favor, asegúrate de haber configurado tu base de datos Storage (Vercel Blob) en el panel de Vercel.');
+        console.error('Error uploading file:', err);
+        alert('Error al subir el archivo: ' + (err as Error).message);
       } finally {
         setIsUploading(false);
       }
@@ -256,11 +260,18 @@ export const FileManager: React.FC<FileManagerProps> = ({ files, setFiles }) => 
     if (!editingFile) return;
     setIsUploading(true);
     try {
-      const blobFile = new Blob([editorContent], { type: editingFile.mimeType || 'text/html' });
-      const blob = await upload(editingFile.name, blobFile, {
-        access: 'public',
-        handleUploadUrl: '/api/upload',
-      });
+      const contentType = editingFile.mimeType || 'text/html';
+      const blobFile = new Blob([editorContent], { type: contentType });
+
+      const res = await fetch(
+        `/api/upload?filename=${encodeURIComponent(editingFile.name)}&contentType=${encodeURIComponent(contentType)}`,
+        { method: 'POST', body: blobFile }
+      );
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Save failed' }));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+      const blob = await res.json();
 
       const updated: VirtualFile = {
         ...editingFile,
@@ -273,7 +284,7 @@ export const FileManager: React.FC<FileManagerProps> = ({ files, setFiles }) => 
       setEditingFile(null);
     } catch (err) {
       console.error('Error saving file:', err);
-      alert('Error al guardar el archivo en Vercel Blob');
+      alert('Error al guardar el archivo: ' + (err as Error).message);
     } finally {
       setIsUploading(false);
     }

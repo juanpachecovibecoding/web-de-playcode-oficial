@@ -7,6 +7,12 @@ export default async function handler(
 ) {
   const body = request.body as HandleUploadBody;
 
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    return response.status(500).json({ 
+      error: "BLOB_READ_WRITE_TOKEN is missing in the Vercel server environment. Please ensure you have added it to your Environment Variables in the Vercel dashboard and triggered a new deployment." 
+    });
+  }
+
   try {
     const jsonResponse = await handleUpload({
       body,
@@ -39,10 +45,6 @@ export default async function handler(
             // optional payload data
           }),
         };
-      },
-      onUploadCompleted: async ({ blob, tokenPayload }) => {
-        // Log when a file has successfully uploaded to Vercel Blob CDN.
-        console.log('Blob upload completed successfully:', blob, tokenPayload);
       },
     });
 

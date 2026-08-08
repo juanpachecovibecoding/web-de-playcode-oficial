@@ -21,7 +21,7 @@ export const Corporate: React.FC = () => {
           {/* Family Day */}
           <div className="bg-slate-800 border-4 border-[#ff6b6b] p-8 shadow-[8px_8px_0_0_#ff6b6b] hover:-translate-y-1 hover:shadow-[12px_12px_0_0_#ff6b6b] transition-all">
             <div className="flex items-center gap-4 mb-6">
-              <div className="p-3 bg-[#ff6b6b] text-white border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a]">
+              <div className="p-3 bg-[#152945] text-white border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a]">
                 <HeartHandshake className="w-7 h-7" />
               </div>
               <h3 className="font-pixel text-xl sm:text-2xl tracking-wide text-white break-words">FAMILY DAY EN TU EMPRESA</h3>
@@ -37,7 +37,7 @@ export const Corporate: React.FC = () => {
                 <p className="text-sm text-slate-400 font-medium">Juegos y dinámicas de programación sin pantallas para disfrutar en familia.</p>
               </div>
               <div className="bg-slate-900 p-4 border-2 border-slate-700 shadow-[4px_4px_0_0_#0f172a]">
-                <h4 className="font-pixel text-[#ffe66d] flex items-center gap-2 mb-2 tracking-wide text-sm sm:text-base">
+                <h4 className="font-pixel text-white flex items-center gap-2 mb-2 tracking-wide text-sm sm:text-base">
                   <Bot className="w-4 h-4" /> ROBOT PARTY
                 </h4>
                 <p className="text-sm text-slate-400 font-medium">Armado y programación de robots propios con cartón, papel, y materiales creativos.</p>
@@ -54,7 +54,7 @@ export const Corporate: React.FC = () => {
                 href="https://wa.me/5491173708555?text=Hola,%20quiero%20solicitar%20informaci%C3%B3n%20sobre%20las%20propuestas%20corporativas%20y%20Family%20Day%20para%20empresas"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full inline-block text-center px-6 py-3 bg-[#4ecdc4] hover:bg-[#3dbdb4] text-slate-900 font-pixel tracking-wide border-4 border-slate-900 shadow-[6px_6px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[6px] active:translate-x-[6px] transition-all"
+                className="w-full inline-block text-center px-6 py-3 bg-[#2a5280] hover:bg-[#1e3a5f] text-slate-900 font-pixel tracking-wide border-4 border-slate-900 shadow-[6px_6px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[6px] active:translate-x-[6px] transition-all"
               >
                 CONTACTAR A ASESORÍA
               </a>
@@ -65,7 +65,7 @@ export const Corporate: React.FC = () => {
           <div className="space-y-8">
             <div className="bg-slate-800 border-4 border-slate-700 p-8 shadow-[6px_6px_0_0_#334155] hover:-translate-y-1 transition-all">
               <div className="flex items-center gap-4 mb-4">
-                <div className="p-2 bg-[#ffe66d] text-slate-900 border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a]">
+                <div className="p-2 bg-[#1e3a5f] text-slate-900 border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a]">
                   <Target className="w-6 h-6" />
                 </div>
                 <h3 className="font-pixel text-base sm:text-xl tracking-wide text-white break-words">TEAM BUILDING TECNOLÓGICO</h3>
@@ -93,7 +93,7 @@ export const Corporate: React.FC = () => {
 
             <div className="bg-slate-800 border-4 border-[#4ecdc4] p-8 shadow-[6px_6px_0_0_#4ecdc4] hover:-translate-y-1 transition-all">
               <div className="flex items-center gap-4 mb-4">
-                <div className="p-2 bg-[#4ecdc4] text-slate-900 border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a]">
+                <div className="p-2 bg-[#2a5280] text-slate-900 border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a]">
                   <Briefcase className="w-6 h-6" />
                 </div>
                 <h3 className="font-pixel text-base sm:text-xl tracking-wide text-white break-words">COLABORACIONES CON EMPRESAS</h3>

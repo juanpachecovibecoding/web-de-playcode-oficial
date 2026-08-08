@@ -47,7 +47,7 @@ export const Footer: React.FC<FooterProps> = ({ onBookMeeting }) => {
                 href="https://www.linkedin.com/company/playcodelatam"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-white/10 p-2 border-2 border-transparent hover:border-[#ffe66d] text-slate-400 hover:text-[#ffe66d] hover:shadow-[4px_4px_0_0_#ffe66d] transition-all"
+                className="bg-white/10 p-2 border-2 border-transparent hover:border-[#2a5280] text-slate-400 hover:text-white hover:shadow-[4px_4px_0_0_#ffe66d] transition-all"
                 aria-label="LinkedIn"
               >
                 <Linkedin className="w-5 h-5" />
@@ -85,8 +85,8 @@ export const Footer: React.FC<FooterProps> = ({ onBookMeeting }) => {
                 </span>
               </li>
               <li className="flex items-center gap-3">
-                <Mail className="text-[#ffe66d] w-5 h-5 shrink-0" />
-                <a href="mailto:hola@playcode.com.ar" className="hover:text-[#ffe66d] transition-colors">
+                <Mail className="text-white w-5 h-5 shrink-0" />
+                <a href="mailto:hola@playcode.com.ar" className="hover:text-white transition-colors">
                   hola@playcode.com.ar
                 </a>
               </li>

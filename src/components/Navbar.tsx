@@ -33,7 +33,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onGoToPlatform }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="bg-[#001F4A] p-2 border-2 border-slate-900 shadow-[2px_2px_0_0_#0f172a] text-[#F2900F]">
+            <div className="bg-[#152945] p-2 border-2 border-slate-900 shadow-[2px_2px_0_0_#0f172a] text-white">
               <Code2 className="w-6 h-6" />
             </div>
             <span className="font-pixel text-xl sm:text-2xl tracking-wide text-slate-900">
@@ -45,25 +45,25 @@ export const Navbar: React.FC<NavbarProps> = ({ onGoToPlatform }) => {
           <div className="hidden md:flex items-center gap-8">
             <a
               href="#nosotros"
-              className="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors uppercase tracking-widest"
+              className="text-sm font-bold text-slate-600 hover:text-[#152945] transition-colors uppercase tracking-widest"
             >
               Nosotros
             </a>
             <a
               href="#servicios"
-              className="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors uppercase tracking-widest"
+              className="text-sm font-bold text-slate-600 hover:text-[#152945] transition-colors uppercase tracking-widest"
             >
               Servicios
             </a>
             <a
               href="#escuelas"
-              className="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors uppercase tracking-widest"
+              className="text-sm font-bold text-slate-600 hover:text-[#152945] transition-colors uppercase tracking-widest"
             >
               Para Escuelas
             </a>
             <a
               href="#empresas"
-              className="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors uppercase tracking-widest"
+              className="text-sm font-bold text-slate-600 hover:text-[#152945] transition-colors uppercase tracking-widest"
             >
               Para Empresas
             </a>
@@ -72,7 +72,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onGoToPlatform }) => {
                 e.preventDefault();
                 onGoToPlatform();
               }}
-              className="px-6 py-2.5 bg-[#ff6b6b] hover:bg-[#ff5252] text-white text-sm font-pixel tracking-wide border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[4px] active:translate-x-[4px] transition-all cursor-pointer"
+              className="px-6 py-2.5 bg-[#152945] hover:bg-[#1e3a5f] text-white text-sm font-pixel tracking-wide border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[4px] active:translate-x-[4px] transition-all cursor-pointer"
             >
               IR A LA PLATAFORMA
             </button>
@@ -99,28 +99,28 @@ export const Navbar: React.FC<NavbarProps> = ({ onGoToPlatform }) => {
           <a
             href="#nosotros"
             onClick={() => setIsOpen(false)}
-            className="text-base font-medium text-slate-600 hover:text-indigo-600"
+            className="text-base font-medium text-slate-600 hover:text-[#152945]"
           >
             Nosotros
           </a>
           <a
             href="#servicios"
             onClick={() => setIsOpen(false)}
-            className="text-base font-medium text-slate-600 hover:text-indigo-600"
+            className="text-base font-medium text-slate-600 hover:text-[#152945]"
           >
             Servicios
           </a>
           <a
             href="#escuelas"
             onClick={() => setIsOpen(false)}
-            className="text-base font-medium text-slate-600 hover:text-indigo-600"
+            className="text-base font-medium text-slate-600 hover:text-[#152945]"
           >
             Para Escuelas
           </a>
           <a
             href="#empresas"
             onClick={() => setIsOpen(false)}
-            className="text-base font-medium text-slate-600 hover:text-indigo-600"
+            className="text-base font-medium text-slate-600 hover:text-[#152945]"
           >
             Para Empresas
           </a>
@@ -130,7 +130,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onGoToPlatform }) => {
               setIsOpen(false);
               onGoToPlatform();
             }}
-            className="w-full px-6 py-3 bg-[#ff6b6b] hover:bg-[#ff5252] text-white text-sm font-pixel tracking-wide border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[4px] active:translate-x-[4px] transition-all text-center uppercase cursor-pointer"
+            className="w-full py-3 px-4 bg-[#152945] hover:bg-[#1e3a5f] text-white font-pixel tracking-wide border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[4px] active:translate-x-[4px] transition-all text-center uppercase cursor-pointer"
           >
             IR A LA PLATAFORMA
           </button>

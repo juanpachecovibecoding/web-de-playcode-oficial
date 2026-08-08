@@ -3,7 +3,7 @@ import { CheckCircle2 } from 'lucide-react';
 
 export const Courses: React.FC = () => {
   return (
-    <section id="servicios" className="py-24 bg-[#ff6b6b] relative border-y-8 border-slate-900">
+    <section id="servicios" className="py-24 bg-[#152945] relative border-y-8 border-slate-900">
       {/* Grid Pattern */}
       <div className="absolute inset-0 opacity-20 pointer-events-none pixel-grid-colored"></div>
       
@@ -25,7 +25,7 @@ export const Courses: React.FC = () => {
           
           {/* LMS */}
           <div className="bg-white p-8 border-4 border-slate-900 shadow-[8px_8px_0_0_#0f172a] hover:shadow-[12px_12px_0_0_#0f172a] hover:-translate-y-1 transition-all relative flex flex-col">
-            <div className="absolute top-0 right-0 bg-[#4ecdc4] border-l-4 border-b-4 border-slate-900 text-slate-900 font-pixel text-[10px] px-3 py-1">
+            <div className="absolute top-0 right-0 bg-[#2a5280] border-l-4 border-b-4 border-slate-900 text-slate-900 font-pixel text-[10px] px-3 py-1">
               TECNOLOGÍA
             </div>
             <div className="flex-1">
@@ -34,15 +34,15 @@ export const Courses: React.FC = () => {
 
               <ul className="space-y-3 mb-8">
                 <li className="flex items-start gap-2 text-slate-700 text-sm font-medium">
-                  <CheckCircle2 className="w-5 h-5 text-indigo-500 shrink-0" />
+                  <CheckCircle2 className="w-5 h-5 text-[#2a5280] shrink-0" />
                   <span>Tu logo, nombre y paleta de colores personalizada.</span>
                 </li>
                 <li className="flex items-start gap-2 text-slate-700 text-sm font-medium">
-                  <CheckCircle2 className="w-5 h-5 text-indigo-500 shrink-0" />
+                  <CheckCircle2 className="w-5 h-5 text-[#2a5280] shrink-0" />
                   <span>Paneles separados para Administradores, Docentes y Alumnos.</span>
                 </li>
                 <li className="flex items-start gap-2 text-slate-700 text-sm font-medium">
-                  <CheckCircle2 className="w-5 h-5 text-indigo-500 shrink-0" />
+                  <CheckCircle2 className="w-5 h-5 text-[#2a5280] shrink-0" />
                   <span>Gestión de aulas, agendas, enlaces de clases virtuales y legajos.</span>
                 </li>
               </ul>
@@ -51,7 +51,7 @@ export const Courses: React.FC = () => {
               href="https://wa.me/5491173708555?text=Hola,%20quiero%20solicitar%20una%20demostraci%C3%B3n%20del%20LMS%20Marca%20Blanca"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full py-3 px-4 bg-indigo-500 hover:bg-indigo-400 text-white font-pixel tracking-wide border-4 border-slate-900 shadow-[4px_4px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[4px] active:translate-x-[4px] transition-all text-center block"
+              className="w-full py-3 px-4 bg-[#152945] hover:bg-[#1e3a5f] text-white font-pixel tracking-wide border-4 border-slate-900 shadow-[4px_4px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[4px] active:translate-x-[4px] transition-all text-center block"
             >
               SOLICITAR DEMO
             </a>
@@ -59,7 +59,7 @@ export const Courses: React.FC = () => {
 
           {/* Currículo */}
           <div className="bg-white p-8 border-4 border-slate-900 shadow-[8px_8px_0_0_#0f172a] hover:shadow-[12px_12px_0_0_#0f172a] hover:-translate-y-1 transition-all relative flex flex-col">
-            <div className="absolute top-0 right-0 bg-[#4ecdc4] border-l-4 border-b-4 border-slate-900 text-slate-900 font-pixel text-[10px] px-3 py-1">
+            <div className="absolute top-0 right-0 bg-[#2a5280] border-l-4 border-b-4 border-slate-900 text-slate-900 font-pixel text-[10px] px-3 py-1">
               CURRÍCULO
             </div>
             <div className="flex-1">
@@ -68,15 +68,15 @@ export const Courses: React.FC = () => {
 
               <ul className="space-y-3 mb-8">
                 <li className="flex items-start gap-2 text-slate-700 text-sm font-medium">
-                  <CheckCircle2 className="w-5 h-5 text-indigo-500 shrink-0" />
+                  <CheckCircle2 className="w-5 h-5 text-[#2a5280] shrink-0" />
                   <span>Secuencias didácticas de Programación, Robótica e IA.</span>
                 </li>
                 <li className="flex items-start gap-2 text-slate-700 text-sm font-medium">
-                  <CheckCircle2 className="w-5 h-5 text-indigo-500 shrink-0" />
+                  <CheckCircle2 className="w-5 h-5 text-[#2a5280] shrink-0" />
                   <span>Adaptado para diferentes rangos de edad (6 a 18 años).</span>
                 </li>
                 <li className="flex items-start gap-2 text-slate-700 text-sm font-medium">
-                  <CheckCircle2 className="w-5 h-5 text-indigo-500 shrink-0" />
+                  <CheckCircle2 className="w-5 h-5 text-[#2a5280] shrink-0" />
                   <span>Guías detalladas para el docente e instructores de tu centro.</span>
                 </li>
               </ul>
@@ -85,15 +85,15 @@ export const Courses: React.FC = () => {
               href="https://wa.me/5491173708555?text=Hola,%20quiero%20conocer%20los%20contenidos%20curriculares%20STEAM"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full py-3 px-4 bg-indigo-500 hover:bg-indigo-400 text-white font-pixel tracking-wide border-4 border-slate-900 shadow-[4px_4px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[4px] active:translate-x-[4px] transition-all text-center block"
+              className="w-full py-3 px-4 bg-[#152945] hover:bg-[#1e3a5f] text-white font-pixel tracking-wide border-4 border-slate-900 shadow-[4px_4px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[4px] active:translate-x-[4px] transition-all text-center block"
             >
               VER PROGRAMAS
             </a>
           </div>
 
           {/* Recursos Gamificados */}
-          <div className="bg-slate-900 p-8 border-4 border-[#ffe66d] shadow-[8px_8px_0_0_#ffe66d] hover:-translate-y-1 transition-all relative flex flex-col">
-            <div className="absolute top-0 right-0 bg-[#ffe66d] border-l-4 border-b-4 border-slate-900 text-slate-900 font-pixel text-[10px] px-3 py-1">
+          <div className="bg-slate-900 p-8 border-4 border-[#2a5280] shadow-[8px_8px_0_0_#2a5280] hover:-translate-y-1 transition-all relative flex flex-col">
+            <div className="absolute top-0 right-0 bg-[#1e3a5f] border-l-4 border-b-4 border-slate-900 text-slate-900 font-pixel text-[10px] px-3 py-1">
               RECURSOS
             </div>
             <div className="flex-1">
@@ -102,15 +102,15 @@ export const Courses: React.FC = () => {
 
               <ul className="space-y-3 mb-8">
                 <li className="flex items-start gap-2 text-slate-300 text-sm font-medium">
-                  <CheckCircle2 className="w-5 h-5 text-[#ffe66d] shrink-0" />
+                  <CheckCircle2 className="w-5 h-5 text-white shrink-0" />
                   <span>Acceso a juegos únicos creados por Play Code (Cloud Constructor).</span>
                 </li>
                 <li className="flex items-start gap-2 text-slate-300 text-sm font-medium">
-                  <CheckCircle2 className="w-5 h-5 text-[#ffe66d] shrink-0" />
+                  <CheckCircle2 className="w-5 h-5 text-white shrink-0" />
                   <span>Gamificación incorporada: cofres, insignias y sistema de ítems.</span>
                 </li>
                 <li className="flex items-start gap-2 text-slate-300 text-sm font-medium">
-                  <CheckCircle2 className="w-5 h-5 text-[#ffe66d] shrink-0" />
+                  <CheckCircle2 className="w-5 h-5 text-white shrink-0" />
                   <span>Actualizaciones constantes y mantenimiento de servidores incluido.</span>
                 </li>
               </ul>
@@ -119,7 +119,7 @@ export const Courses: React.FC = () => {
               href="https://wa.me/5491173708555?text=Hola,%20quiero%20conocer%20los%20recursos%20interactivos%20de%20Play%20Code"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full py-3 px-4 bg-[#ffe66d] hover:bg-yellow-300 text-slate-900 font-pixel tracking-wide border-4 border-slate-900 shadow-[4px_4px_0_0_#ffffff] active:shadow-[0px_0px_0_0_#ffffff] active:translate-y-[4px] active:translate-x-[4px] transition-all text-center block"
+              className="w-full py-3 px-4 bg-[#1e3a5f] hover:bg-[#2a5280] text-slate-900 font-pixel tracking-wide border-4 border-slate-900 shadow-[4px_4px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#ffffff] active:translate-y-[4px] active:translate-x-[4px] transition-all text-center block"
             >
               PROBAR RECURSOS
             </a>

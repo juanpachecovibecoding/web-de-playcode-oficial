@@ -17,9 +17,9 @@ export const Corporate: React.FC = () => {
         </div>
 
         {/* Top Priority Horizontal Card: Plataforma Corporativa de Capacitación */}
-        <div className="bg-slate-800 border-4 border-[#152945] p-8 shadow-[8px_8px_0_0_#152945] hover:-translate-y-1 hover:shadow-[12px_12px_0_0_#152945] transition-all mb-8">
+        <div className="bg-slate-800 border-4 border-[#4ecdc4] p-8 shadow-[6px_6px_0_0_#4ecdc4] hover:-translate-y-1 hover:shadow-[10px_10px_0_0_#4ecdc4] transition-all mb-8">
           <div className="flex flex-col md:flex-row md:items-center gap-6">
-            <div className="p-4 bg-[#152945] text-white border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a] shrink-0 self-start md:self-center">
+            <div className="p-4 bg-[#2a5280] text-white border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a] shrink-0 self-start md:self-center">
               <GraduationCap className="w-8 h-8" />
             </div>
             <div>

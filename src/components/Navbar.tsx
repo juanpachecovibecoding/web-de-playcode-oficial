@@ -33,7 +33,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onGoToPlatform }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="bg-[#152945] p-2 border-2 border-slate-900 shadow-[2px_2px_0_0_#0f172a] text-white">
+            <div className="bg-[#001F4A] p-2 border-2 border-slate-900 shadow-[2px_2px_0_0_#0f172a] text-[#F2900F]">
               <Code2 className="w-6 h-6" />
             </div>
             <span className="font-pixel text-xl sm:text-2xl tracking-wide text-slate-900">

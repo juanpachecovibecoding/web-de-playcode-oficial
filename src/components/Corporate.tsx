@@ -68,10 +68,10 @@ export const Corporate: React.FC = () => {
                 <div className="p-2 bg-[#152945] text-white border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a]">
                   <GraduationCap className="w-6 h-6" />
                 </div>
-                <h3 className="font-pixel text-base sm:text-xl tracking-wide text-white break-words">PORTAL DE APRENDIZAJE</h3>
+                <h3 className="font-pixel text-base sm:text-xl tracking-wide text-white break-words">PLATAFORMA CORPORATIVA DE CAPACITACIÓN</h3>
               </div>
               <p className="text-slate-300 font-medium">
-                Espacio exclusivo para capacitar a tus empleados. Play Code se encarga de la gestión integral del contenido, lecciones y seguimiento.
+                Te proveemos de una plataforma LMS propia de marca blanca, completamente equipada con contenidos interactivos, lecciones y métricas de progreso para potenciar el desarrollo continuo de tus colaboradores sin sobrecargar a tu equipo de RRHH.
               </p>
             </div>
 

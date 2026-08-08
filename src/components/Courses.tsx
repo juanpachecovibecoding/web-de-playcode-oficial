@@ -93,7 +93,7 @@ export const Courses: React.FC = () => {
 
           {/* Recursos Gamificados */}
           <div className="bg-slate-900 p-8 border-4 border-[#2a5280] shadow-[8px_8px_0_0_#2a5280] hover:-translate-y-1 transition-all relative flex flex-col">
-            <div className="absolute top-0 right-0 bg-[#1e3a5f] border-l-4 border-b-4 border-slate-900 text-slate-900 font-pixel text-[10px] px-3 py-1">
+            <div className="absolute top-0 right-0 bg-white border-l-4 border-b-4 border-slate-900 text-slate-900 font-pixel text-[10px] px-3 py-1">
               RECURSOS
             </div>
             <div className="flex-1">
@@ -119,7 +119,7 @@ export const Courses: React.FC = () => {
               href="https://wa.me/5491173708555?text=Hola,%20quiero%20conocer%20los%20recursos%20interactivos%20de%20Play%20Code"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full py-3 px-4 bg-[#1e3a5f] hover:bg-[#2a5280] text-slate-900 font-pixel tracking-wide border-4 border-slate-900 shadow-[4px_4px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#ffffff] active:translate-y-[4px] active:translate-x-[4px] transition-all text-center block"
+              className="w-full py-3 px-4 bg-white hover:bg-slate-100 text-slate-900 font-pixel tracking-wide border-4 border-slate-900 shadow-[4px_4px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[4px] active:translate-x-[4px] transition-all text-center block"
             >
               PROBAR RECURSOS
             </a>

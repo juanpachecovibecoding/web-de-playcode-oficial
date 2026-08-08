@@ -1,5 +1,5 @@
 import React from 'react';
-import { HeartHandshake, Users, Bot, Music, Target, Presentation, Briefcase } from 'lucide-react';
+import { HeartHandshake, Users, Bot, Music, Target, Presentation, Briefcase, GraduationCap } from 'lucide-react';
 
 export const Corporate: React.FC = () => {
   return (
@@ -63,6 +63,18 @@ export const Corporate: React.FC = () => {
 
           {/* Other Corporate Services */}
           <div className="space-y-8">
+            <div className="bg-slate-800 border-4 border-slate-700 p-8 shadow-[6px_6px_0_0_#334155] hover:-translate-y-1 transition-all">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-2 bg-[#152945] text-white border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a]">
+                  <GraduationCap className="w-6 h-6" />
+                </div>
+                <h3 className="font-pixel text-base sm:text-xl tracking-wide text-white break-words">PORTAL DE APRENDIZAJE</h3>
+              </div>
+              <p className="text-slate-300 font-medium">
+                Espacio exclusivo para capacitar a tus empleados. Play Code se encarga de la gestión integral del contenido, lecciones y seguimiento.
+              </p>
+            </div>
+
             <div className="bg-slate-800 border-4 border-slate-700 p-8 shadow-[6px_6px_0_0_#334155] hover:-translate-y-1 transition-all">
               <div className="flex items-center gap-4 mb-4">
                 <div className="p-2 bg-[#1e3a5f] text-white border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a]">

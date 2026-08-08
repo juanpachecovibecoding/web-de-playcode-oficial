@@ -15,7 +15,7 @@ export const Courses: React.FC = () => {
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4 text-shadow-black">
             Solución Todo en Uno
           </h2>
-          <p className="text-xl text-white font-medium text-shadow-black-sm">
+          <p className="text-xl text-[#E0E7FF] font-medium text-shadow-black-sm">
             Te equipamos con la infraestructura, el contenido educativo y las herramientas interactivas 
             para que dirijas tu academia o escuela con excelencia tecnológica.
           </p>

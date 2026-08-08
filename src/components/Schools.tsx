@@ -22,7 +22,7 @@ export const Schools: React.FC = () => {
                 href="https://wa.me/5491173708555?text=Hola,%20quiero%20solicitar%20informaci%C3%B3n%20sobre%20el%20servicio%20de%20asesor%C3%ADa%20para%20colegios"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block text-center px-6 py-3 bg-[#2a5280] hover:bg-[#1e3a5f] text-slate-900 font-pixel tracking-wide border-4 border-slate-900 shadow-[6px_6px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[6px] active:translate-x-[6px] transition-all"
+                className="inline-block text-center px-6 py-3 bg-[#152945] hover:bg-[#1e3a5f] text-white font-pixel tracking-wide border-4 border-slate-900 shadow-[6px_6px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[6px] active:translate-x-[6px] transition-all"
               >
                 CONTACTAR A ASESORÍA
               </a>
@@ -38,7 +38,7 @@ export const Schools: React.FC = () => {
                     window.history.pushState({}, '', '/recursos');
                     window.dispatchEvent(new PopStateEvent('popstate'));
                   }}
-                  className="inline-block text-center px-6 py-3 bg-[#1e3a5f] hover:bg-[#ffd166] text-slate-900 font-pixel tracking-wide border-4 border-slate-900 shadow-[6px_6px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[6px] active:translate-x-[6px] transition-all cursor-pointer"
+                  className="inline-block text-center px-6 py-3 bg-[#152945] hover:bg-[#1e3a5f] text-white font-pixel tracking-wide border-4 border-slate-900 shadow-[6px_6px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[6px] active:translate-x-[6px] transition-all cursor-pointer"
                 >
                   CONOCE NUESTROS RECURSOS
                 </a>

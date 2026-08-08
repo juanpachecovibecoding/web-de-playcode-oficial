@@ -49,12 +49,12 @@ export const Schools: React.FC = () => {
           <div className="lg:w-2/3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {/* Service 1 (Highlighted) */}
-              <div className="p-6 border-4 border-slate-900 hover:-translate-y-1 transition-all shadow-[6px_6px_0_0_#0f172a] hover:shadow-[10px_10px_0_0_#0f172a] bg-[#1e3a5f] sm:col-span-2">
-                <div className="w-12 h-12 border-2 border-slate-900 flex items-center justify-center mb-6 shadow-[2px_2px_0_0_#0f172a] bg-[#152945] text-white">
+              <div className="bg-slate-900 p-6 border-4 border-[#2a5280] shadow-[8px_8px_0_0_#2a5280] hover:-translate-y-1 transition-all relative flex flex-col sm:col-span-2">
+                <div className="w-12 h-12 border-2 border-slate-900 flex items-center justify-center mb-6 shadow-[2px_2px_0_0_#0f172a] bg-white text-slate-900">
                   <School className="w-6 h-6" />
                 </div>
-                <h3 className="font-pixel text-xl text-slate-900 mb-3 uppercase">Implementación Curricular</h3>
-                <p className="text-slate-800 font-medium leading-relaxed">Diseñamos la ruta de aprendizaje articulando programación, robótica e IA directamente dentro del horario escolar.</p>
+                <h3 className="font-pixel text-xl text-white mb-3 uppercase">Implementación Curricular</h3>
+                <p className="text-slate-300 font-medium leading-relaxed">Diseñamos la ruta de aprendizaje articulando programación, robótica e IA directamente dentro del horario escolar.</p>
               </div>
 
               {/* Service 2 */}

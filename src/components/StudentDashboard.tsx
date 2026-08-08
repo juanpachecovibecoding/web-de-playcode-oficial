@@ -26,7 +26,9 @@ import {
   LayoutDashboard,
   Award,
   Trophy,
-  FolderOpen
+  FolderOpen,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { SafeHTMLViewer } from './SafeHTMLViewer';
 
@@ -744,6 +746,38 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                 <span>¡Cofre Listo!</span>
               </button>
             ) : null}
+
+            {/* Light / Dark Mode Toggle Controls */}
+            <div className="flex items-center bg-white/10 p-0.5 border border-white/20 rounded shadow-[1px_1px_0_0_#000000]">
+              <button
+                onClick={() => {
+                  setPalette('default');
+                  onSaveProfile({ ...student, theme: 'default' });
+                }}
+                title="Modo Claro"
+                className={`p-1.5 rounded transition-all cursor-pointer ${
+                  palette === 'default'
+                    ? 'bg-amber-400 text-slate-900 shadow-[1px_1px_0_0_#000000]'
+                    : 'text-slate-300 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <Sun className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => {
+                  setPalette('cyberpunk');
+                  onSaveProfile({ ...student, theme: 'cyberpunk' });
+                }}
+                title="Modo Oscuro"
+                className={`p-1.5 rounded transition-all cursor-pointer ${
+                  palette === 'cyberpunk'
+                    ? 'bg-purple-600 text-white shadow-[1px_1px_0_0_#ff00ff]'
+                    : 'text-slate-300 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <Moon className="w-4 h-4" />
+              </button>
+            </div>
 
             <button
               onClick={onLogout}

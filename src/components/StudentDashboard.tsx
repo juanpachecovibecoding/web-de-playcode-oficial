@@ -28,7 +28,9 @@ import {
   Trophy,
   FolderOpen,
   Sun,
-  Moon
+  Moon,
+  Check,
+  Pipette
 } from 'lucide-react';
 import { SafeHTMLViewer } from './SafeHTMLViewer';
 
@@ -605,6 +607,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   const [bio, setBio] = useState(student.bio || '¡Hola! Soy alumno en Play Code y estoy programando el futuro.');
   const [selectedAvatar, setSelectedAvatar] = useState(student.avatar || '🚀');
   const [customPhotoUrl, setCustomPhotoUrl] = useState(student.photoUrl || '');
+  const [selectedColorPalette, setSelectedColorPalette] = useState<string>('blue-soft');
   const [isSaved, setIsSaved] = useState(false);
 
   const handleSave = () => {
@@ -2346,74 +2349,77 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                   <Palette className="w-4 h-4" /> Seleccionar Tema del Panel
                 </h3>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {/* Theme 1 Card (Light) */}
-                  <button
-                    onClick={() => {
-                      setThemePreference('light');
-                      localStorage.setItem('playcode_theme_pref', 'light');
-                    }}
-                    className={`p-4 border-2 text-left cursor-pointer transition-all flex flex-col justify-between h-28 ${
-                      themePreference === 'light'
-                        ? 'border-[#2a4e7c] bg-[#f0f4f8] shadow-[3px_3px_0_0_#2a4e7c]'
-                        : 'border-slate-300 bg-white hover:border-slate-400'
-                    }`}
-                  >
-                    <div>
-                      <span className="text-xs font-bold text-[#0d1b2e] block">Modo Claro</span>
-                      <span className="text-[9px] text-[#6180a6] uppercase font-bold">Light Theme</span>
-                    </div>
-                    <div className="flex gap-1">
-                      <span className="w-3.5 h-3.5 rounded-full bg-[#0d1b2e]"></span>
-                      <span className="w-3.5 h-3.5 rounded-full bg-[#2a4e7c]"></span>
-                      <span className="w-3.5 h-3.5 rounded-full bg-[#a3b8cc]"></span>
-                    </div>
-                  </button>
+                <div className="grid grid-cols-6 sm:grid-cols-6 md:grid-cols-6 gap-3 p-4 bg-slate-100/60 rounded-xl border border-slate-200/80">
+                  {[
+                    { id: 'blue-soft', top: '#dbeafe', left: '#2563eb', right: '#cbd5e1', name: 'Azul Suave' },
+                    { id: 'gray-blue', top: '#e2e8f0', left: '#2563eb', right: '#cbd5e1', name: 'Gris Azul' },
+                    { id: 'slate-blue', top: '#dbeafe', left: '#1e40af', right: '#bfdbfe', name: 'Azul Marino' },
+                    { id: 'dark-gray', top: '#e0e7ff', left: '#475569', right: '#cbd5e1', name: 'Gris Oscuro' },
+                    { id: 'mint-gray', top: '#e0f2fe', left: '#334155', right: '#cbd5e1', name: 'Menta Frío' },
+                    { id: 'cyan-bright', top: '#a7f3d0', left: '#047857', right: '#6ee7b7', name: 'Cian Brillante' },
+                    
+                    { id: 'green-light', top: '#d9f99d', left: '#365314', right: '#bef264', name: 'Verde Hoja' },
+                    { id: 'sage-green', top: '#ecfccb', left: '#475569', right: '#cbd5e1', name: 'Verde Olivo' },
+                    { id: 'gold-yellow', top: '#fde047', left: '#713f12', right: '#eab308', name: 'Dorado Calido' },
+                    { id: 'peach-soft', top: '#fed7aa', left: '#7c2d12', right: '#fb923c', name: 'Durazno Suave' },
+                    { id: 'beige-nude', top: '#ffedd5', left: '#78350f', right: '#fde68a', name: 'Beige Cálido' },
+                    { id: 'pink-rose', top: '#ffe4e6', left: '#881337', right: '#f43f5e', name: 'Rosa Pastel' },
 
-                  {/* Theme 2 Card (Dark) */}
-                  <button
-                    onClick={() => {
-                      setThemePreference('dark');
-                      localStorage.setItem('playcode_theme_pref', 'dark');
-                    }}
-                    className={`p-4 border-2 text-left cursor-pointer transition-all flex flex-col justify-between h-28 ${
-                      themePreference === 'dark'
-                        ? 'border-[#ff00ff] bg-[#8b2ae2]/10 shadow-[3px_3px_0_0_#ff00ff]'
-                        : 'border-slate-300 bg-white hover:border-slate-400'
-                    }`}
-                  >
-                    <div>
-                      <span className="text-xs font-bold text-slate-800 block">Modo Oscuro</span>
-                      <span className="text-[9px] text-[#ff00ff] uppercase font-bold">Dark Theme</span>
-                    </div>
-                    <div className="flex gap-1">
-                      <span className="w-3.5 h-3.5 rounded-full bg-[#1a0033]"></span>
-                      <span className="w-3.5 h-3.5 rounded-full bg-[#ff00ff]"></span>
-                      <span className="w-3.5 h-3.5 rounded-full bg-[#7b6eff]"></span>
-                    </div>
-                  </button>
+                    { id: 'mauve-nude', top: '#fecdd3', left: '#5f373e', right: '#fda4af', name: 'Malva Nude' },
+                    { id: 'purple-magenta', top: '#fbcfe8', left: '#701a75', right: '#f472b6', name: 'Púrpura Magenta' },
+                    { id: 'violet-soft', top: '#f3e8ff', left: '#581c87', right: '#c084fc', name: 'Violeta Suave' }
+                  ].map((colorItem) => {
+                    const isSelected = selectedColorPalette === colorItem.id;
+                    return (
+                      <button
+                        key={colorItem.id}
+                        type="button"
+                        onClick={() => setSelectedColorPalette(colorItem.id)}
+                        title={colorItem.name}
+                        className={`w-14 h-14 rounded-2xl bg-white flex items-center justify-center p-1 relative transition-all cursor-pointer hover:scale-105 ${
+                          isSelected
+                            ? 'ring-2 ring-emerald-500 shadow-md scale-105'
+                            : 'hover:shadow-sm border border-slate-200/50'
+                        }`}
+                      >
+                        <div className="w-11 h-11 rounded-full overflow-hidden relative shadow-inner">
+                          {/* Top hemisphere */}
+                          <div className="absolute top-0 left-0 w-full h-1/2" style={{ backgroundColor: colorItem.top }}></div>
+                          {/* Bottom left quadrant */}
+                          <div className="absolute bottom-0 left-0 w-1/2 h-1/2" style={{ backgroundColor: colorItem.left }}></div>
+                          {/* Bottom right quadrant */}
+                          <div className="absolute bottom-0 right-0 w-1/2 h-1/2" style={{ backgroundColor: colorItem.right }}></div>
+                        </div>
 
-                  {/* Theme 3 Card (System / Navegador) */}
+                        {isSelected && (
+                          <div className="absolute -top-1 -right-1 w-5 h-5 bg-[#0f766e] text-white rounded-full flex items-center justify-center shadow">
+                            <Check className="w-3 h-3 stroke-[3]" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+
+                  {/* Custom Eyedropper Circle */}
                   <button
-                    onClick={() => {
-                      setThemePreference('system');
-                      localStorage.setItem('playcode_theme_pref', 'system');
-                    }}
-                    className={`p-4 border-2 text-left cursor-pointer transition-all flex flex-col justify-between h-28 ${
-                      themePreference === 'system'
-                        ? 'border-emerald-500 bg-emerald-50 shadow-[3px_3px_0_0_#10b981]'
-                        : 'border-slate-300 bg-white hover:border-slate-400'
+                    type="button"
+                    onClick={() => setSelectedColorPalette('custom-picker')}
+                    title="Selector Personalizado"
+                    className={`w-14 h-14 rounded-2xl bg-white flex items-center justify-center p-1 relative transition-all cursor-pointer hover:scale-105 ${
+                      selectedColorPalette === 'custom-picker'
+                        ? 'ring-2 ring-emerald-500 shadow-md scale-105'
+                        : 'hover:shadow-sm border border-slate-200/50'
                     }`}
                   >
-                    <div>
-                      <span className="text-xs font-bold text-slate-800 block">Tema del Navegador</span>
-                      <span className="text-[9px] text-emerald-600 uppercase font-bold">Automático (OS)</span>
+                    <div className="w-11 h-11 rounded-full bg-[#7dd3fc] flex items-center justify-center text-[#0f172a] shadow-inner">
+                      <Pipette className="w-5 h-5" />
                     </div>
-                    <div className="flex gap-1">
-                      <span className="w-3.5 h-3.5 rounded-full bg-slate-900"></span>
-                      <span className="w-3.5 h-3.5 rounded-full bg-emerald-500"></span>
-                      <span className="w-3.5 h-3.5 rounded-full bg-slate-200"></span>
-                    </div>
+
+                    {selectedColorPalette === 'custom-picker' && (
+                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-[#0f766e] text-white rounded-full flex items-center justify-center shadow">
+                        <Check className="w-3 h-3 stroke-[3]" />
+                      </div>
+                    )}
                   </button>
                 </div>
               </div>

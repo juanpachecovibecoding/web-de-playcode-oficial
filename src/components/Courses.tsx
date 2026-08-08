@@ -25,7 +25,7 @@ export const Courses: React.FC = () => {
           
           {/* LMS */}
           <div className="bg-white p-8 border-4 border-slate-900 shadow-[8px_8px_0_0_#0f172a] hover:shadow-[12px_12px_0_0_#0f172a] hover:-translate-y-1 transition-all relative flex flex-col">
-            <div className="absolute top-0 right-0 bg-[#2a5280] border-l-4 border-b-4 border-slate-900 text-slate-900 font-pixel text-[10px] px-3 py-1">
+            <div className="absolute top-0 right-0 bg-[#2a5280] border-l-4 border-b-4 border-slate-900 text-[#E0D5C9] font-pixel text-[10px] px-3 py-1">
               TECNOLOGÍA
             </div>
             <div className="flex-1">
@@ -59,7 +59,7 @@ export const Courses: React.FC = () => {
 
           {/* Currículo */}
           <div className="bg-white p-8 border-4 border-slate-900 shadow-[8px_8px_0_0_#0f172a] hover:shadow-[12px_12px_0_0_#0f172a] hover:-translate-y-1 transition-all relative flex flex-col">
-            <div className="absolute top-0 right-0 bg-[#2a5280] border-l-4 border-b-4 border-slate-900 text-slate-900 font-pixel text-[10px] px-3 py-1">
+            <div className="absolute top-0 right-0 bg-[#2a5280] border-l-4 border-b-4 border-slate-900 text-[#E0D5C9] font-pixel text-[10px] px-3 py-1">
               CURRÍCULO
             </div>
             <div className="flex-1">

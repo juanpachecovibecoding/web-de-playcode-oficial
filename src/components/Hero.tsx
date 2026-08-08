@@ -25,7 +25,7 @@ export const Hero: React.FC = () => {
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-slate-900 tracking-tight mb-8">
             La plataforma STEAM <br className="hidden sm:block" />
             <span className="font-pixel text-2xl sm:text-4xl md:text-5xl lg:text-6xl text-[#152945] tracking-wider block mt-4 sm:mt-6 text-shadow-slate">
-              PARA TU ACADEMIA O COLEGIO
+              PARA TU PROYECTO EDUCATIVO
             </span>
           </h1>
 

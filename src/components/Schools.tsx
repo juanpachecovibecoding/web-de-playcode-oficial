@@ -59,7 +59,7 @@ export const Schools: React.FC = () => {
 
               {/* Service 2 */}
               <div className="p-6 border-4 border-slate-900 hover:-translate-y-1 transition-all shadow-[6px_6px_0_0_#0f172a] hover:shadow-[10px_10px_0_0_#0f172a] bg-white">
-                <div className="w-12 h-12 border-2 border-slate-900 flex items-center justify-center mb-6 shadow-[2px_2px_0_0_#0f172a] bg-[#2a5280] text-slate-900">
+                <div className="w-12 h-12 border-2 border-slate-900 flex items-center justify-center mb-6 shadow-[2px_2px_0_0_#0f172a] bg-[#152945] text-white">
                   <Puzzle className="w-6 h-6" />
                 </div>
                 <h3 className="font-pixel text-xl text-slate-900 mb-3 uppercase">Talleres Extraescolares</h3>
@@ -68,7 +68,7 @@ export const Schools: React.FC = () => {
 
               {/* Service 3 */}
               <div className="p-6 border-4 border-slate-900 hover:-translate-y-1 transition-all shadow-[6px_6px_0_0_#0f172a] hover:shadow-[10px_10px_0_0_#0f172a] bg-white">
-                <div className="w-12 h-12 border-2 border-slate-900 flex items-center justify-center mb-6 shadow-[2px_2px_0_0_#0f172a] bg-[#2a5280] text-slate-900">
+                <div className="w-12 h-12 border-2 border-slate-900 flex items-center justify-center mb-6 shadow-[2px_2px_0_0_#0f172a] bg-[#152945] text-white">
                   <CalendarDays className="w-6 h-6" />
                 </div>
                 <h3 className="font-pixel text-xl text-slate-900 mb-3 uppercase">Días Especiales</h3>
@@ -77,7 +77,7 @@ export const Schools: React.FC = () => {
 
               {/* Service 4 */}
               <div className="p-6 border-4 border-slate-900 hover:-translate-y-1 transition-all shadow-[6px_6px_0_0_#0f172a] hover:shadow-[10px_10px_0_0_#0f172a] bg-white">
-                <div className="w-12 h-12 border-2 border-slate-900 flex items-center justify-center mb-6 shadow-[2px_2px_0_0_#0f172a] bg-[#2a5280] text-slate-900">
+                <div className="w-12 h-12 border-2 border-slate-900 flex items-center justify-center mb-6 shadow-[2px_2px_0_0_#0f172a] bg-[#152945] text-white">
                   <GraduationCap className="w-6 h-6" />
                 </div>
                 <h3 className="font-pixel text-xl text-slate-900 mb-3 uppercase">Capacitación Docente</h3>
@@ -86,7 +86,7 @@ export const Schools: React.FC = () => {
 
               {/* Service 5 */}
               <div className="p-6 border-4 border-slate-900 hover:-translate-y-1 transition-all shadow-[6px_6px_0_0_#0f172a] hover:shadow-[10px_10px_0_0_#0f172a] bg-white">
-                <div className="w-12 h-12 border-2 border-slate-900 flex items-center justify-center mb-6 shadow-[2px_2px_0_0_#0f172a] bg-[#2a5280] text-slate-900">
+                <div className="w-12 h-12 border-2 border-slate-900 flex items-center justify-center mb-6 shadow-[2px_2px_0_0_#0f172a] bg-[#152945] text-white">
                   <Mic className="w-6 h-6" />
                 </div>
                 <h3 className="font-pixel text-xl text-slate-900 mb-3 uppercase">Conferencias para Familias</h3>

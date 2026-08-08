@@ -16,6 +16,21 @@ export const Corporate: React.FC = () => {
           </p>
         </div>
 
+        {/* Top Priority Horizontal Card: Plataforma Corporativa de Capacitación */}
+        <div className="bg-slate-800 border-4 border-[#152945] p-8 shadow-[8px_8px_0_0_#152945] hover:-translate-y-1 hover:shadow-[12px_12px_0_0_#152945] transition-all mb-8">
+          <div className="flex flex-col md:flex-row md:items-center gap-6">
+            <div className="p-4 bg-[#152945] text-white border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a] shrink-0 self-start md:self-center">
+              <GraduationCap className="w-8 h-8" />
+            </div>
+            <div>
+              <h3 className="font-pixel text-xl sm:text-2xl tracking-wide text-white mb-3">PLATAFORMA CORPORATIVA DE CAPACITACIÓN</h3>
+              <p className="text-slate-300 font-medium leading-relaxed">
+                Te proveemos de una plataforma LMS propia de marca blanca, completamente equipada con contenidos interactivos, lecciones y métricas de progreso para potenciar el desarrollo continuo de tus colaboradores sin sobrecargar a tu equipo de RRHH.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           
           {/* Family Day */}
@@ -63,18 +78,6 @@ export const Corporate: React.FC = () => {
 
           {/* Other Corporate Services */}
           <div className="space-y-8">
-            <div className="bg-slate-800 border-4 border-slate-700 p-8 shadow-[6px_6px_0_0_#334155] hover:-translate-y-1 transition-all">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="p-2 bg-[#152945] text-white border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a]">
-                  <GraduationCap className="w-6 h-6" />
-                </div>
-                <h3 className="font-pixel text-base sm:text-xl tracking-wide text-white break-words">PLATAFORMA CORPORATIVA DE CAPACITACIÓN</h3>
-              </div>
-              <p className="text-slate-300 font-medium">
-                Te proveemos de una plataforma LMS propia de marca blanca, completamente equipada con contenidos interactivos, lecciones y métricas de progreso para potenciar el desarrollo continuo de tus colaboradores sin sobrecargar a tu equipo de RRHH.
-              </p>
-            </div>
-
             <div className="bg-slate-800 border-4 border-slate-700 p-8 shadow-[6px_6px_0_0_#334155] hover:-translate-y-1 transition-all">
               <div className="flex items-center gap-4 mb-4">
                 <div className="p-2 bg-[#1e3a5f] text-white border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a]">

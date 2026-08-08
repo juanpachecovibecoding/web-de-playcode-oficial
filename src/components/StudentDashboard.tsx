@@ -339,6 +339,10 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   const [activeTab, setActiveTab] = useState<'dashboard' | 'aprendizaje' | 'recursos' | 'certificados' | 'puntos' | 'foro' | 'perfil'>('dashboard');
   const [selectedCertificateCourse, setSelectedCertificateCourse] = useState<Classroom | null>(null);
   const [hideLessonsSidebar, setHideLessonsSidebar] = useState(false);
+  // B2B multi-tenant branding/theme resolution
+  const studentPlatformId = student.platformId || student.platformIds?.[0] || '';
+  const myPlatform = platforms.find(p => p.id === studentPlatformId);
+
   // System / Browser dark mode preference handling
   const [themePreference, setThemePreference] = useState<'light' | 'dark' | 'system'>(() => {
     const saved = localStorage.getItem('playcode_theme_pref');
@@ -2343,18 +2347,21 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {/* Theme 1 Card */}
+                  {/* Theme 1 Card (Light) */}
                   <button
-                    onClick={() => setPalette('default')}
+                    onClick={() => {
+                      setThemePreference('light');
+                      localStorage.setItem('playcode_theme_pref', 'light');
+                    }}
                     className={`p-4 border-2 text-left cursor-pointer transition-all flex flex-col justify-between h-28 ${
-                      palette === 'default'
+                      themePreference === 'light'
                         ? 'border-[#2a4e7c] bg-[#f0f4f8] shadow-[3px_3px_0_0_#2a4e7c]'
                         : 'border-slate-300 bg-white hover:border-slate-400'
                     }`}
                   >
                     <div>
-                      <span className="text-xs font-bold text-[#0d1b2e] block">Paleta 1</span>
-                      <span className="text-[9px] text-[#6180a6] uppercase font-bold">Default Blue</span>
+                      <span className="text-xs font-bold text-[#0d1b2e] block">Modo Claro</span>
+                      <span className="text-[9px] text-[#6180a6] uppercase font-bold">Light Theme</span>
                     </div>
                     <div className="flex gap-1">
                       <span className="w-3.5 h-3.5 rounded-full bg-[#0d1b2e]"></span>
@@ -2363,18 +2370,21 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                     </div>
                   </button>
 
-                  {/* Theme 2 Card */}
+                  {/* Theme 2 Card (Dark) */}
                   <button
-                    onClick={() => setPalette('cyberpunk')}
+                    onClick={() => {
+                      setThemePreference('dark');
+                      localStorage.setItem('playcode_theme_pref', 'dark');
+                    }}
                     className={`p-4 border-2 text-left cursor-pointer transition-all flex flex-col justify-between h-28 ${
-                      palette === 'cyberpunk'
+                      themePreference === 'dark'
                         ? 'border-[#ff00ff] bg-[#8b2ae2]/10 shadow-[3px_3px_0_0_#ff00ff]'
                         : 'border-slate-300 bg-white hover:border-slate-400'
                     }`}
                   >
                     <div>
-                      <span className="text-xs font-bold text-slate-800 block">Paleta 2</span>
-                      <span className="text-[9px] text-[#ff00ff] uppercase font-bold">Cyberpunk / Neon</span>
+                      <span className="text-xs font-bold text-slate-800 block">Modo Oscuro</span>
+                      <span className="text-[9px] text-[#ff00ff] uppercase font-bold">Dark Theme</span>
                     </div>
                     <div className="flex gap-1">
                       <span className="w-3.5 h-3.5 rounded-full bg-[#1a0033]"></span>
@@ -2383,23 +2393,26 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                     </div>
                   </button>
 
-                  {/* Theme 3 Card */}
+                  {/* Theme 3 Card (System / Navegador) */}
                   <button
-                    onClick={() => setPalette('playcode')}
+                    onClick={() => {
+                      setThemePreference('system');
+                      localStorage.setItem('playcode_theme_pref', 'system');
+                    }}
                     className={`p-4 border-2 text-left cursor-pointer transition-all flex flex-col justify-between h-28 ${
-                      palette === 'playcode'
-                        ? 'border-[#001f4a] bg-slate-100 shadow-[3px_3px_0_0_#f2900f]'
+                      themePreference === 'system'
+                        ? 'border-emerald-500 bg-emerald-50 shadow-[3px_3px_0_0_#10b981]'
                         : 'border-slate-300 bg-white hover:border-slate-400'
                     }`}
                   >
                     <div>
-                      <span className="text-xs font-bold text-[#001f4a] block">Paleta 3</span>
-                      <span className="text-[9px] text-[#f2900f] uppercase font-bold">Play Code Web</span>
+                      <span className="text-xs font-bold text-slate-800 block">Tema del Navegador</span>
+                      <span className="text-[9px] text-emerald-600 uppercase font-bold">Automático (OS)</span>
                     </div>
                     <div className="flex gap-1">
-                      <span className="w-3.5 h-3.5 rounded-full bg-[#001f4a]"></span>
-                      <span className="w-3.5 h-3.5 rounded-full bg-[#ffe66d]"></span>
-                      <span className="w-3.5 h-3.5 rounded-full bg-[#f2900f]"></span>
+                      <span className="w-3.5 h-3.5 rounded-full bg-slate-900"></span>
+                      <span className="w-3.5 h-3.5 rounded-full bg-emerald-500"></span>
+                      <span className="w-3.5 h-3.5 rounded-full bg-slate-200"></span>
                     </div>
                   </button>
                 </div>

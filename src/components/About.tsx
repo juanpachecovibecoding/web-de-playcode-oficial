@@ -34,12 +34,10 @@ export const About: React.FC = () => {
                 <Cpu className="w-32 h-32 text-[#2a5280]" />
               </div>
               <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
-                <Rocket className="text-[#a8c5e0] w-5 h-5" /> Parque Tecnológico
+                <Rocket className="text-[#a8c5e0] w-5 h-5" /> Tecnologia
               </h3>
               <p className="text-[#cddff0] mb-4 leading-relaxed">
-                Contamos con kits que rotan según el curso. Destacamos <strong>Arduino</strong>, 
-                una placa de desarrollo electrónico para proyectos interactivos enfocados a 
-                soluciones reales (ej. contenedor de basura inteligente).
+                Potenciamos <strong>Arduino</strong>, una placa de desarrollo electrónico para proyectos interactivos enfocados a soluciones reales (ej. contenedor de basura inteligente).
               </p>
             </div>
           </div>

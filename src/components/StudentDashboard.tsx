@@ -339,15 +339,32 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   const [activeTab, setActiveTab] = useState<'dashboard' | 'aprendizaje' | 'recursos' | 'certificados' | 'puntos' | 'foro' | 'perfil'>('dashboard');
   const [selectedCertificateCourse, setSelectedCertificateCourse] = useState<Classroom | null>(null);
   const [hideLessonsSidebar, setHideLessonsSidebar] = useState(false);
-  // B2B multi-tenant branding/theme resolution
-  const studentPlatformId = student.platformId || student.platformIds?.[0] || '';
-  const myPlatform = platforms.find(p => p.id === studentPlatformId);
-  const platformTheme = (myPlatform as any)?.theme || student.theme || 'default';
-  const [palette, setPalette] = useState<'default' | 'cyberpunk' | 'playcode'>(platformTheme);
+  // System / Browser dark mode preference handling
+  const [themePreference, setThemePreference] = useState<'light' | 'dark' | 'system'>(() => {
+    const saved = localStorage.getItem('playcode_theme_pref');
+    return (saved as 'light' | 'dark' | 'system') || 'system';
+  });
+
+  const [systemIsDark, setSystemIsDark] = useState<boolean>(() => {
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
 
   useEffect(() => {
-    setPalette(platformTheme);
-  }, [platformTheme]);
+    if (!window.matchMedia) return;
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e: MediaQueryListEvent) => {
+      setSystemIsDark(e.matches);
+    };
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
+  // Determine active palette: if preference is 'system', follow browser preference (dark -> cyberpunk, light -> default)
+  const activeMode: 'light' | 'dark' = themePreference === 'system' 
+    ? (systemIsDark ? 'dark' : 'light') 
+    : themePreference;
+
+  const palette: 'default' | 'cyberpunk' = activeMode === 'dark' ? 'cyberpunk' : 'default';
 
   const [isOpeningChest, setIsOpeningChest] = useState(false);
   const [chestOpened, setChestOpened] = useState(false);
@@ -747,16 +764,16 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
               </button>
             ) : null}
 
-            {/* Light / Dark Mode Toggle Controls */}
+            {/* Browser / System Theme Toggle Controls */}
             <div className="flex items-center bg-white/10 p-0.5 border border-white/20 rounded shadow-[1px_1px_0_0_#000000]">
               <button
                 onClick={() => {
-                  setPalette('default');
-                  onSaveProfile({ ...student, theme: 'default' });
+                  setThemePreference('light');
+                  localStorage.setItem('playcode_theme_pref', 'light');
                 }}
                 title="Modo Claro"
                 className={`p-1.5 rounded transition-all cursor-pointer ${
-                  palette === 'default'
+                  themePreference === 'light'
                     ? 'bg-amber-400 text-slate-900 shadow-[1px_1px_0_0_#000000]'
                     : 'text-slate-300 hover:text-white hover:bg-white/10'
                 }`}
@@ -765,17 +782,31 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
               </button>
               <button
                 onClick={() => {
-                  setPalette('cyberpunk');
-                  onSaveProfile({ ...student, theme: 'cyberpunk' });
+                  setThemePreference('dark');
+                  localStorage.setItem('playcode_theme_pref', 'dark');
                 }}
                 title="Modo Oscuro"
                 className={`p-1.5 rounded transition-all cursor-pointer ${
-                  palette === 'cyberpunk'
+                  themePreference === 'dark'
                     ? 'bg-purple-600 text-white shadow-[1px_1px_0_0_#ff00ff]'
                     : 'text-slate-300 hover:text-white hover:bg-white/10'
                 }`}
               >
                 <Moon className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => {
+                  setThemePreference('system');
+                  localStorage.setItem('playcode_theme_pref', 'system');
+                }}
+                title={`Usar tema del navegador (${systemIsDark ? 'Oscuro activo' : 'Claro activo'})`}
+                className={`px-1.5 py-1 text-[10px] font-bold rounded transition-all cursor-pointer uppercase ${
+                  themePreference === 'system'
+                    ? 'bg-emerald-400 text-slate-900 shadow-[1px_1px_0_0_#000000]'
+                    : 'text-slate-300 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                Auto
               </button>
             </div>
 

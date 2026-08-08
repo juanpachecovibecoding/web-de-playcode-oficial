@@ -65,7 +65,7 @@ export const Corporate: React.FC = () => {
           <div className="space-y-8">
             <div className="bg-slate-800 border-4 border-slate-700 p-8 shadow-[6px_6px_0_0_#334155] hover:-translate-y-1 transition-all">
               <div className="flex items-center gap-4 mb-4">
-                <div className="p-2 bg-[#1e3a5f] text-slate-900 border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a]">
+                <div className="p-2 bg-[#1e3a5f] text-white border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a]">
                   <Target className="w-6 h-6" />
                 </div>
                 <h3 className="font-pixel text-base sm:text-xl tracking-wide text-white break-words">TEAM BUILDING TECNOLÓGICO</h3>
@@ -93,7 +93,7 @@ export const Corporate: React.FC = () => {
 
             <div className="bg-slate-800 border-4 border-[#4ecdc4] p-8 shadow-[6px_6px_0_0_#4ecdc4] hover:-translate-y-1 transition-all">
               <div className="flex items-center gap-4 mb-4">
-                <div className="p-2 bg-[#2a5280] text-slate-900 border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a]">
+                <div className="p-2 bg-[#2a5280] text-white border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a]">
                   <Briefcase className="w-6 h-6" />
                 </div>
                 <h3 className="font-pixel text-base sm:text-xl tracking-wide text-white break-words">COLABORACIONES CON EMPRESAS</h3>

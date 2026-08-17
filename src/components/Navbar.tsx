@@ -74,7 +74,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onGoToPlatform }) => {
               }}
               className="px-6 py-2.5 bg-[#152945] hover:bg-[#1e3a5f] text-white text-sm font-pixel tracking-wide border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[4px] active:translate-x-[4px] transition-all cursor-pointer"
             >
-              IR A LA PLATAFORMA
+              CONTACTAR
             </button>
           </div>
 
@@ -132,7 +132,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onGoToPlatform }) => {
             }}
             className="w-full py-3 px-4 bg-[#152945] hover:bg-[#1e3a5f] text-white font-pixel tracking-wide border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[4px] active:translate-x-[4px] transition-all text-center uppercase cursor-pointer"
           >
-            IR A LA PLATAFORMA
+            CONTACTAR
           </button>
         </div>
       </div>

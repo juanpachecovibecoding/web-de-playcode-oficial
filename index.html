@@ -1,17 +1,935 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es" class="scroll-smooth">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='2' y='2' width='28' height='28' fill='%23001F4A' stroke='%230f172a' stroke-width='2'/><g transform='translate(6, 6) scale(0.833)' stroke='%23F2900F' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'><path d='m18 16 4-4-4-4'/><path d='m6 8-4 4 4 4'/><path d='m14.5 4-5 16'/></g></svg>">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Play Code - Plataforma Educativa</title>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
-  </head>
-  <body class="min-h-screen bg-slate-50 font-sans selection:bg-indigo-100 selection:text-indigo-900 antialiased">
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Play Code - Plataforma Educativa</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='2' y='2' width='28' height='28' fill='%23001F4A' stroke='%230f172a' stroke-width='2'/><g transform='translate(6, 6) scale(0.833)' stroke='%23F2900F' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'><path d='m18 16 4-4-4-4'/><path d='m6 8-4 4 4 4'/><path d='m14.5 4-5 16'/></g></svg>">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@0.400.0/dist/umd/lucide.js"></script>
+  
+  <!-- Tailwind Custom Configuration -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            pixel: ['"Press Start 2P"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Custom CSS for Grids & Neo-Brutalism details -->
+  <style>
+    .pixel-grid {
+      background-image: radial-gradient(#0f172a 2px, transparent 2px);
+      background-size: 24px 24px;
+    }
+    .pixel-grid-colored {
+      background-image: linear-gradient(#0f172a 2px, transparent 2px), linear-gradient(90deg, #0f172a 2px, transparent 2px);
+      background-size: 32px 32px;
+    }
+    .pixel-grid-cyan {
+      background-image: radial-gradient(#4ecdc4 2px, transparent 2px);
+      background-size: 24px 24px;
+    }
+    .text-shadow-slate {
+      text-shadow: 4px 4px 0 #cbd5e1;
+    }
+    .text-shadow-black {
+      text-shadow: 4px 4px 0 #0f172a;
+    }
+    .text-shadow-black-sm {
+      text-shadow: 2px 2px 0 #0f172a;
+    }
+  </style>
+  <!-- GOOGLE AI & GENERATIVE ENGINE OPTIMIZATION (GEO) METAS & SCHEMA.ORG -->
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="description" content="Play Code: Academia líder en educación STEAM, programación, robótica y simuladores interactivos en la nube para niños, jóvenes, colegios y empresas.">
+  <meta property="og:title" content="Play Code | Educación STEAM, Robótica y Programación Interactiva">
+  <meta property="og:description" content="Plataforma educativa con laboratorios virtuales y simuladores propios: Minecraft, BrainBlox, Cloud Constructor 3D y Flexbox Defense.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://playcode.com.ar/">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "EducationalOrganization",
+        "@id": "https://playcode.com.ar/#organization",
+        "name": "Play Code",
+        "url": "https://playcode.com.ar",
+        "logo": "https://edu.playcode.com.ar/wp-content/uploads/2026/08/playcode-logo.png",
+        "description": "Academia de tecnología y educación STEAM especializada en programación para niños, robótica educativa, laboratorios en la nube y plataformas de formación LMS.",
+        "email": "contacto@playcode.com.ar",
+        "knowsAbout": [
+          "Educación STEAM",
+          "Programación para Niños y Adolescentes",
+          "Robótica Educativa",
+          "Minecraft Education & Modding",
+          "Simuladores de Programación 3D",
+          "Plataformas LMS Multitenant para Colegios y Empresas"
+        ],
+        "hasOfferCatalog": {
+          "@type": "OfferCatalog",
+          "name": "Recursos y Laboratorios Educativos Play Code",
+          "itemListElement": [
+            {
+              "@type": "SoftwareApplication",
+              "name": "Minecraft: La Hora del Código Offline",
+              "url": "https://hourofcode.playcode.com.ar/",
+              "applicationCategory": "EducationalApplication",
+              "operatingSystem": "Web Browser"
+            },
+            {
+              "@type": "SoftwareApplication",
+              "name": "BrainBlox by Play Code",
+              "url": "https://brainblox.playcode.com.ar/",
+              "applicationCategory": "EducationalApplication",
+              "operatingSystem": "Web Browser"
+            },
+            {
+              "@type": "SoftwareApplication",
+              "name": "Tower Defense CSS Flexbox",
+              "url": "https://flexboxdefense.playcode.com.ar/",
+              "applicationCategory": "EducationalApplication",
+              "operatingSystem": "Web Browser"
+            },
+            {
+              "@type": "SoftwareApplication",
+              "name": "Cloud Constructor 3D",
+              "url": "https://cloudconstructor.playcode.com.ar/",
+              "applicationCategory": "EducationalApplication",
+              "operatingSystem": "Web Browser"
+            },
+            {
+              "@type": "SoftwareApplication",
+              "name": "CodeCraft - Programa con Minecraft",
+              "url": "https://codecraft.playcode.com.ar/",
+              "applicationCategory": "EducationalApplication",
+              "operatingSystem": "Web Browser"
+            }
+          ]
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://playcode.com.ar/#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "¿Qué es Play Code y qué metodología utiliza?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Play Code es un ecosistema educativo tecnológico de aprendizaje STEAM enfocado en enseñar pensamiento computacional, robótica y programación mediante simuladores interactivos propios, gamificación y entornos 3D en la nube."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "¿A partir de qué edad pueden aprender a programar los niños en Play Code?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Los niños pueden comenzar a partir de los 5 años con entornos visuales por bloques como BrainBlox, y avanzar hacia lógica intermedia y avanzada (+9 y +12 años) con Minecraft Modding, Cloud Constructor 3D y desarrollo de videojuegos."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "¿Qué herramientas y simuladores interactivos propios ofrece Play Code?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Play Code ofrece acceso libre a simuladores propios: BrainBlox para programación en bloques, Minecraft Hora del Código offline, CodeCraft para lógica 3D, Cloud Constructor y Tower Defense para lógica web."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+</head>
+<body class="min-h-screen bg-slate-50 font-sans selection:bg-indigo-100 selection:text-indigo-900 antialiased">
+
+  <!-- NAVBAR -->
+  <nav id="navbar" class="fixed top-0 w-full z-50 transition-all duration-300 bg-transparent py-5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center gap-3">
+          <div class="bg-[#001F4A] p-2 border-2 border-slate-900 shadow-[2px_2px_0_0_#0f172a] text-[#F2900F]">
+            <i data-lucide="code-2" class="w-6 h-6"></i>
+          </div>
+          <span class="font-pixel text-xl sm:text-2xl tracking-wide text-slate-900">
+            Play Code
+          </span>
+        </div>
+
+        <!-- Desktop Nav -->
+        <div class="hidden md:flex items-center gap-6 lg:gap-8">
+          <a href="#nosotros" class="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors uppercase tracking-widest">Nosotros</a>
+          <a href="#recursos" class="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors uppercase tracking-widest">Recursos</a>
+          <a href="#escuelas" class="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors uppercase tracking-widest">Para Escuelas</a>
+          <a href="#empresas" class="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors uppercase tracking-widest">Para Empresas</a>
+          <a href="https://business.playcode.com.ar" target="_blank" rel="noopener noreferrer" class="text-xs lg:text-sm font-bold text-slate-900 hover:text-indigo-700 transition-colors uppercase tracking-wider flex items-center gap-1.5 bg-[#ffe66d] px-3 py-2 border-2 border-slate-900 shadow-[2px_2px_0_0_#0f172a]">
+            <span>Campus Empresas</span>
+            <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+          </a>
+          <a href="https://edu.playcode.com.ar/wp-login.php" target="_blank" rel="noopener noreferrer" class="px-5 py-2 bg-[#ff6b6b] hover:bg-[#ff5252] text-white text-xs lg:text-sm font-pixel tracking-wide border-2 border-slate-900 shadow-[3px_3px_0_0_#0f172a] active:translate-y-[2px] active:translate-x-[2px] transition-all">
+            PLATAFORMA EDUCATIVA
+          </a>
+        </div>
+
+        <!-- Mobile Menu Button -->
+        <button id="mobile-menu-btn" class="md:hidden text-slate-600 focus:outline-none">
+          <i data-lucide="menu" class="w-6 h-6" id="menu-icon"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Nav -->
+    <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-100 w-full absolute left-0 top-full shadow-lg">
+      <div class="px-4 py-4 space-y-4 flex flex-col">
+        <a href="#nosotros" onclick="toggleMobileMenu()" class="text-base font-medium text-slate-600 hover:text-indigo-600">Nosotros</a>
+        <a href="#recursos" onclick="toggleMobileMenu()" class="text-base font-medium text-slate-600 hover:text-indigo-600">Recursos</a>
+        <a href="#escuelas" onclick="toggleMobileMenu()" class="text-base font-medium text-slate-600 hover:text-indigo-600">Para Escuelas</a>
+        <a href="#empresas" onclick="toggleMobileMenu()" class="text-base font-medium text-slate-600 hover:text-indigo-600">Para Empresas</a>
+        <a href="https://business.playcode.com.ar" target="_blank" rel="noopener noreferrer" class="text-base font-bold text-slate-900 flex items-center justify-between bg-[#ffe66d] p-3 border-2 border-slate-900 shadow-[2px_2px_0_0_#0f172a]">
+          <span>Campus Empresas (Business)</span>
+          <i data-lucide="external-link" class="w-4 h-4"></i>
+        </a>
+        <a href="https://edu.playcode.com.ar/wp-login.php" target="_blank" rel="noopener noreferrer" class="w-full px-6 py-3 bg-[#ff6b6b] hover:bg-[#ff5252] text-white text-sm font-pixel tracking-wide border-2 border-slate-900 shadow-[3px_3px_0_0_#0f172a] text-center uppercase">
+          PLATAFORMA EDUCATIVA (ESCUELAS / ALUMNOS)
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO SECTION -->
+  <section class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-slate-50">
+    <!-- Pixel Grid Background -->
+    <div class="absolute inset-0 opacity-10 pointer-events-none pixel-grid"></div>
+    
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+      <div class="absolute top-20 right-10 w-16 h-16 bg-yellow-400 border-4 border-slate-900 shadow-[8px_8px_0_0_rgba(15,23,42,0.1)] animate-bounce" style="animation-duration: 3s;"></div>
+      <div class="absolute bottom-20 left-10 w-24 h-24 bg-purple-400 border-4 border-slate-900 shadow-[8px_8px_0_0_rgba(15,23,42,0.1)] rounded-full animate-pulse"></div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div class="text-center max-w-4xl mx-auto">
+        <div class="inline-flex items-center gap-2 px-4 py-2 bg-[#4ecdc4] border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a] text-slate-900 font-pixel tracking-wide mb-8 text-xs sm:text-sm">
+          <i data-lucide="sparkles" class="w-4 h-4"></i>
+          <span class="leading-relaxed">🔥 100% ONLINE EN VIVO · TODA ARGENTINA Y LATAM</span>
+        </div>
+        
+        <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-slate-900 tracking-tight mb-8">
+          De consumidores de pantallas a <br class="hidden sm:block"/>
+          <span class="font-pixel text-2xl sm:text-4xl md:text-5xl lg:text-6xl text-indigo-600 tracking-wider block mt-4 sm:mt-6 text-shadow-slate">
+            CREADORES CON IA
+          </span>
+        </h1>
+
+        <p class="text-lg md:text-xl text-slate-600 mb-10 max-w-3xl mx-auto leading-relaxed font-medium">
+          Formamos a la próxima generación en <strong>Vibecoding e Inteligencia Artificial</strong> para chicos de 9 a 16 años. 
+          No memorizan código aburrido: aprenden a dirigir a la IA para construir sus propios videojuegos, herramientas y proyectos web con lógica y pensamiento crítico.
+        </p>
+
+        <div class="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
+          <a href="https://wa.me/541173708555?text=%C2%A1Hola%20Play%20Code!%20Quiero%20reservar%20una%20Clase%20de%20Prueba%20Sin%20Costo%20de%20Vibecoding%20con%20IA%20para%20mi%20hijo/a.%20%F0%9F%91%8B" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-4 bg-[#25D366] hover:bg-[#20bd5a] text-slate-950 font-pixel tracking-wide border-4 border-slate-900 shadow-[6px_6px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[6px] active:translate-x-[6px] transition-all text-sm sm:text-base w-full sm:w-auto">
+            <i data-lucide="message-circle" class="w-5 h-5 shrink-0"></i>
+            CLASE DEMO GRATIS (WHATSAPP)
+          </a>
+          <a href="#recursos" class="inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-4 bg-[#ffe66d] hover:bg-[#ffd166] text-slate-900 font-pixel tracking-wide border-4 border-slate-900 shadow-[6px_6px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[6px] active:translate-x-[6px] transition-all text-sm sm:text-base w-full sm:w-auto">
+            <i data-lucide="sparkles" class="w-5 h-5 shrink-0"></i>
+            SIMULADORES INTERACTIVOS
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LEAD MAGNET / CLASE DE PRUEBA EN VIVO -->
+  <section id="clase-gratis" class="py-12 bg-[#ffe66d] border-y-4 border-slate-900 relative">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="bg-white border-4 border-slate-900 shadow-[8px_8px_0_0_#0f172a] p-6 sm:p-10 flex flex-col lg:flex-row items-center justify-between gap-8">
+        <div class="flex-1">
+          <div class="inline-flex items-center gap-2 px-3 py-1 bg-[#ff6b6b] text-white border-2 border-slate-900 font-pixel text-xs mb-3 shadow-[2px_2px_0_0_#0f172a]">
+            <span>🔥 CUPOS LIMITADOS POR SEMANA</span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 mb-3 leading-tight">
+            Clase de Prueba en Vivo Sin Costo
+          </h2>
+          <p class="text-slate-700 text-base sm:text-lg font-medium leading-relaxed">
+            ¿Querés ver a tu hijo/a crear su primer videojuego con Inteligencia Artificial en 60 minutos? Una experiencia 100% práctica en grupos reducidos para que descubra su potencial creador sin moverte de casa.
+          </p>
+        </div>
+        <div class="w-full lg:w-auto flex flex-col sm:flex-row items-center gap-4">
+          <a href="https://wa.me/541173708555?text=%C2%A1Hola%20Play%20Code!%20Quiero%20reservar%20el%20lugar%20de%20mi%20hijo/a%20para%20la%20pr%C3%B3xima%20Clase%20de%20Prueba%20de%20Vibecoding%20con%20IA.%20%F0%9F%91%8B" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 bg-[#25D366] hover:bg-[#20bd5a] text-slate-950 font-pixel tracking-wide border-4 border-slate-900 shadow-[6px_6px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[6px] active:translate-x-[6px] transition-all text-sm sm:text-base text-center">
+            <i data-lucide="calendar" class="w-5 h-5 shrink-0"></i>
+            RESERVAR LUGAR GRATIS 👋
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT / NOSOTROS SECTION -->
+  <section id="nosotros" class="py-24 bg-white relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-24">
+      
+      <!-- Top section: About Us Intro and Parque Tecnológico -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+        <div>
+          <div class="inline-block px-3 py-1 bg-purple-100 border-2 border-slate-900 shadow-[2px_2px_0_0_#0f172a] text-purple-700 text-sm font-pixel tracking-wide mb-6">
+            SOBRE NOSOTROS
+          </div>
+          <h2 class="text-4xl font-bold text-slate-900 mb-6 leading-tight">
+            Más de 7 años transformando la educación
+          </h2>
+          <p class="text-lg text-slate-600 mb-6 leading-relaxed">
+            En Play Code diseñamos, planificamos y llevamos adelante experiencias 
+            educativas innovadoras utilizando el enfoque <strong>S.T.E.A.M.</strong> 
+            (Ciencia, Tecnología, Ingeniería, Arte y Matemáticas).
+          </p>
+          <p class="text-lg text-slate-600 mb-8 leading-relaxed">
+            Nuestro propósito es despertar el amor por el conocimiento científico 
+            y tecnológico, trabajando de forma integral para potenciar habilidades.
+          </p>
+        </div>
+
+        <div>
+          <div class="bg-slate-900 p-8 text-white border-4 border-indigo-500 shadow-[8px_8px_0_0_#4f46e5] relative overflow-hidden mt-0 lg:mt-24">
+            <div class="absolute top-0 right-0 -mt-4 -mr-4 opacity-10">
+              <i data-lucide="cpu" class="w-32 h-32 text-indigo-500"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-3 flex items-center gap-2">
+              <i data-lucide="cloud" class="text-purple-200 w-5 h-5"></i> Ecosistema & Laboratorio Cloud
+            </h3>
+            <p class="text-indigo-100 mb-4 leading-relaxed">
+              Nuestros alumnos no necesitan instalar software complejo. Acceden a <strong>simuladores interactivos en la nube</strong> y entornos de desarrollo guiados donde programan lógica 3D, modding de Minecraft y proyectos de <strong>Vibecoding con Inteligencia Artificial</strong> en tiempo real.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Middle section: El Equipo Directivo -->
+      <div class="bg-slate-50 p-6 md:p-10 border-4 border-slate-900 shadow-[8px_8px_0_0_#0f172a]">
+        <h3 class="font-pixel text-2xl text-slate-900 mb-10 flex items-center gap-3">
+          <i data-lucide="users" class="text-indigo-600 w-8 h-8"></i> EL EQUIPO DIRECTIVO
+        </h3>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          <!-- Erica -->
+          <div class="flex flex-col gap-6">
+            <img src="eri.jpg" alt="Erica Diaz" class="w-full aspect-square object-cover shadow-[8px_8px_0_0_#0f172a] border-2 border-slate-900 transition-all duration-300 hover:grayscale">
+            <div>
+              <h4 class="font-bold text-xl text-slate-900">Erica Diaz</h4>
+              <p class="text-sm font-semibold text-purple-600 mb-3">Co-fundadora · Pedagogía Digital, IA & Diseño de Experiencias</p>
+              <div class="text-sm text-slate-700 space-y-3 leading-relaxed">
+                <p>Docente, diseñadora de experiencias educativas y especialista en adopción tecnológica y crianza digital. Lleva más de 8 años investigando y liderando la enseñanza de habilidades digitales, programación y pensamiento computacional en niños y jóvenes desde Play Code, la plataforma que co-fundó en 2017.</p>
+                <p>Tiene formación en Tecnología Educativa (UTN), Diploma Superior en Educación y Nuevas Tecnologías (FLACSO) y fue reconocida como emprendedora destacada por la Secretaría de Ambiente y Desarrollo Sustentable de la Nación.</p>
+                <p>En <a href="https://www.linkedin.com/company/devtechar/" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:underline font-semibold">DevTech</a> y Play Code lidera la formación docente y el diseño curricular: cómo se enseña la tecnología y la Inteligencia Artificial importa tanto como la herramienta misma.</p>
+                <p class="italic font-medium text-slate-900 border-l-4 border-purple-400 pl-4 mt-4 py-1">"No basta con implementar una herramienta. Hay que diseñar la experiencia para que las personas quieran y puedan usarla."</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Juan -->
+          <div class="flex flex-col gap-6">
+            <img src="juan.jpg" alt="Juan Pacheco" class="w-full aspect-square object-cover shadow-[8px_8px_0_0_#0f172a] border-2 border-slate-900 transition-all duration-300 hover:grayscale">
+            <div>
+              <h4 class="font-bold text-xl text-slate-900">Juan Pacheco</h4>
+              <p class="text-sm font-semibold text-indigo-600 mb-3">Co-fundador · Arquitectura EdTech & Estrategia en IA</p>
+              <div class="text-sm text-slate-700 space-y-3 leading-relaxed">
+                <p>Desarrollador y arquitecto EdTech con más de 20 años de trayectoria: Experto Universitario en Counseling y Diplomado en Gestión Educativa con mención en IA y Análisis de Datos (UTN), certificado en Microsoft Azure AI y en IA aplicada por la Universidad de Maryland.</p>
+                <p>Co-fundó Play Code en 2017, donde acompañó a más de 600 familias en el desarrollo de habilidades tecnológicas. Creador de la metodología de Vibecoding con IA para chicos de 9 a 16 años y diseñador de arquitecturas multitenant (Campus Manager) para colegios y organizaciones que necesitan escalar su formación digital sin fricciones técnicas.</p>
+                <p>En <a href="https://www.linkedin.com/company/devtechar/" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:underline font-semibold">DevTech</a> diseña soluciones e infraestructuras inteligentes con foco en que la Inteligencia Artificial potencie a las personas y genere un impacto real y medible.</p>
+                <p class="italic font-medium text-slate-900 border-l-4 border-indigo-400 pl-4 mt-4 py-1">"Construir la solución técnica es solo la mitad del trabajo. La otra mitad es acompañar a las personas que tienen que usarla."</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom section: Beneficios STEAM -->
+      <div class="max-w-4xl mx-auto">
+        <h3 class="font-pixel text-2xl text-slate-900 mb-8 text-center">BENEFICIOS S.T.E.A.M.</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="flex items-center gap-4 bg-white p-4 border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a] hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#0f172a] transition-all">
+            <div class="bg-indigo-100 p-3 border-2 border-slate-900 text-indigo-600">
+              <i data-lucide="lightbulb" class="w-6 h-6"></i>
+            </div>
+            <span class="text-slate-800 font-medium text-lg">Favorece el aprendizaje autónomo</span>
+          </div>
+
+          <div class="flex items-center gap-4 bg-white p-4 border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a] hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#0f172a] transition-all">
+            <div class="bg-indigo-100 p-3 border-2 border-slate-900 text-indigo-600">
+              <i data-lucide="brain" class="w-6 h-6"></i>
+            </div>
+            <span class="text-slate-800 font-medium text-lg">Aumenta la retención y comprensión de conceptos</span>
+          </div>
+
+          <div class="flex items-center gap-4 bg-white p-4 border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a] hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#0f172a] transition-all">
+            <div class="bg-indigo-100 p-3 border-2 border-slate-900 text-indigo-600">
+              <i data-lucide="message-square" class="w-6 h-6"></i>
+            </div>
+            <span class="text-slate-800 font-medium text-lg">Mejora la creatividad y la comunicación</span>
+          </div>
+
+          <div class="flex items-center gap-4 bg-white p-4 border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a] hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#0f172a] transition-all">
+            <div class="bg-indigo-100 p-3 border-2 border-slate-900 text-indigo-600">
+              <i data-lucide="users" class="w-6 h-6"></i>
+            </div>
+            <span class="text-slate-800 font-medium text-lg">Fomenta el trabajo en equipo y colaborativo</span>
+          </div>
+
+          <div class="flex items-center gap-4 bg-white p-4 border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a] hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#0f172a] transition-all">
+            <div class="bg-indigo-100 p-3 border-2 border-slate-900 text-indigo-600">
+              <i data-lucide="bot" class="w-6 h-6"></i>
+            </div>
+            <span class="text-slate-800 font-medium text-lg">Pensamiento crítico y dirección de IA</span>
+          </div>
+
+          <div class="flex items-start sm:items-center gap-4 bg-white p-4 border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a] hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#0f172a] transition-all md:col-span-2 w-full max-w-2xl mx-auto">
+            <div class="bg-[#ff6b6b] p-3 border-2 border-slate-900 text-white shrink-0 mt-1 sm:mt-0">
+              <i data-lucide="shield-check" class="w-6 h-6"></i>
+            </div>
+            <div class="flex flex-col">
+              <span class="text-slate-900 font-bold text-lg mb-1">Ciudadanía Digital y Entorno Seguro</span>
+              <span class="text-slate-600 text-sm font-medium leading-relaxed">
+                No solo enseñamos tecnología. Fomentamos valores, prevenimos riesgos digitales 
+                y acompañamos a la familia para un uso sano de las herramientas.
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- RESOURCES / RECURSOS SECTION -->
+  <section id="recursos" class="py-24 bg-[#ff6b6b] relative border-y-8 border-slate-900">
+    <!-- Grid Pattern -->
+    <div class="absolute inset-0 opacity-20 pointer-events-none pixel-grid-colored"></div>
+    
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div class="text-center max-w-3xl mx-auto mb-16">
+        <div class="inline-block px-3 py-1 bg-white border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a] text-slate-900 font-pixel tracking-wide mb-4">
+          LABORATORIO INTERACTIVO EN LA NUBE
+        </div>
+        <h2 class="text-4xl md:text-5xl font-bold text-white mb-4 text-shadow-black">
+          Simuladores Propios Sin Instalación
+        </h2>
+        <p class="text-xl text-white font-medium text-shadow-black-sm">
+          Herramientas y simuladores desarrollados exclusivamente por Play Code que los alumnos usan en vivo desde cualquier navegador: lógica 3D, entornos en bloques, Minecraft y desarrollo web.
+        </p>
+      </div>
+
+      <div id="recursos-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <!-- Recurso 1: Minecraft: La Hora del Código -->
+        <div class="bg-white p-4 sm:p-5 border-[3px] border-slate-900 shadow-[5px_5px_0_0_#0f172a] hover:shadow-[8px_8px_0_0_#0f172a] hover:-translate-y-1 transition-all relative flex flex-col">
+          <div class="relative mb-3.5 overflow-hidden border-2 border-slate-900 shadow-[2px_2px_0_0_#0f172a] aspect-video bg-slate-100">
+            <img src="https://edu.playcode.com.ar/wp-content/uploads/2026/08/mc-hour.jpg" alt="Minecraft: La Hora del Código" class="w-full h-full object-cover">
+            <div class="absolute top-1.5 right-1.5 bg-[#4ecdc4] border-2 border-slate-900 text-slate-900 font-pixel text-[10px] px-2 py-0.5 shadow-[1.5px_1.5px_0_0_#0f172a]">
+              Edad: 9+
+            </div>
+          </div>
+          <div class="flex-1 flex flex-col justify-between">
+            <h3 class="text-base sm:text-lg font-bold text-slate-900 mb-3 line-clamp-1">Minecraft: La Hora del Código</h3>
+            <a href="https://hourofcode.playcode.com.ar/" target="_blank" rel="noopener noreferrer" class="w-full py-2.5 px-3 bg-[#4ecdc4] hover:bg-[#3dbdb4] text-slate-900 font-pixel text-[11px] tracking-wide border-2 border-slate-900 shadow-[3px_3px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[3px] active:translate-x-[3px] transition-all text-center block uppercase">
+              Acceder al Recurso ↗
+            </a>
+          </div>
+        </div>
+
+        <!-- Recurso 2: BrainBlox by Play Code -->
+        <div class="bg-white p-4 sm:p-5 border-[3px] border-slate-900 shadow-[5px_5px_0_0_#0f172a] hover:shadow-[8px_8px_0_0_#0f172a] hover:-translate-y-1 transition-all relative flex flex-col">
+          <div class="relative mb-3.5 overflow-hidden border-2 border-slate-900 shadow-[2px_2px_0_0_#0f172a] aspect-video bg-slate-100">
+            <img src="https://edu.playcode.com.ar/wp-content/uploads/2026/08/brainblox.png" alt="BrainBlox by Play Code" class="w-full h-full object-cover">
+            <div class="absolute top-1.5 right-1.5 bg-[#ffe66d] border-2 border-slate-900 text-slate-900 font-pixel text-[10px] px-2 py-0.5 shadow-[1.5px_1.5px_0_0_#0f172a]">
+              Edad: +5
+            </div>
+          </div>
+          <div class="flex-1 flex flex-col justify-between">
+            <h3 class="text-base sm:text-lg font-bold text-slate-900 mb-3 line-clamp-1">BrainBlox by Play Code</h3>
+            <a href="https://brainblox.playcode.com.ar/" target="_blank" rel="noopener noreferrer" class="w-full py-2.5 px-3 bg-[#ffe66d] hover:bg-[#ffd166] text-slate-900 font-pixel text-[11px] tracking-wide border-2 border-slate-900 shadow-[3px_3px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[3px] active:translate-x-[3px] transition-all text-center block uppercase">
+              Acceder al Recurso ↗
+            </a>
+          </div>
+        </div>
+
+        <!-- Recurso 3: Tower Defense by Play Code -->
+        <div class="bg-white p-4 sm:p-5 border-[3px] border-slate-900 shadow-[5px_5px_0_0_#0f172a] hover:shadow-[8px_8px_0_0_#0f172a] hover:-translate-y-1 transition-all relative flex flex-col">
+          <div class="relative mb-3.5 overflow-hidden border-2 border-slate-900 shadow-[2px_2px_0_0_#0f172a] aspect-video bg-slate-100">
+            <img src="https://edu.playcode.com.ar/wp-content/uploads/2026/08/tower.jpg" alt="Tower Defense by Play Code" class="w-full h-full object-cover">
+            <div class="absolute top-1.5 right-1.5 bg-[#ff6b6b] border-2 border-slate-900 text-white font-pixel text-[10px] px-2 py-0.5 shadow-[1.5px_1.5px_0_0_#0f172a]">
+              Edad: +12
+            </div>
+          </div>
+          <div class="flex-1 flex flex-col justify-between">
+            <h3 class="text-base sm:text-lg font-bold text-slate-900 mb-3 line-clamp-1">Tower Defense by Play Code</h3>
+            <a href="https://flexboxdefense.playcode.com.ar/" target="_blank" rel="noopener noreferrer" class="w-full py-2.5 px-3 bg-[#ff6b6b] hover:bg-[#ff5252] text-white font-pixel text-[11px] tracking-wide border-2 border-slate-900 shadow-[3px_3px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[3px] active:translate-x-[3px] transition-all text-center block uppercase">
+              Acceder al Recurso ↗
+            </a>
+          </div>
+        </div>
+
+        <!-- Recurso 4: Cloud Constructor -->
+        <div class="bg-white p-4 sm:p-5 border-[3px] border-slate-900 shadow-[5px_5px_0_0_#0f172a] hover:shadow-[8px_8px_0_0_#0f172a] hover:-translate-y-1 transition-all relative flex flex-col">
+          <div class="relative mb-3.5 overflow-hidden border-2 border-slate-900 shadow-[2px_2px_0_0_#0f172a] aspect-video bg-slate-100">
+            <img src="https://edu.playcode.com.ar/wp-content/uploads/2026/08/cloudcons.jpg" alt="Cloud Constructor" class="w-full h-full object-cover">
+            <div class="absolute top-1.5 right-1.5 bg-[#a78bfa] border-2 border-slate-900 text-slate-900 font-pixel text-[10px] px-2 py-0.5 shadow-[1.5px_1.5px_0_0_#0f172a]">
+              Edad: +9
+            </div>
+          </div>
+          <div class="flex-1 flex flex-col justify-between">
+            <h3 class="text-base sm:text-lg font-bold text-slate-900 mb-3 line-clamp-1">Cloud Constructor</h3>
+            <a href="https://cloudconstructor.playcode.com.ar/" target="_blank" rel="noopener noreferrer" class="w-full py-2.5 px-3 bg-[#a78bfa] hover:bg-[#906ef5] text-slate-900 font-pixel text-[11px] tracking-wide border-2 border-slate-900 shadow-[3px_3px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[3px] active:translate-x-[3px] transition-all text-center block uppercase">
+              Acceder al Recurso ↗
+            </a>
+          </div>
+        </div>
+
+        <!-- Recurso 5: Programa con Minecraft -->
+        <div class="bg-white p-4 sm:p-5 border-[3px] border-slate-900 shadow-[5px_5px_0_0_#0f172a] hover:shadow-[8px_8px_0_0_#0f172a] hover:-translate-y-1 transition-all relative flex flex-col">
+          <div class="relative mb-3.5 overflow-hidden border-2 border-slate-900 shadow-[2px_2px_0_0_#0f172a] aspect-video bg-slate-100">
+            <img src="https://edu.playcode.com.ar/wp-content/uploads/2026/08/codecraft202a.png" alt="Programa con Minecraft" class="w-full h-full object-cover">
+            <div class="absolute top-1.5 right-1.5 bg-[#4ecdc4] border-2 border-slate-900 text-slate-900 font-pixel text-[10px] px-2 py-0.5 shadow-[1.5px_1.5px_0_0_#0f172a]">
+              Edad: +9
+            </div>
+          </div>
+          <div class="flex-1 flex flex-col justify-between">
+            <h3 class="text-base sm:text-lg font-bold text-slate-900 mb-3 line-clamp-1">Programa con Minecraft</h3>
+            <a href="https://codecraft.playcode.com.ar/" target="_blank" rel="noopener noreferrer" class="w-full py-2.5 px-3 bg-[#4ecdc4] hover:bg-[#3dbdb4] text-slate-900 font-pixel text-[11px] tracking-wide border-2 border-slate-900 shadow-[3px_3px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[3px] active:translate-x-[3px] transition-all text-center block uppercase">
+              Acceder al Recurso ↗
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCHOOLS / ESCUELAS SECTION -->
+  <section id="escuelas" class="py-24 bg-white relative overflow-hidden">
+    <div class="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
+    
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col lg:flex-row gap-16">
+        
+        <div class="lg:w-1/3">
+          <div class="lg:sticky lg:top-32">
+            <h2 class="text-4xl md:text-5xl font-bold text-[#0F172B] mb-6 leading-tight" style="text-shadow: 4px 4px 0 #e2e8f0;">
+              EL <span class="text-[#FF6B6B]">ALIADO ACADÉMICO</span> PARA TU COLEGIO
+            </h2>
+            <p class="text-lg text-slate-600 mb-8 font-medium">
+              Desarrollamos y coordinamos la estrategia de Educación Digital 
+              institucional desde sala de 4 años hasta 5to año de secundaria.
+            </p>
+            <div class="flex flex-col sm:flex-row lg:flex-col gap-3">
+              <a href="https://wa.me/5491173708555?text=Hola,%20quiero%20solicitar%20informaci%C3%B3n%20sobre%20el%20servicio%20de%20asesor%C3%ADa%20para%20colegios" target="_blank" rel="noopener noreferrer" class="text-center px-6 py-3 bg-[#4ecdc4] hover:bg-[#3dbdb4] text-slate-900 font-pixel text-xs sm:text-sm tracking-wide border-4 border-slate-900 shadow-[5px_5px_0_0_#0f172a] active:translate-y-[4px] active:translate-x-[4px] transition-all">
+                CONTACTAR A ASESORÍA
+              </a>
+              <a href="https://edu.playcode.com.ar/wp-login.php" target="_blank" rel="noopener noreferrer" class="text-center px-6 py-2.5 bg-white hover:bg-slate-100 text-slate-900 font-pixel text-xs tracking-wide border-2 border-slate-900 shadow-[3px_3px_0_0_#0f172a] flex items-center justify-center gap-2">
+                <i data-lucide="graduation-cap" class="w-4 h-4 text-indigo-600"></i>
+                <span>INGRESAR A EDU.PLAYCODE</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:w-2/3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <!-- Service 1 (Highlighted) -->
+            <div class="p-6 border-4 border-slate-900 hover:-translate-y-1 transition-all shadow-[6px_6px_0_0_#0f172a] hover:shadow-[10px_10px_0_0_#0f172a] bg-[#ffe66d] sm:col-span-2">
+              <div class="w-12 h-12 border-2 border-slate-900 flex items-center justify-center mb-6 shadow-[2px_2px_0_0_#0f172a] bg-[#ff6b6b] text-white">
+                <i data-lucide="school" class="w-6 h-6"></i>
+              </div>
+              <h3 class="font-pixel text-xl text-slate-900 mb-3 uppercase">Implementación Curricular</h3>
+              <p class="text-slate-800 font-medium leading-relaxed">Diseñamos la ruta de aprendizaje articulando programación, robótica e IA directamente dentro del horario escolar.</p>
+            </div>
+
+            <!-- Service 2 -->
+            <div class="p-6 border-4 border-slate-900 hover:-translate-y-1 transition-all shadow-[6px_6px_0_0_#0f172a] hover:shadow-[10px_10px_0_0_#0f172a] bg-white">
+              <div class="w-12 h-12 border-2 border-slate-900 flex items-center justify-center mb-6 shadow-[2px_2px_0_0_#0f172a] bg-[#4ecdc4] text-slate-900">
+                <i data-lucide="puzzle" class="w-6 h-6"></i>
+              </div>
+              <h3 class="font-pixel text-xl text-slate-900 mb-3 uppercase">Talleres Extraescolares</h3>
+              <p class="text-slate-800 font-medium leading-relaxed">1 hora semanal con actividades planificadas y kits propios. Disponible en opción presencial o virtual.</p>
+            </div>
+
+            <!-- Service 3 -->
+            <div class="p-6 border-4 border-slate-900 hover:-translate-y-1 transition-all shadow-[6px_6px_0_0_#0f172a] hover:shadow-[10px_10px_0_0_#0f172a] bg-white">
+              <div class="w-12 h-12 border-2 border-slate-900 flex items-center justify-center mb-6 shadow-[2px_2px_0_0_#0f172a] bg-[#4ecdc4] text-slate-900">
+                <i data-lucide="calendar-days" class="w-6 h-6"></i>
+              </div>
+              <h3 class="font-pixel text-xl text-slate-900 mb-3 uppercase">Días Especiales</h3>
+              <p class="text-slate-800 font-medium leading-relaxed">"Club del Codigo en la escuela": actividades de programación y robótica diseñadas para alumnos de 5 a 13 años.</p>
+            </div>
+
+            <!-- Service 4 -->
+            <div class="p-6 border-4 border-slate-900 hover:-translate-y-1 transition-all shadow-[6px_6px_0_0_#0f172a] hover:shadow-[10px_10px_0_0_#0f172a] bg-white">
+              <div class="w-12 h-12 border-2 border-slate-900 flex items-center justify-center mb-6 shadow-[2px_2px_0_0_#0f172a] bg-[#4ecdc4] text-slate-900">
+                <i data-lucide="graduation-cap" class="w-6 h-6"></i>
+              </div>
+              <h3 class="font-pixel text-xl text-slate-900 mb-3 uppercase">Capacitación Docente</h3>
+              <p class="text-slate-800 font-medium leading-relaxed">Recursos como "Aula STEAM" para alfabetización digital y "Workshop de IA para docentes" usando herramientas como Google AI Studio. Disponible en opción presencial o virtual.</p>
+            </div>
+
+            <!-- Service 5 -->
+            <div class="p-6 border-4 border-slate-900 hover:-translate-y-1 transition-all shadow-[6px_6px_0_0_#0f172a] hover:shadow-[10px_10px_0_0_#0f172a] bg-white">
+              <div class="w-12 h-12 border-2 border-slate-900 flex items-center justify-center mb-6 shadow-[2px_2px_0_0_#0f172a] bg-[#4ecdc4] text-slate-900">
+                <i data-lucide="mic" class="w-6 h-6"></i>
+              </div>
+              <h3 class="font-pixel text-xl text-slate-900 mb-3 uppercase">Conferencias para Familias</h3>
+              <p class="text-slate-800 font-medium leading-relaxed">Charlas sobre tecnología y educación digital impartidas por Erica Diaz, experta en educación digital y familia.</p>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </section>
+
+  <!-- B2B CORPORATE CAMPUS HIGHLIGHT BANNER -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mb-12 relative z-20">
+    <div class="bg-slate-950 text-white border-4 border-slate-900 shadow-[8px_8px_0_0_#0f172a] p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-4">
+        <div class="p-3 bg-[#ffe66d] text-slate-900 border-2 border-slate-900 shadow-[3px_3px_0_0_#0f172a] shrink-0">
+          <i data-lucide="briefcase" class="w-8 h-8"></i>
+        </div>
+        <div>
+          <h3 class="font-pixel text-lg sm:text-xl text-white mb-1">Capacitación y Formación para Empresas</h3>
+          <p class="text-slate-300 text-sm sm:text-base font-medium">Descubrí <strong>business.playcode.com.ar</strong>: plataformas de capacitación corporativa, Team Building y programas de innovación para tus equipos.</p>
+        </div>
+      </div>
+      <a href="https://business.playcode.com.ar" target="_blank" rel="noopener noreferrer" class="shrink-0 px-6 py-3 bg-[#4ecdc4] hover:bg-[#3dbdb4] text-slate-900 font-pixel text-xs sm:text-sm tracking-wide border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a] active:translate-y-[2px] active:translate-x-[2px] transition-all flex items-center gap-2">
+        <span>IR A PLAY CODE BUSINESS</span>
+        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- CORPORATE / EMPRESAS SECTION -->
+  <section id="empresas" class="py-24 bg-slate-900 text-white relative overflow-hidden border-t-8 border-slate-900">
+    <!-- Background Glow & Pixel Grid -->
+    <div class="absolute inset-0 opacity-10 pointer-events-none pixel-grid-cyan"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div class="text-center max-w-3xl mx-auto mb-16">
+        <h2 class="font-pixel text-2xl sm:text-3xl md:text-5xl font-bold mb-6 text-[#4ecdc4] text-shadow-black">PROPUESTAS PARA EMPRESAS</h2>
+        <p class="text-lg text-slate-300 font-medium">
+          Orientados a fomentar la innovación, la cultura corporativa, el team building 
+          y el impacto social positivo mediante la tecnología.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        
+        <!-- Family Day -->
+        <div class="bg-slate-800 border-4 border-[#ff6b6b] p-8 shadow-[8px_8px_0_0_#ff6b6b] hover:-translate-y-1 hover:shadow-[12px_12px_0_0_#ff6b6b] transition-all">
+          <div class="flex items-center gap-4 mb-6">
+            <div class="p-3 bg-[#ff6b6b] text-white border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a]">
+              <i data-lucide="heart-handshake" class="w-7 h-7"></i>
+            </div>
+            <h3 class="font-pixel text-xl sm:text-2xl tracking-wide text-white break-words">FAMILY DAY EN TU EMPRESA</h3>
+          </div>
+          <p class="text-slate-300 mb-8 font-medium">
+            Eventos lúdicos y educativos para que los empleados asistan y disfruten con sus hijos.
+          </p>
+          <div class="space-y-4">
+            <div class="bg-slate-900 p-4 border-2 border-slate-700 shadow-[4px_4px_0_0_#0f172a]">
+              <h4 class="font-pixel text-[#4ecdc4] flex items-center gap-2 mb-2 tracking-wide text-sm sm:text-base">
+                <i data-lucide="users" class="w-4 h-4"></i> ACTIVIDADES DESCONECTADAS
+              </h4>
+              <p class="text-sm text-slate-400 font-medium">Juegos y dinámicas de programación sin pantallas para disfrutar en familia.</p>
+            </div>
+            <div class="bg-slate-900 p-4 border-2 border-slate-700 shadow-[4px_4px_0_0_#0f172a]">
+              <h4 class="font-pixel text-[#ffe66d] flex items-center gap-2 mb-2 tracking-wide text-sm sm:text-base">
+                <i data-lucide="bot" class="w-4 h-4"></i> ROBOT PARTY
+              </h4>
+              <p class="text-sm text-slate-400 font-medium">Armado y programación de robots propios con cartón, papel, y materiales creativos.</p>
+            </div>
+            <div class="bg-slate-900 p-4 border-2 border-slate-700 shadow-[4px_4px_0_0_#0f172a]">
+              <h4 class="font-pixel text-[#ff6b6b] flex items-center gap-2 mb-2 tracking-wide text-sm sm:text-base">
+                <i data-lucide="music" class="w-4 h-4"></i> BAILANDO AL RITMO DEL CÓDIGO
+              </h4>
+              <p class="text-sm text-slate-400 font-medium">Participantes programan secuencias y luego bailan las instrucciones creadas.</p>
+            </div>
+          </div>
+          <div class="mt-8">
+            <a href="https://wa.me/5491173708555?text=Hola,%20quiero%20solicitar%20informaci%C3%B3n%20sobre%20las%20propuestas%20corporativas%20y%20Family%20Day%20para%20empresas" target="_blank" rel="noopener noreferrer" class="w-full inline-block text-center px-6 py-3 bg-[#4ecdc4] hover:bg-[#3dbdb4] text-slate-900 font-pixel tracking-wide border-4 border-slate-900 shadow-[6px_6px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[6px] active:translate-x-[6px] transition-all">
+              CONTACTAR A ASESORÍA
+            </a>
+          </div>
+        </div>
+
+        <!-- Other Corporate Services -->
+        <div class="space-y-8">
+          <div class="bg-slate-800 border-4 border-slate-700 p-8 shadow-[6px_6px_0_0_#334155] hover:-translate-y-1 transition-all">
+            <div class="flex items-center gap-4 mb-4">
+              <div class="p-2 bg-[#ffe66d] text-slate-900 border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a]">
+                <i data-lucide="target" class="w-6 h-6"></i>
+              </div>
+              <h3 class="font-pixel text-base sm:text-xl tracking-wide text-white break-words">TEAM BUILDING TECNOLÓGICO</h3>
+            </div>
+            <p class="text-slate-300 font-medium">
+              Desafíos con kits de robótica para fortalecer el trabajo en equipo, la lógica y la 
+              resolución de problemas en equipos de profesionales.
+            </p>
+          </div>
+
+          <div class="bg-slate-800 border-4 border-slate-700 p-8 shadow-[6px_6px_0_0_#334155] hover:-translate-y-1 transition-all">
+            <div class="flex items-center gap-4 mb-4">
+              <div class="p-2 bg-[#9b5de5] text-white border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a]">
+                <i data-lucide="presentation" class="w-6 h-6"></i>
+              </div>
+              <h3 class="font-pixel text-base sm:text-xl tracking-wide text-white break-words">CONFERENCIAS PARA COLABORADORES</h3>
+            </div>
+            <p class="text-slate-300 mb-2 font-medium">
+              <strong class="text-[#4ecdc4]">Crianza Digital:</strong> Con Erica Diaz, estrategias para familias modernas.
+            </p>
+            <p class="text-slate-300 font-medium">
+              <strong class="text-[#4ecdc4]">Pensar en la era de la IA:</strong> Con Juan Pacheco, innovación y mentalidad de crecimiento.
+            </p>
+          </div>
+
+          <div class="bg-slate-800 border-4 border-[#4ecdc4] p-8 shadow-[6px_6px_0_0_#4ecdc4] hover:-translate-y-1 transition-all">
+            <div class="flex items-center gap-4 mb-4">
+              <div class="p-2 bg-[#4ecdc4] text-slate-900 border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a]">
+                <i data-lucide="briefcase" class="w-6 h-6"></i>
+              </div>
+              <h3 class="font-pixel text-base sm:text-xl tracking-wide text-white break-words">COLABORACIONES CON EMPRESAS</h3>
+            </div>
+            <p class="text-slate-300 font-medium">
+              Nos aliamos con actores sociales para acompañar a jovenes de bajos recursos a traves de clases en vivo de programación, desarrollo de videojuegos y habilidades blandas, buscando impactar a las futuras generaciones.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer id="contacto" class="bg-slate-950 text-slate-300 py-16 border-t-8 border-slate-900 relative">
+    <div class="absolute inset-0 opacity-5 pointer-events-none pixel-grid-cyan"></div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+        
+        <div class="lg:col-span-1">
+          <div class="flex items-center gap-3 mb-6 text-white">
+            <div class="bg-[#001F4A] p-2 border-2 border-slate-900 shadow-[2px_2px_0_0_#0f172a] text-[#F2900F]">
+              <i data-lucide="code-2" class="w-6 h-6"></i>
+            </div>
+            <span class="font-pixel font-bold text-xl sm:text-2xl tracking-wide">Play Code</span>
+          </div>
+          <p class="text-slate-400 text-sm leading-relaxed mb-6 font-medium">
+            Despertando el amor por la ciencia y tecnología a través del enfoque STEAM para formar los creadores del mañana.
+          </p>
+          <div class="flex gap-4">
+            <a href="https://www.instagram.com/playcodelatam/" target="_blank" rel="noopener noreferrer" class="bg-white/10 p-2 border-2 border-transparent hover:border-[#4ecdc4] text-slate-400 hover:text-[#4ecdc4] hover:shadow-[4px_4px_0_0_#4ecdc4] transition-all">
+              <i data-lucide="instagram" class="w-5 h-5"></i>
+            </a>
+            <a href="https://www.facebook.com/playcodelatam/" target="_blank" rel="noopener noreferrer" class="bg-white/10 p-2 border-2 border-transparent hover:border-[#ff6b6b] text-slate-400 hover:text-[#ff6b6b] hover:shadow-[4px_4px_0_0_#ff6b6b] transition-all">
+              <i data-lucide="facebook" class="w-5 h-5"></i>
+            </a>
+            <a href="https://www.linkedin.com/company/playcodelatam" target="_blank" rel="noopener noreferrer" class="bg-white/10 p-2 border-2 border-transparent hover:border-[#ffe66d] text-slate-400 hover:text-[#ffe66d] hover:shadow-[4px_4px_0_0_#ffe66d] transition-all">
+              <i data-lucide="linkedin" class="w-5 h-5"></i>
+            </a>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="font-pixel text-white mb-6 tracking-wide text-sm sm:text-base">NAVEGACIÓN</h4>
+          <ul id="footer-recursos-list" class="space-y-3 text-sm font-medium">
+            <li><a href="#nosotros" class="hover:text-[#4ecdc4] transition-colors">Sobre Nosotros</a></li>
+            <li><a href="#recursos" class="hover:text-[#4ecdc4] transition-colors">Recursos y Herramientas</a></li>
+            <li><a href="#escuelas" class="hover:text-[#4ecdc4] transition-colors">Propuestas para Escuelas</a></li>
+            <li><a href="#empresas" class="hover:text-[#4ecdc4] transition-colors">Experiencias Corporativas</a></li>
+          </ul>
+        </div>
+
+                <div>
+          <h4 class="font-pixel text-white mb-6 tracking-wide text-sm sm:text-base">RECURSOS DESTACADOS</h4>
+          <ul id="footer-recursos-list" class="space-y-3 text-sm font-medium">
+            <li><a href="https://hourofcode.playcode.com.ar/" target="_blank" class="hover:text-[#4ecdc4] transition-colors">Minecraft: Hora del Código</a></li>
+            <li><a href="https://brainblox.playcode.com.ar/" target="_blank" class="hover:text-[#4ecdc4] transition-colors">BrainBlox by Play Code</a></li>
+            <li><a href="https://flexboxdefense.playcode.com.ar/" target="_blank" class="hover:text-[#4ecdc4] transition-colors">Tower Defense by Play Code</a></li>
+            <li><a href="https://cloudconstructor.playcode.com.ar/" target="_blank" class="hover:text-[#4ecdc4] transition-colors">Cloud Constructor</a></li>
+            <li><a href="https://codecraft.playcode.com.ar/" target="_blank" class="hover:text-[#4ecdc4] transition-colors">Programa con Minecraft</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-pixel text-white mb-6 tracking-wide text-sm sm:text-base">CONTACTO</h4>
+          <ul class="space-y-4 text-sm font-medium">
+            <li class="flex items-start gap-3">
+              <i data-lucide="map-pin" class="text-[#ff6b6b] w-5 h-5 shrink-0 mt-0.5"></i>
+              <span>
+                Belgrano 3349<br />
+                Santa Fe, Argentina
+              </span>
+            </li>
+            <li class="flex items-center gap-3">
+              <i data-lucide="mail" class="text-[#ffe66d] w-5 h-5 shrink-0"></i>
+              <a href="mailto:hola@playcode.com.ar" class="hover:text-[#ffe66d] transition-colors">
+                hola@playcode.com.ar
+              </a>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+      
+      <div class="border-t-4 border-slate-900 mt-16 pt-8 text-center text-sm text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-4 font-medium">
+        <p>© <span id="current-year"></span> Play Code. Todos los derechos reservados.</p>
+        <p>
+          Diseñado con <span class="text-[#ff6b6b] text-lg leading-none align-middle">♥</span> para el futuro.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JAVASCRIPT FOR DYNAMIC ACTIONS -->
+  <script>
+    // Set current year
+    document.getElementById('current-year').textContent = new Date().getFullYear();
+
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    // Navbar scroll effect
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 20) {
+        navbar.classList.remove('bg-transparent', 'py-5');
+        navbar.classList.add('bg-white/90', 'backdrop-blur-md', 'shadow-sm', 'py-3');
+      } else {
+        navbar.classList.remove('bg-white/90', 'backdrop-blur-md', 'shadow-sm', 'py-3');
+        navbar.classList.add('bg-transparent', 'py-5');
+      }
+    });
+
+    // Mobile menu toggle
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const menuIcon = document.getElementById('menu-icon');
+
+    function toggleMobileMenu() {
+      mobileMenu.classList.toggle('hidden');
+      const isHidden = mobileMenu.classList.contains('hidden');
+      
+      // Update Lucide icon dynamically
+      if (isHidden) {
+        menuIcon.setAttribute('data-lucide', 'menu');
+      } else {
+        menuIcon.setAttribute('data-lucide', 'x');
+      }
+      lucide.createIcons();
+    }
+
+    mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+  </script>
+  <!-- DYNAMIC RECURSOS SYNC WITH PLAY CODE DATABASE (READ-ONLY & SECURE) -->
+  <script>
+  (function() {
+    var apiUrl = 'https://edu.playcode.com.ar/wp-json/playcode/v1/recursos';
+    var grid = document.getElementById('recursos-grid');
+    var footerList = document.getElementById('footer-recursos-list');
+
+    if (!grid) return;
+
+    fetch(apiUrl)
+      .then(function(res) {
+        if (!res.ok) throw new Error('Network response was not ok');
+        return res.json();
+      })
+      .then(function(items) {
+        if (!Array.isArray(items) || items.length === 0) return;
+
+        var badgeColors = ['bg-[#4ecdc4]', 'bg-[#ffe66d]', 'bg-[#ff6b6b]', 'bg-[#a78bfa]', 'bg-[#4ecdc4]'];
+        var btnColors = [
+          'bg-[#4ecdc4] hover:bg-[#3dbdb4] text-slate-900',
+          'bg-[#ffe66d] hover:bg-[#ffd166] text-slate-900',
+          'bg-[#ff6b6b] hover:bg-[#ff5252] text-white',
+          'bg-[#a78bfa] hover:bg-[#906ef5] text-slate-900',
+          'bg-[#4ecdc4] hover:bg-[#3dbdb4] text-slate-900'
+        ];
+
+        var html = '';
+        var footerHtml = '';
+
+        items.forEach(function(item, index) {
+          var badgeColor = badgeColors[index % badgeColors.length];
+          var btnColor = btnColors[index % btnColors.length];
+          var title = escapeHtml(item.title || '');
+          var age = escapeHtml(item.age || '');
+          var url = escapeUrl(item.url || '#');
+          var imgUrl = escapeUrl(item.image_url || '');
+
+          var imgTag = imgUrl 
+            ? '<img src="' + imgUrl + '" alt="' + title + '" class="w-full h-full object-cover">'
+            : '<div class="w-full h-full flex items-center justify-center text-3xl font-pixel bg-slate-200">🎮</div>';
+
+          var ageTag = age 
+            ? '<div class="absolute top-1.5 right-1.5 ' + badgeColor + ' border-2 border-slate-900 font-pixel text-[10px] px-2 py-0.5 shadow-[1.5px_1.5px_0_0_#0f172a] text-slate-900">Edad: ' + age + '</div>'
+            : '';
+
+          html += 
+            '<div class="bg-white p-4 sm:p-5 border-[3px] border-slate-900 shadow-[5px_5px_0_0_#0f172a] hover:shadow-[8px_8px_0_0_#0f172a] hover:-translate-y-1 transition-all relative flex flex-col">' +
+              '<div class="relative mb-3.5 overflow-hidden border-2 border-slate-900 shadow-[2px_2px_0_0_#0f172a] aspect-video bg-slate-100">' +
+                imgTag +
+                ageTag +
+              '</div>' +
+              '<div class="flex-1 flex flex-col justify-between">' +
+                '<h3 class="text-base sm:text-lg font-bold text-slate-900 mb-3 line-clamp-1">' + title + '</h3>' +
+                '<a href="' + url + '" target="_blank" rel="noopener noreferrer" class="w-full py-2.5 px-3 ' + btnColor + ' font-pixel text-[11px] tracking-wide border-2 border-slate-900 shadow-[3px_3px_0_0_#0f172a] active:shadow-[0px_0px_0_0_#0f172a] active:translate-y-[3px] active:translate-x-[3px] transition-all text-center block uppercase">' +
+                  'Acceder al Recurso ↗' +
+                '</a>' +
+              '</div>' +
+            '</div>';
+
+          footerHtml += '<li><a href="' + url + '" target="_blank" class="hover:text-[#4ecdc4] transition-colors">' + title + '</a></li>';
+        });
+
+        grid.innerHTML = html;
+        if (footerList && footerHtml) {
+          footerList.innerHTML = footerHtml;
+        }
+      })
+      .catch(function(err) {
+        // Fallback seguro: se mantienen las tarjetas estáticas actuales
+      });
+
+    function escapeHtml(str) {
+      var div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function escapeUrl(url) {
+      return encodeURI(url).replace(/"/g, '&quot;');
+    }
+  })();
+  </script>
+  <!-- FLOATING WHATSAPP BUTTON (NEO-BRUTALIST) -->
+  <a href="https://wa.me/541173708555?text=%C2%A1Hola%20Play%20Code!%20Estuve%20viendo%20la%20web%20y%20quiero%20consultar%20por%20los%20cursos%20de%20Vibecoding%20con%20IA%20y%20la%20clase%20de%20prueba.%20%F0%9F%91%8B" target="_blank" rel="noopener noreferrer" class="fixed bottom-6 right-6 z-50 inline-flex items-center gap-3 px-4 sm:px-5 py-3.5 bg-[#25D366] hover:bg-[#20bd5a] text-slate-950 font-bold border-[3px] border-slate-900 shadow-[5px_5px_0_0_#0f172a] hover:shadow-[7px_7px_0_0_#0f172a] hover:-translate-y-1 active:translate-y-[3px] active:translate-x-[3px] active:shadow-[2px_2px_0_0_#0f172a] transition-all group" aria-label="Contactar por WhatsApp">
+    <div class="relative">
+      <i data-lucide="message-circle" class="w-6 h-6 text-slate-950"></i>
+      <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-slate-900 animate-ping"></span>
+      <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-slate-900"></span>
+    </div>
+    <span class="font-pixel text-xs tracking-wider uppercase hidden sm:inline-block">Consultar por WhatsApp</span>
+  </a>
+</body>
 </html>
